@@ -5,6 +5,7 @@ import global.*;
 import heap.*;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class Stream implements GlobalConst {
 
@@ -27,7 +28,6 @@ public class Stream implements GlobalConst {
         this.columnFilter = columnFilter;
         this.valueFilter = valueFilter;
         firstDataPage();
-
     }
 
     public Map getNext(MID mid) throws InvalidTupleSizeException, IOException {
@@ -51,8 +51,15 @@ public class Stream implements GlobalConst {
             e.printStackTrace();
         }
 
+        assert recmap != null;
+
         userMid = datapage.nextRecord(mid);
         nextUserStatus = userMid != null;
+
+        if((this.rowFilter != null && !Objects.equals(recmap.getRowLabel(), this.rowFilter)) ||
+                (this.columnFilter != null && !Objects.equals(recmap.getColumnLabel(), this.columnFilter)) ||
+                (this.valueFilter != null && !Objects.equals(recmap.getValue(), this.valueFilter)))
+            return getNext(mid);
 
         return recmap;
     }
@@ -113,9 +120,7 @@ public class Stream implements GlobalConst {
                         e.printStackTrace();
                     }
 
-                    if (recordMap.getLength() != DataPageInfo.size)
-                        return false;
-
+                    assert recordMap != null;
                     dpinfo = new DataPageInfo(recordMap);
                     datapageId.pid = dpinfo.pageId.pid;
                 } else {
@@ -285,6 +290,27 @@ public class Stream implements GlobalConst {
 
 
     public void closestream() {
+        if (datapage != null) {
+            try{
+                unpinPage(datapageId, false);
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        datapageId.pid = 0;
+        datapage = null;
 
+        if (dirpage != null) {
+
+            try{
+                unpinPage(dirpageId, false);
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        dirpage = null;
+        nextUserStatus = true;
     }
 }
