@@ -47,17 +47,13 @@ public class MID {
 
 
     /** Compares two MID object, i.e, this to the mid
-     * @param rid MID object to be compared to
+     * @param mid MID object to be compared to
      * @return true is they are equal
      *         false if not.
      */
-    public boolean equals(RID rid) {
-
-        if ((this.pageNo.pid==rid.pageNo.pid)
-                &&(this.slotNo==rid.slotNo))
-            return true;
-        else
-            return false;
+    public boolean equals(MID mid) {
+        return (this.pageNo.pid == mid.pageNo.pid)
+                && (this.slotNo == mid.slotNo);
     }
 
 }

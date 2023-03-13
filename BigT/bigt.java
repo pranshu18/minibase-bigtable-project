@@ -30,7 +30,9 @@ public class bigt {
 
     }
 
-
+    public Heapfile heapfile(){
+        return this.heapfile;
+    }
     //Requires the modified Heapfile class
     public void deleteBigt() throws HFDiskMgrException, InvalidSlotNumberException, InvalidTupleSizeException, HFBufMgrException, FileAlreadyDeletedException, IOException {
 
@@ -97,10 +99,10 @@ public class bigt {
 
     //Requires the Stream class
      Stream openStream(int orderType, java.lang.String rowFilter,
-java.lang.String columnFilter, java.lang.String valueFilter){
+java.lang.String columnFilter, java.lang.String valueFilter) throws IOException, InvalidTupleSizeException, HFBufMgrException {
 
         //placeholder constructor
-        return Stream(this,orderType,rowFilter,columnFilter,valueFilter);
+        return new Stream(this,orderType,rowFilter,columnFilter,valueFilter);
 
      }
 
