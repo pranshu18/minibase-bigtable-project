@@ -244,10 +244,7 @@ public class Scan implements GlobalConst{
    * @return true if successful
    *         false otherwise
    */
-  private boolean firstDataPage() 
-    throws InvalidTupleSizeException,
-	   IOException
-  {
+  private boolean firstDataPage() throws InvalidTupleSizeException, IOException {
     DataPageInfo dpinfo;
     Tuple        rectuple = null;
     Boolean      bst;

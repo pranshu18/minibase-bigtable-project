@@ -26,9 +26,9 @@ public class Map {
         data_offset = 0;
     }
 
-    public Map(byte [] atuple, int offset)
+    public Map(byte [] amap, int offset)
     {
-        data = atuple;
+        data = amap;
         data_offset = offset;
     }
 
@@ -37,6 +37,10 @@ public class Map {
         data = fromMap.getMapByteArray();
         data_offset = 0;
         fldOffset = fromMap.copyFldOffset();
+    }
+
+    public int getOffset() {
+        return data_offset;
     }
 
     public String getRowLabel() throws IOException {

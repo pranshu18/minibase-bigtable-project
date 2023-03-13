@@ -5,6 +5,7 @@ package heap;
 import java.io.*;
 import java.lang.*;
 
+import BigT.Map;
 import global.*;
 import diskmgr.*;
 
@@ -464,10 +465,10 @@ public class HFPage extends Page
    * in C++ Status firstRecord(RID& firstRid)
    * 
    */ 
-  public RID firstRecord() 
+  public MID firstRecord()
     throws IOException
     {
-      RID rid = new RID();
+      MID mid = new MID();
       // find the first non-empty slot
       
       
@@ -487,60 +488,58 @@ public class HFPage extends Page
       
       // found a non-empty slot
       
-      rid.slotNo = i;
+      mid.slotNo = i;
       curPage.pid= Convert.getIntValue(CUR_PAGE, data);
-      rid.pageNo.pid = curPage.pid;
+      mid.pageNo.pid = curPage.pid;
       
-      return rid;
+      return mid;
     }
   
   /**
    * @return RID of next record on the page, null if no more 
    * records exist on the page
-   * @param 	curRid	current record ID
+   * @param    curMID    current record ID
    * @exception  IOException I/O errors
    * in C++ Status nextRecord (RID curRid, RID& nextRid)
    */
-  public RID nextRecord (RID curRid) 
-    throws IOException 
+  public MID nextRecord (MID curMID) throws IOException
     {
-      RID rid = new RID();
+      MID mid = new MID();
       slotCnt = Convert.getShortValue (SLOT_CNT, data);
       
-      int i=curRid.slotNo;
+      int i= curMID.slotNo;
       short length; 
       
       // find the next non-empty slot
-      for (i++; i < slotCnt;  i++)
-	{
-	  length = getSlotLength(i);
-	  if (length != EMPTY_SLOT)
-	    break;
-	}
+      for (i++; i < slotCnt;  i++)  {
+          length = getSlotLength(i);
+          if (length != EMPTY_SLOT)
+            break;
+	    }
       
       if(i >= slotCnt)
-	return null;
+	    return null;
       
       // found a non-empty slot
       
-      rid.slotNo = i;
+      mid.slotNo = i;
       curPage.pid = Convert.getIntValue(CUR_PAGE, data);
-      rid.pageNo.pid = curPage.pid;
+      mid.pageNo.pid = curPage.pid;
       
-      return rid;
+      return mid;
     }
   
   /**
    * copies out record with RID rid into record pointer.
    * <br>
    * Status getRecord(RID rid, char *recPtr, int& recLen)
-   * @param	rid 	the record ID
-   * @return 	a tuple contains the record
+   * @param    mid    the record ID
+   * @return 	a map containing the record
    * @exception   InvalidSlotNumberException Invalid slot number
    * @exception  	IOException I/O errors
-   * @see 	Tuple
+   * @see 	Map
    */
-  public Tuple getRecord ( RID rid ) 
+  public Map getRecord (MID mid)
     throws IOException,  
 	   InvalidSlotNumberException
     {
@@ -548,9 +547,9 @@ public class HFPage extends Page
       short offset;
       byte []record;
       PageId pageNo = new PageId();
-      pageNo.pid= rid.pageNo.pid;
+      pageNo.pid= mid.pageNo.pid;
       curPage.pid = Convert.getIntValue (CUR_PAGE, data);
-      int slotNo = rid.slotNo;
+      int slotNo = mid.slotNo;
       
       // length of record being returned
       recLen = getSlotLength (slotNo);
@@ -561,8 +560,8 @@ public class HFPage extends Page
 	  offset = getSlotOffset (slotNo);
 	  record = new byte[recLen];
 	  System.arraycopy(data, offset, record, 0, recLen);
-	  Tuple tuple = new Tuple(record, 0, recLen);
-	  return tuple;
+	  Map amap = new Map(record, 0);
+	  return amap;
 	}
       
       else {
@@ -576,23 +575,23 @@ public class HFPage extends Page
    * returns a tuple in a byte array[pageSize] with given RID rid.
    * <br>
    * in C++	Status returnRecord(RID rid, char*& recPtr, int& recLen)
-   * @param       rid     the record ID
+   * @param       mid     the record ID
    * @return      a tuple  with its length and offset in the byte array
    * @exception   InvalidSlotNumberException Invalid slot number
    * @exception   IOException I/O errors
-   * @see 	Tuple
+   * @see 	Map
    */  
-  public Tuple returnRecord ( RID rid )
+  public Map returnRecord (MID mid)
     throws IOException, 
 	   InvalidSlotNumberException
     {
       short recLen;
       short offset;
       PageId pageNo = new PageId();
-      pageNo.pid = rid.pageNo.pid;
+      pageNo.pid = mid.pageNo.pid;
       
       curPage.pid = Convert.getIntValue (CUR_PAGE, data);
-      int slotNo = rid.slotNo;
+      int slotNo = mid.slotNo;
       
       // length of record being returned
       recLen = getSlotLength (slotNo);
@@ -603,8 +602,8 @@ public class HFPage extends Page
 	{
 	  
 	  offset = getSlotOffset (slotNo);
-	  Tuple tuple = new Tuple(data, offset, recLen);
-	  return tuple;
+	  Map amap = new Map(data, offset);
+	  return amap;
 	}
       
       else {   

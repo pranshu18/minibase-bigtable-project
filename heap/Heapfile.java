@@ -2,7 +2,6 @@ package heap;
 
 import java.io.*;
 import diskmgr.*;
-import bufmgr.*;
 import global.*;
 
 /**  This heapfile implementation is directory-based. We maintain a
@@ -456,7 +455,7 @@ public class Heapfile implements Filetype,  GlobalConst {
 		  
 		  
 		  
-		  atuple = dpinfo.convertToTuple();
+		  atuple = dpinfo.convertToMap();
 		  
 		  byte [] tmpData = atuple.getTupleByteArray();
 		  currentDataPageRid = currentDirPage.insertRecord(tmpData);
@@ -590,7 +589,7 @@ public class Heapfile implements Filetype,  GlobalConst {
       dpinfo_ondirpage.availspace = dpinfo.availspace;
       dpinfo_ondirpage.recct = dpinfo.recct;
       dpinfo_ondirpage.pageId.pid = dpinfo.pageId.pid;
-      dpinfo_ondirpage.flushToTuple();
+      dpinfo_ondirpage.flushToByteArray();
       
       
       unpinPage(currentDirPageId, true /* = DIRTY */);
@@ -648,14 +647,14 @@ public class Heapfile implements Filetype,  GlobalConst {
       currentDataPage.deleteRecord(rid);
       
       pdpinfo.recct--;
-      pdpinfo.flushToTuple();	//Write to the buffer pool
+      pdpinfo.flushToByteArray();	//Write to the buffer pool
       if (pdpinfo.recct >= 1) 
 	{
 	  // more records remain on datapage so it still hangs around.  
 	  // we just need to modify its directory entry
 	  
 	  pdpinfo.availspace = currentDataPage.available_space();
-	  pdpinfo.flushToTuple();
+	  pdpinfo.flushToByteArray();
 	  unpinPage(currentDataPageId, true /* = DIRTY*/);
 	  
 	  unpinPage(currentDirPageId, true /* = DIRTY */);

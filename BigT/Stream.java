@@ -1,10 +1,7 @@
 package BigT;
 
 import diskmgr.Page;
-import global.GlobalConst;
-import global.PageId;
-import global.RID;
-import global.SystemDefs;
+import global.*;
 import heap.*;
 
 import java.io.IOException;
@@ -17,10 +14,10 @@ public class Stream implements GlobalConst {
 
     private PageId dirpageId = new PageId();
     private HFPage dirpage = new HFPage();
-    private RID datapageRid = new RID();
+    private MID datapageMid = new MID();
     private PageId datapageId = new PageId();
     private HFPage datapage = new HFPage();
-    private RID userrid = new RID();
+    private MID userMid = new MID();
     private boolean nextUserStatus;
 
     public Stream(bigt bigtable, int orderType, String rowFilter, String columnFilter, String valueFilter) throws IOException, InvalidTupleSizeException, HFBufMgrException {
@@ -33,9 +30,36 @@ public class Stream implements GlobalConst {
 
     }
 
+    public Map getNext(MID mid) throws InvalidTupleSizeException, IOException {
+        Map recmap = null;
+
+        if (!nextUserStatus) {
+            nextDataPage();
+        }
+
+        if (datapage == null)
+            return null;
+
+        mid.pageNo.pid = userMid.pageNo.pid;
+        mid.slotNo = userMid.slotNo;
+
+        try {
+            recmap = datapage.getRecord(mid);
+        }
+
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        userMid = datapage.nextRecord(mid);
+        nextUserStatus = userMid != null;
+
+        return recmap;
+    }
+
     private boolean firstDataPage() throws InvalidTupleSizeException, IOException, HFBufMgrException {
         DataPageInfo dpinfo;
-        Tuple recordTuple = null;
+        Map recordMap = null;
         Boolean bst;
 
         dirpageId.pid = bigtable.heapfile()._firstDirPageId.pid;
@@ -48,17 +72,17 @@ public class Stream implements GlobalConst {
             e.printStackTrace();
         }
 
-        datapageRid = dirpage.firstRecord();
+        datapageMid = dirpage.firstRecord();
 
-        if(datapageRid != null) {
+        if(datapageMid != null) {
             try {
-                recordTuple = dirpage.getRecord(datapageRid);
+                recordMap = dirpage.getRecord(datapageMid);
             } catch (InvalidSlotNumberException e) {
                 e.printStackTrace();
             }
 
-            assert recordTuple != null;
-            dpinfo = new DataPageInfo(recordTuple);
+            assert recordMap != null;
+            dpinfo = new DataPageInfo(recordMap);
             datapageId.pid = dpinfo.pageId.pid;
         } else {
             PageId nextDirPageId = dirpage.getNextPage();
@@ -76,23 +100,23 @@ public class Stream implements GlobalConst {
                 }
 
                 try {
-                    datapageRid = dirpage.firstRecord();
+                    datapageMid = dirpage.firstRecord();
                 } catch (Exception e) {
                     e.printStackTrace();
                     datapageId.pid = INVALID_PAGE;
                 }
 
-                if (datapageRid != null) {
+                if (datapageMid != null) {
                     try {
-                        recordTuple = dirpage.getRecord(datapageRid);
+                        recordMap = dirpage.getRecord(datapageMid);
                     } catch (InvalidSlotNumberException e) {
                         e.printStackTrace();
                     }
 
-                    if (recordTuple.getLength() != DataPageInfo.size)
+                    if (recordMap.getLength() != DataPageInfo.size)
                         return false;
 
-                    dpinfo = new DataPageInfo(recordTuple);
+                    dpinfo = new DataPageInfo(recordMap);
                     datapageId.pid = dpinfo.pageId.pid;
                 } else {
                     datapageId.pid = INVALID_PAGE;
@@ -117,7 +141,7 @@ public class Stream implements GlobalConst {
         DataPageInfo dpinfo;
 
         PageId nextDirPageId;
-        Tuple rectuple = null;
+        Map recordmap = null;
 
         if ((dirpage == null) && (datapageId.pid == INVALID_PAGE))
             return false;
@@ -143,7 +167,7 @@ public class Stream implements GlobalConst {
                 }
 
                 try {
-                    userrid = datapage.firstRecord();
+                    userMid = datapage.firstRecord();
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -166,9 +190,9 @@ public class Stream implements GlobalConst {
             return false;
         }
 
-        datapageRid = dirpage.nextRecord(datapageRid);
+        datapageMid = dirpage.nextRecord(datapageMid);
 
-        if (datapageRid == null) {
+        if (datapageMid == null) {
 
             nextDirPageId = dirpage.getNextPage();
 
@@ -201,7 +225,7 @@ public class Stream implements GlobalConst {
                     return false;
 
                 try {
-                    datapageRid = dirpage.firstRecord();
+                    datapageMid = dirpage.firstRecord();
                 }
                 catch (Exception e){
                     return false;
@@ -209,18 +233,16 @@ public class Stream implements GlobalConst {
             }
         }
         try {
-            rectuple = dirpage.getRecord(datapageRid);
+            recordmap = dirpage.getRecord(datapageMid);
         }
 
         catch (Exception e) {
             System.err.println("HeapFile: Error in Scan" + e);
         }
 
-        assert rectuple != null;
-        if (rectuple.getLength() != DataPageInfo.size)
-            return false;
+        assert recordmap != null;
 
-        dpinfo = new DataPageInfo(rectuple);
+        dpinfo = new DataPageInfo(recordmap);
         datapageId.pid = dpinfo.pageId.pid;
 
         try {
@@ -232,9 +254,9 @@ public class Stream implements GlobalConst {
             System.err.println("HeapFile: Error in Scan" + e);
         }
 
-        userrid = datapage.firstRecord();
+        userMid = datapage.firstRecord();
 
-        if(userrid == null)
+        if(userMid == null)
         {
             nextUserStatus = false;
             return false;
