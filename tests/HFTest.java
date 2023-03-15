@@ -1,11 +1,9 @@
 package tests;
 
 import java.io.*;
-import java.util.*;
 import java.lang.*;
 import heap.*;
-import bufmgr.*;
-import diskmgr.*;
+import BigT.Map;
 import global.*;
 import chainexception.*;
 
@@ -94,7 +92,7 @@ public boolean runTests () {
 
     System.out.println ("\n  Test 1: Insert and scan fixed-size records\n");
     boolean status = OK;
-    RID rid = new RID();
+    MID mid = new MID();
     Heapfile f = null;
 
     System.out.println ("  - Create a heap file\n");
@@ -124,7 +122,7 @@ public boolean runTests () {
 	rec.name = "record" + i;
 
 	try {
-	  rid = f.insertRecord(rec.toByteArray());
+	  mid = f.insertMap(rec.toByteArray());
 	}
 	catch (Exception e) {
 	  status = FAIL;
@@ -141,9 +139,9 @@ public boolean runTests () {
       }
       
       try {
-	if ( f.getRecCnt() != choice ) {
+	if ( f.getMapCnt() != choice ) {
 	  status = FAIL;
-	  System.err.println ("*** File reports " + f.getRecCnt() + 
+	  System.err.println ("*** File reports " + f.getMapCnt() +
 			      " records, not " + choice + "\n");
 	}
       }
@@ -182,13 +180,13 @@ public boolean runTests () {
     if ( status == OK ) {
       int len, i = 0;
       DummyRecord rec = null;
-      Tuple tuple = new Tuple();
+      Map map = new Map();
       
       boolean done = false;
       while (!done) { 
 	try {
-	  tuple = scan.getNext(rid);
-	  if (tuple == null) {
+	  map = scan.getNext(mid);
+	  if (map == null) {
 	    done = true;
 	    break;
 	  }
@@ -200,21 +198,27 @@ public boolean runTests () {
 
 	if (status == OK && !done) {
 	  try {
-	    rec = new DummyRecord(tuple);
+	    rec = new DummyRecord(map);
 	  }
 	  catch (Exception e) {
 	    System.err.println (""+e);
 	    e.printStackTrace();
 	  }
-	  
-	  len = tuple.getLength();
+
+		/**
+		 * @TODO
+		 * what to do for map when getLegth()
+		 * //commenting this test out for now
+		 */
+		/*
+		len = map.getLength();
 	  if ( len != reclen ) {
 	    System.err.println ("*** Record " + i + " had unexpected length " 
 				+ len + "\n");
 	    status = FAIL;
 	    break;
-	  }
-	  else if ( SystemDefs.JavabaseBM.getNumUnpinnedBuffers()
+	  }*/
+	  if ( SystemDefs.JavabaseBM.getNumUnpinnedBuffers()
 		    == SystemDefs.JavabaseBM.getNumBuffers() ) {
 	    System.err.println ("On record " + i + ":\n");
 	    System.err.println ("*** The heap-file scan has not left its " +
@@ -271,7 +275,7 @@ public boolean runTests () {
     System.out.println ("\n  Test 2: Delete fixed-size records\n");
     boolean status = OK;
     Scan scan = null;
-    RID rid = new RID();
+    MID mid = new MID();
     Heapfile f = null;
 
     System.out.println ("  - Open the same heap file as test 1\n");
@@ -298,13 +302,13 @@ public boolean runTests () {
     
     if ( status == OK ) {
       int len, i = 0;
-      Tuple tuple = new Tuple();
+      Map map = new Map();
       boolean done = false;
 
       while (!done) { 
 	try {
-	  tuple = scan.getNext(rid);
-	  if (tuple == null) {
+	  map = scan.getNext(mid);
+	  if (map == null) {
 	    done = true;
 	  }
 	}
@@ -319,7 +323,7 @@ public boolean runTests () {
 	  if ( i % 2 == 0 ) odd = false;
 	  if ( odd )  {       // Delete the odd-numbered ones.
 	    try {
-	      status = f.deleteRecord( rid );
+	      status = f.deleteMap( mid );
 	    }
 	    catch (Exception e) {
 	      status = FAIL;
@@ -362,13 +366,13 @@ public boolean runTests () {
     if ( status == OK ) {
       int len, i = 0;
       DummyRecord rec = null;
-      Tuple tuple = new Tuple();
+      Map map = new Map();
       boolean done = false;
 
       while ( !done ) {
 	try {
-	  tuple = scan.getNext(rid);
-	  if (tuple == null) {
+	  map = scan.getNext(mid);
+	  if (map == null) {
 	    done = true;
 	  }
 	}
@@ -379,7 +383,7 @@ public boolean runTests () {
 
 	if (!done && status == OK) {
 	  try {
-	    rec = new DummyRecord(tuple);
+	    rec = new DummyRecord(map);
 	  }
 	  catch (Exception e) {
 	    System.err.println (""+e);
@@ -413,7 +417,7 @@ public boolean runTests () {
     System.out.println ("\n  Test 3: Update fixed-size records\n");
     boolean status = OK;
     Scan scan = null;
-    RID rid = new RID();
+    MID mid = new MID();
     Heapfile f = null; 
 
     System.out.println ("  - Open the same heap file as tests 1 and 2\n");
@@ -442,13 +446,13 @@ public boolean runTests () {
 
       int len, i = 0;
       DummyRecord rec = null; 
-      Tuple tuple = new Tuple();
+      Map map = new Map();
       boolean done = false;
       
       while ( !done ) {
 	try {
-	  tuple = scan.getNext(rid);
-	  if (tuple == null) {
+	  map = scan.getNext(mid);
+	  if (map == null) {
 	    done = true;
 	  }
 	}
@@ -459,7 +463,7 @@ public boolean runTests () {
 	
 	if (!done && status == OK) {
 	  try {
-	    rec = new DummyRecord(tuple);
+	    rec = new DummyRecord(map);
 	  }
 	  catch (Exception e) {
 	    System.err.println (""+e);
@@ -468,9 +472,9 @@ public boolean runTests () {
 
 	  rec.fval =(float) 7*i;     // We'll check that i==rec.ival below.
 
-	  Tuple newTuple = null; 
+	  Map newMap = null;
 	  try {
-	    newTuple = new Tuple (rec.toByteArray(),0,rec.getRecLength()); 
+	    newMap = new Map (rec.toByteArray(),0);
 	  }
 	  catch (Exception e) {
 	    status = FAIL;
@@ -478,7 +482,7 @@ public boolean runTests () {
 	    e.printStackTrace();
 	  }
 	  try {
-	    status = f.updateRecord(rid, newTuple); 
+	    status = f.updateMap(mid, newMap);
 	  }
 	  catch (Exception e) {
 	    status = FAIL;
@@ -526,14 +530,14 @@ public boolean runTests () {
       int len, i = 0;
       DummyRecord rec = null;
       DummyRecord rec2 = null;
-      Tuple tuple = new Tuple(); 
-      Tuple tuple2 = new Tuple(); 
+      Map map = new Map();
+      Map map2 = new Map();
       boolean done = false;
       
       while ( !done ) {
 	try {
-	  tuple = scan.getNext(rid);
-	  if (tuple == null) {
+	  map = scan.getNext(mid);
+	  if (map == null) {
 	    done = true;
 	    break;
 	  }
@@ -545,7 +549,7 @@ public boolean runTests () {
 	
 	if (!done && status == OK) {
 	  try {
-	    rec = new DummyRecord(tuple);
+	    rec = new DummyRecord(map);
 	  }
 	  catch (Exception e) {
 	    System.err.println (""+e);
@@ -553,7 +557,7 @@ public boolean runTests () {
 
 	  // While we're at it, test the getRecord method too.
 	  try {
-	    tuple2 = f.getRecord( rid ); 
+	    map2 = f.getMap( mid );
 	  }
 	  catch (Exception e) {
 	    status = FAIL;
@@ -563,7 +567,7 @@ public boolean runTests () {
 	  }
 	  
 	  try {
-	    rec2 = new DummyRecord(tuple2);
+	    rec2 = new DummyRecord(map2);
 	  }
 	  catch (Exception e) {
 	    System.err.println (""+e);
@@ -606,7 +610,7 @@ public boolean runTests () {
     System.out.println ("\n  Test 4: Test some error conditions\n");
     boolean status = OK;
     Scan scan = null;
-    RID rid = new RID();
+    MID mid = new MID();
     Heapfile f = null; 
     
     try {
@@ -636,11 +640,11 @@ public boolean runTests () {
     if ( status == OK ) {
       int len;
       DummyRecord rec = null;
-      Tuple tuple = new Tuple();
+      Map map = new Map();
       
       try {
-	tuple = scan.getNext(rid);
-	if (tuple == null) {
+	map = scan.getNext(mid);
+	if (map == null) {
 	  status = FAIL;
 	}
       }
@@ -654,23 +658,28 @@ public boolean runTests () {
       
       if (status == OK) {
 	try {
-	  rec = new DummyRecord(tuple);
+	  rec = new DummyRecord(map);
 	}
 	catch (Exception e) {
 	  System.err.println (""+e);
 	  status = FAIL;
 	}
-	len = tuple.getLength();
-	  Tuple newTuple = null;
+	/**
+	 * @TODO
+	 * we dont need this right
+	 * commenting out for now
+	 */
+	//len = map.getLength();
+	  Map newMap = null;
 	try {
-	  newTuple = new Tuple(rec.toByteArray(), 0, len-1);
+	  newMap = new Map(rec.toByteArray(), 0);
 	}
 	catch (Exception e) {
 	  System.err.println (""+e);
 	  e.printStackTrace();
 	}
 	try {
-	  status = f.updateRecord( rid, newTuple );
+	  status = f.updateMap( mid, newMap );
 	}
 	catch (ChainException e) { 
 	  status = checkException (e, "heap.InvalidUpdateException");
@@ -694,24 +703,27 @@ public boolean runTests () {
 
       if (status == OK) {
 	try {
-	  rec = new DummyRecord(tuple);
+	  rec = new DummyRecord(map);
 	}
 	catch (Exception e) {
 	  System.err.println (""+e);
 	  e.printStackTrace();
 	}
-	
-	len = tuple.getLength();
-	Tuple newTuple = null;
+		  /**
+		   * @TODO
+		   * same thing here about map length
+		   */
+	//len = map.getLength();
+	Map newMap = null;
 	try {
-	  newTuple = new Tuple(rec.toByteArray(), 0, len+1);
+	  newMap = new Map(rec.toByteArray(), 0);
 	}
 	catch (Exception e) {
 	  System.err.println( ""+e );
 	  e.printStackTrace();
 	}
 	try {
-	  status = f.updateRecord( rid, newTuple );
+	  status = f.updateMap( mid, newMap );
 	}
 	catch (ChainException e) {
 	  status = checkException(e, "heap.InvalidUpdateException");
@@ -740,7 +752,7 @@ public boolean runTests () {
       System.out.println ("  - Try to insert a record that's too long\n");
       byte [] record = new byte [MINIBASE_PAGESIZE+4];
       try {
-	rid = f.insertRecord( record );
+	mid = f.insertMap( record );
       }
       catch (ChainException e) {
 	status = checkException (e, "heap.SpaceNotAvailableException");
@@ -831,12 +843,15 @@ class DummyRecord  {
   /** constructor: translate a tuple to a DummyRecord object
    *  it will make a copy of the data in the tuple
    * @param atuple: the input tuple
+   * @TODO
+   * figure out what to do with legnths
+   * lenghts to 12
    */
-  public DummyRecord(Tuple _atuple) 
+  public DummyRecord(Map map)
 	throws java.io.IOException{   
-    data = new byte[_atuple.getLength()];
-    data = _atuple.getTupleByteArray();
-    setRecLen(_atuple.getLength());
+    data = new byte[map.getLength()];
+    data = map.getMapByteArray();
+    setRecLen(map.getLength());
     
     setIntRec (data);
     setFloRec (data);

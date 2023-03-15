@@ -8,10 +8,8 @@ import index.*;
 import java.io.*;
 import java.util.*;
 import java.lang.*;
-import diskmgr.*;
-import bufmgr.*;
-import btree.*; 
-import catalog.*;
+
+import btree.*;
 
 /**
    Here is the implementation for the tests. There are N tests performed.
@@ -214,7 +212,7 @@ class JoinsDriver implements GlobalConst {
       }
       
       try {
-	rid = f.insertRecord(t.returnTupleByteArray());
+	rid = f.insertMap(t.returnTupleByteArray());
       }
       catch (Exception e) {
 	System.err.println("*** error in Heapfile.insertRecord() ***");
@@ -285,7 +283,7 @@ class JoinsDriver implements GlobalConst {
       }
       
       try {
-	rid = f.insertRecord(t.returnTupleByteArray());
+	rid = f.insertMap(t.returnTupleByteArray());
       }
       catch (Exception e) {
 	System.err.println("*** error in Heapfile.insertRecord() ***");
@@ -355,7 +353,7 @@ class JoinsDriver implements GlobalConst {
       }      
       
       try {
-	rid = f.insertRecord(t.returnTupleByteArray());
+	rid = f.insertMap(t.returnTupleByteArray());
       }
       catch (Exception e) {
 	System.err.println("*** error in Heapfile.insertRecord() ***");

@@ -7,6 +7,8 @@ package btree;
 import global.*;
 
 /** KeyDataEntry: define (key, data) pair.
+ * @TODO
+ * Change these to MID
  */
 public class KeyDataEntry {
    /** key in the (key, data)

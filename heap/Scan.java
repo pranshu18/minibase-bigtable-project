@@ -7,6 +7,8 @@ package heap;
  */
 
 import java.io.*;
+
+import BigT.Map;
 import global.*;
 import bufmgr.*;
 import diskmgr.*;
@@ -40,7 +42,7 @@ public class Scan implements GlobalConst{
     /** record ID of the DataPageInfo struct (in the directory page) which
      * describes the data page where our current record lives.
      */
-    private RID datapageRid = new RID();
+    private MID datapageRid = new MID();
 
     /** the actual PageId of the data page with the current record */
     private PageId datapageId = new PageId();
@@ -49,7 +51,7 @@ public class Scan implements GlobalConst{
     private HFPage datapage = new HFPage();
 
     /** record ID of the current record (from the current data page) */
-    private RID userrid = new RID();
+    private MID userrid = new MID();
 
     /** Status of next user status */
     private boolean nextUserStatus;
@@ -78,14 +80,14 @@ public class Scan implements GlobalConst{
    * @exception InvalidTupleSizeException Invalid tuple size
    * @exception IOException I/O errors
    *
-   * @param rid Record ID of the record
+   * @param mid Record ID of the record
    * @return the Tuple of the retrieved record.
    */
-  public Tuple getNext(RID rid) 
+  public Map getNext(MID mid)
     throws InvalidTupleSizeException,
 	   IOException
   {
-    Tuple recptrtuple = null;
+    Map recptrMap = null;
     
     if (nextUserStatus != true) {
         nextDataPage();
@@ -94,11 +96,11 @@ public class Scan implements GlobalConst{
     if (datapage == null)
       return null;
     
-    rid.pageNo.pid = userrid.pageNo.pid;    
-    rid.slotNo = userrid.slotNo;
+    mid.pageNo.pid = userrid.pageNo.pid;
+    mid.slotNo = userrid.slotNo;
          
     try {
-      recptrtuple = datapage.getRecord(rid);
+      recptrMap = datapage.getRecord(mid);
     }
     
     catch (Exception e) {
@@ -106,11 +108,11 @@ public class Scan implements GlobalConst{
       e.printStackTrace();
     }   
     
-    userrid = datapage.nextRecord(rid);
+    userrid = datapage.nextRecord(mid);
     if(userrid == null) nextUserStatus = false;
     else nextUserStatus = true;
      
-    return recptrtuple;
+    return recptrMap;
   }
 
 
@@ -118,25 +120,25 @@ public class Scan implements GlobalConst{
      * 
      * @exception InvalidTupleSizeException Invalid tuple size
      * @exception IOException I/O errors
-     * @param rid Record ID of the given record
+     * @param mid Record ID of the given record
      * @return 	true if successful, 
      *			false otherwise.
      */
-  public boolean position(RID rid) 
+  public boolean position(MID mid)
     throws InvalidTupleSizeException,
 	   IOException
   { 
-    RID    nxtrid = new RID();
+    MID nxtmid = new MID();
     boolean bst;
 
-    bst = peekNext(nxtrid);
+    bst = peekNext(nxtmid);
 
-    if (nxtrid.equals(rid)==true) 
+    if (nxtmid.equals(mid)==true)
     	return true;
 
     // This is kind lame, but otherwise it will take all day.
     PageId pgid = new PageId();
-    pgid.pid = rid.pageNo.pid;
+    pgid.pid = mid.pageNo.pid;
  
     if (!datapageId.equals(pgid)) {
 
@@ -171,10 +173,10 @@ public class Scan implements GlobalConst{
         return bst;
       }
     
-    bst = peekNext(nxtrid);
+    bst = peekNext(nxtmid);
     
-    while ((bst == true) && (nxtrid != rid))
-      bst = mvNext(nxtrid);
+    while ((bst == true) && (nxtmid != mid))
+      bst = mvNext(nxtmid);
     
     return bst;
   }
@@ -246,7 +248,7 @@ public class Scan implements GlobalConst{
    */
   private boolean firstDataPage() throws InvalidTupleSizeException, IOException {
     DataPageInfo dpinfo;
-    Tuple        rectuple = null;
+    Map        recMap = null;
     Boolean      bst;
 
     /** copy data about first directory page */
@@ -272,7 +274,7 @@ public class Scan implements GlobalConst{
     /** there is a datapage record on the first directory page: */
 	
 	try {
-          rectuple = dirpage.getRecord(datapageRid);
+          recMap = dirpage.getRecord(datapageRid);
 	}  
 				
 	catch (Exception e) {
@@ -280,7 +282,7 @@ public class Scan implements GlobalConst{
 		e.printStackTrace();
 	}		
       			    
-    	dpinfo = new DataPageInfo(rectuple);
+    	dpinfo = new DataPageInfo(recMap);
         datapageId.pid = dpinfo.pageId.pid;
 
     } else {
@@ -334,18 +336,23 @@ public class Scan implements GlobalConst{
           
 	  try {
 	  
-	    rectuple = dirpage.getRecord(datapageRid);
+	    recMap = dirpage.getRecord(datapageRid);
 	  }
 	  
 	  catch (Exception e) {
 	//    System.err.println("SCAN: Error getRecord 4: " + e);
 	    e.printStackTrace();
 	  }
+
+        /**
+         * @TODO
+         * verify if this is needed since Map has set size
+         * commenting out for now
+         */
+	  //if (recMap.getLength() != DataPageInfo.size)
+	    //return false;
 	  
-	  if (rectuple.getLength() != DataPageInfo.size)
-	    return false;
-	  
-	  dpinfo = new DataPageInfo(rectuple);
+	  dpinfo = new DataPageInfo(recMap);
 	  datapageId.pid = dpinfo.pageId.pid;
 	  
          } else {
@@ -399,7 +406,7 @@ public class Scan implements GlobalConst{
     
     boolean nextDataPageStatus;
     PageId nextDirPageId = new PageId();
-    Tuple rectuple = null;
+    Map recMap = null;
 
   // ASSERTIONS:
   // - this->dirpageId has Id of current directory page
@@ -535,17 +542,22 @@ public class Scan implements GlobalConst{
   
     // data page is not yet loaded: read its record from the directory page
    	try {
-	  rectuple = dirpage.getRecord(datapageRid);
+	  recMap = dirpage.getRecord(datapageRid);
 	}
 	
 	catch (Exception e) {
 	  System.err.println("HeapFile: Error in Scan" + e);
 	}
-	
-	if (rectuple.getLength() != DataPageInfo.size)
-	  return false;
+
+      /**
+       * @TODO
+       * verify if this is needed since Map has set size
+       * commenting out for now
+       */
+	//if (recMap.getLength() != DataPageInfo.size)
+	  //return false;
                         
-	dpinfo = new DataPageInfo(rectuple);
+	dpinfo = new DataPageInfo(recMap);
 	datapageId.pid = dpinfo.pageId.pid;
 	
  	try {
@@ -575,10 +587,10 @@ public class Scan implements GlobalConst{
   }
 
 
-  private boolean peekNext(RID rid) {
+  private boolean peekNext(MID mid) {
     
-    rid.pageNo.pid = userrid.pageNo.pid;
-    rid.slotNo = userrid.slotNo;
+    mid.pageNo.pid = userrid.pageNo.pid;
+    mid.slotNo = userrid.slotNo;
     return true;
     
   }
@@ -587,29 +599,29 @@ public class Scan implements GlobalConst{
   /** Move to the next record in a sequential scan.
    * Also returns the RID of the (new) current record.
    */
-  private boolean mvNext(RID rid) 
+  private boolean mvNext(MID mid)
     throws InvalidTupleSizeException,
 	   IOException
   {
-    RID nextrid;
+    MID nextMid;
     boolean status;
 
     if (datapage == null)
         return false;
 
-    	nextrid = datapage.nextRecord(rid);
+    	nextMid = datapage.nextRecord(mid);
 	
-	if( nextrid != null ){
-	  userrid.pageNo.pid = nextrid.pageNo.pid;
-	  userrid.slotNo = nextrid.slotNo;
+	if( nextMid != null ){
+	  userrid.pageNo.pid = nextMid.pageNo.pid;
+	  userrid.slotNo = nextMid.slotNo;
 	  return true;
 	} else {
 	  
 	  status = nextDataPage();
 
 	  if (status==true){
-	    rid.pageNo.pid = userrid.pageNo.pid;
-	    rid.slotNo = userrid.slotNo;
+	    mid.pageNo.pid = userrid.pageNo.pid;
+	    mid.slotNo = userrid.slotNo;
 	  }
 	
 	}

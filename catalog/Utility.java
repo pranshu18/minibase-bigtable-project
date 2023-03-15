@@ -7,10 +7,9 @@
 package catalog;
 
 import java.io.*;
-import bufmgr.*;
+
 import global.*;
 import heap.*;
-import diskmgr.*;
 import btree.*;
 
 public class Utility implements Catalogglobal{
@@ -202,7 +201,7 @@ ExtendedSystemDefs.MINIBASE_RELCAT.getInfo(relation, relRec);
 
 
 // INSERT INTO DATAFILE
-	heap.insertRecord(tuple.getTupleByteArray());
+	heap.insertMap(tuple.getTupleByteArray());
 
 // NOW INSERT INTO EACH INDEX FOR RELATION
 

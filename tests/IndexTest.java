@@ -2,8 +2,6 @@ package tests;
 
 import java.io.*; 
 import global.*;
-import bufmgr.*;
-import diskmgr.*;
 import heap.*;
 import iterator.*;
 import index.*;
@@ -173,7 +171,7 @@ class IndexDriver extends TestDriver
       }
       
       try {
-	rid = f.insertRecord(t.returnTupleByteArray());
+	rid = f.insertMap(t.returnTupleByteArray());
       }
       catch (Exception e) {
 	status = FAIL;
@@ -644,7 +642,7 @@ class IndexDriver extends TestDriver
       }
 
       try {
-	rid = f.insertRecord(t.returnTupleByteArray());
+	rid = f.insertMap(t.returnTupleByteArray());
       }
       catch (Exception e) {
 	status = FAIL;
