@@ -335,10 +335,10 @@ public class HFPage extends Page
    * @exception IOException I/O errors
    * in C++ Status insertRecord(char *recPtr, int recLen, RID& rid)
    */
-  public RID insertRecord ( byte [] record)		
+  public MID insertRecord ( byte [] record)
     throws IOException
     {
-      RID rid = new RID();
+      MID mid = new MID();
       
       int recLen = record.length;
       int spaceNeeded = recLen + SIZE_OF_SLOT;
@@ -390,24 +390,24 @@ public class HFPage extends Page
 	// insert data onto the data page
 	System.arraycopy (record, 0, data, usedPtr, recLen);
 	curPage.pid = Convert.getIntValue (CUR_PAGE, data);
-	rid.pageNo.pid = curPage.pid;
-	rid.slotNo = i;
-	return   rid ;
+	mid.pageNo.pid = curPage.pid;
+	mid.slotNo = i;
+	return   mid ;
       }
     } 
   
   /**
    * delete the record with the specified rid
-   * @param	rid 	the record ID
+   * @param	mid 	the record ID
    * @exception	InvalidSlotNumberException Invalid slot number
    * @exception IOException I/O errors
    * in C++ Status deleteRecord(const RID& rid)
    */
-  public void deleteRecord ( RID rid )
+  public void deleteRecord ( MID mid )
     throws IOException,  
 	   InvalidSlotNumberException
     {
-      int slotNo = rid.slotNo;
+      int slotNo = mid.slotNo;
       short recLen = getSlotLength (slotNo);
       slotCnt = Convert.getShortValue (SLOT_CNT, data);
       

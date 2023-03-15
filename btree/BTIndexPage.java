@@ -80,15 +80,15 @@ public class BTIndexPage extends BTSortedPage{
    null if no space left.
    *@exception IndexInsertRecException error when insert
    */
-   public RID insertKey(KeyClass key, PageId pageNo) 
+   public MID insertKey(KeyClass key, PageId pageNo)
       throws  IndexInsertRecException
     {
-      RID rid;
+      MID mid;
       KeyDataEntry entry;
       try {
         entry = new KeyDataEntry( key, pageNo); 
-        rid=super.insertRecord( entry );
-        return rid;
+        mid=super.insertRecord( entry );
+        return mid;
       }
       catch ( Exception e) {       
         throw new IndexInsertRecException(e, "Insert failed");
@@ -105,16 +105,16 @@ public class BTIndexPage extends BTSortedPage{
    * any reason
    *@return  RID of the record deleted. Can not return null.
    */
-  RID deleteKey(KeyClass key) 
+  MID deleteKey(KeyClass key)
     throws IndexFullDeleteException 
     {
       KeyDataEntry  entry;
-      RID rid=new RID(); 
+      MID mid=new MID();
       
       
       try {
 	
-	entry = getFirst(rid);
+	entry = getFirst(mid);
 	
 	if (entry == null) 
 	  //it is supposed there is at least a record
@@ -127,17 +127,17 @@ public class BTIndexPage extends BTSortedPage{
 	
 	
 	while (BT.keyCompare(key, entry.key) > 0) {
-	  entry = getNext(rid );
+	  entry = getNext(mid );
 	  if (entry == null)
             break;
 	}
 	
-	if (entry == null) rid.slotNo--;
+	if (entry == null) mid.slotNo--;
 	else if (BT.keyCompare(key, entry.key) != 0)
-	  rid.slotNo--; // we want to delete the previous key
+	  mid.slotNo--; // we want to delete the previous key
 	
-	deleteSortedRecord(rid);
-	return rid;
+	deleteSortedRecord(mid);
+	return mid;
       }
       catch (Exception e) {
         throw new IndexFullDeleteException(e, "Full delelte failed"); 
@@ -184,21 +184,21 @@ public class BTIndexPage extends BTSortedPage{
   /**  Iterators. 
    * One of the two functions: getFirst and getNext
    * which  provide an iterator interface to the records on a BTIndexPage.
-   *@param rid It will be modified and the first rid in the index page
+   *@param mid It will be modified and the first rid in the index page
    * will be passed out by itself. Input and Output parameter. 
    *@return return the first KeyDataEntry in the index page.
    *null if NO MORE RECORD
    *@exception IteratorException  iterator error
    */
-  public KeyDataEntry getFirst(RID rid) 
+  public KeyDataEntry getFirst(MID mid)
     throws IteratorException
     {
       
       KeyDataEntry  entry; 
       
       try { 
-	rid.pageNo = getCurPage();
-	rid.slotNo = 0; // begin with first slot
+	mid.pageNo = getCurPage();
+	mid.slotNo = 0; // begin with first slot
 	
 	if ( getSlotCnt() == 0) {
 	  return null;
@@ -220,22 +220,22 @@ public class BTIndexPage extends BTSortedPage{
   /**Iterators.  
    * One of the two functions: get_first and get_next which  provide an
    * iterator interface to the records on a BTIndexPage.
-   *@param rid It will be modified and next rid will be passed out by itself.
+   *@param mid It will be modified and next rid will be passed out by itself.
    *         Input and Output parameter.
    *@return return the next KeyDataEntry in the index page. 
    *null if no more record
    *@exception IteratorException iterator error
    */
-  public KeyDataEntry getNext (RID rid)
+  public KeyDataEntry getNext (MID mid)
     throws  IteratorException 
     {
       KeyDataEntry  entry; 
       int i;
       try{
-	rid.slotNo++; //must before any return;
-	i=rid.slotNo;
+	mid.slotNo++; //must before any return;
+	i=mid.slotNo;
 	
-	if ( rid.slotNo >= getSlotCnt())
+	if ( mid.slotNo >= getSlotCnt())
 	  {
 	    return null;
 	  }
@@ -345,11 +345,11 @@ public class BTIndexPage extends BTSortedPage{
 	entry =  findKeyData( oldKey );
 	if (entry == null) return false;
 	
-	RID rid=deleteKey( entry.key );
-	if (rid==null) throw new IndexFullDeleteException(null, "Rid is null");
+	MID mid=deleteKey( entry.key );
+	if (mid==null) throw new IndexFullDeleteException(null, "Rid is null");
 	
-	rid=insertKey( newKey, ((IndexData)entry.data).getData());        
-	if (rid==null) throw new IndexFullDeleteException(null, "Rid is null");
+	mid=insertKey( newKey, ((IndexData)entry.data).getData());
+	if (mid==null) throw new IndexFullDeleteException(null, "Rid is null");
 	
 	return true;
       }
@@ -429,9 +429,9 @@ public class BTIndexPage extends BTSortedPage{
 	  }
 	  else {
             // get its sibling's first record's key 
-            RID dummyRid=new RID();
+            MID dummyMid=new MID();
             KeyDataEntry firstEntry, lastEntry;
-            firstEntry=indexPage.getFirst(dummyRid);
+            firstEntry=indexPage.getFirst(dummyMid);
             
             // get the entry pointing to the right sibling
 	    
@@ -451,11 +451,11 @@ public class BTIndexPage extends BTSortedPage{
             indexPage.setLeftLink(((IndexData)(lastEntry.data)).getData() );
 	    
             // delete the last record from the old page
-            RID delRid=new RID();
-            delRid.pageNo = getCurPage();
-            delRid.slotNo = getSlotCnt()-1;
+            MID delMid=new MID();
+            delMid.pageNo = getCurPage();
+            delMid.slotNo = getSlotCnt()-1;
 
-            if ( deleteSortedRecord(delRid) ==false )
+            if ( deleteSortedRecord(delMid) ==false )
                    throw new RedistributeException(null, "Delete record failed");
 
             // adjust the entry pointing to sibling in its parent
@@ -497,10 +497,10 @@ public class BTIndexPage extends BTSortedPage{
             setLeftLink(((IndexData)(firstEntry.data)).getData());
             
             // delete the first record 
-            RID delRid=new RID();
-            delRid.pageNo = getCurPage();
-            delRid.slotNo = 0;
-            if (deleteSortedRecord(delRid) == false )
+            MID delMid=new MID();
+            delMid.pageNo = getCurPage();
+            delMid.slotNo = 0;
+            if (deleteSortedRecord(delMid) == false )
 	      throw new RedistributeException(null, "delete record failed");
 	    
             // adjust the entry pointing to itself in its parent
