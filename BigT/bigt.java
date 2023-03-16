@@ -89,7 +89,7 @@ public class bigt {
 
     }
 
-    public MID insertMap(byte[] mapPtr){
+    public MID insertMap(byte[] mapPtr) throws SpaceNotAvailableException, HFDiskMgrException, HFException, InvalidSlotNumberException, InvalidTupleSizeException, HFBufMgrException, IOException {
 
         return heapfile.insertMap(mapPtr);
 
