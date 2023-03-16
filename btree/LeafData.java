@@ -4,6 +4,10 @@ import global.*;
 /**  IndexData: It extends the DataClass.
  *   It defines the data "rid" for leaf node in B++ tree.
  */
+/**
+ * @TODO
+ * Change to MID
+ */
 public class LeafData extends DataClass {
   private RID myRid;
 

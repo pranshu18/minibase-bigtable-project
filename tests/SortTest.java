@@ -2,11 +2,9 @@ package tests;
 
 import java.io.*; 
 import global.*;
-import bufmgr.*;
-import diskmgr.*;
 import heap.*;
 import iterator.*;
-import index.*;
+
 import java.util.Random;
 
 
@@ -176,7 +174,7 @@ class SORTDriver extends TestDriver
       }
       
       try {
-	rid = f.insertRecord(t.returnTupleByteArray());
+	rid = f.insertMap(t.returnTupleByteArray());
       }
       catch (Exception e) {
 	status = FAIL;
@@ -335,7 +333,7 @@ class SORTDriver extends TestDriver
       }
       
       try {
-	rid = f.insertRecord(t.returnTupleByteArray());
+	rid = f.insertMap(t.returnTupleByteArray());
       }
       catch (Exception e) {
 	status = FAIL;
@@ -509,7 +507,7 @@ class SORTDriver extends TestDriver
       }
 
       try {
-	rid = f.insertRecord(t.returnTupleByteArray());
+	rid = f.insertMap(t.returnTupleByteArray());
       }
       catch (Exception e) {
 	status = FAIL;
@@ -787,8 +785,8 @@ class SORTDriver extends TestDriver
       }
       
       try {
-	rid1 = f1.insertRecord(t.returnTupleByteArray());
-	rid2 = f2.insertRecord(t.returnTupleByteArray());
+	rid1 = f1.insertMap(t.returnTupleByteArray());
+	rid2 = f2.insertMap(t.returnTupleByteArray());
       }
       catch (Exception e) {
 	status = FAIL;

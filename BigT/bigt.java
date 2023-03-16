@@ -48,7 +48,7 @@ public class bigt {
     }
 
     //Requires the Stream class
-    public int getRowCnt() throws IOException {
+    public int getRowCnt() throws IOException, InvalidTupleSizeException, HFBufMgrException {
 
         Stream stream = this.openStream(1,"","","");
         MID mid = null;
@@ -69,7 +69,7 @@ public class bigt {
 
 
     //Requires the Stream class
-    public int getColumnCnt() throws IOException {
+    public int getColumnCnt() throws IOException, InvalidTupleSizeException, HFBufMgrException {
 
         Stream stream = this.openStream(1,"","","");
         MID mid = null;
@@ -79,7 +79,6 @@ public class bigt {
         HashSet noDupSet = new HashSet();
 
         while(map!=null){
-
 
             noDupSet.add(map.getColumnLabel());
             map = stream.getNext(mid);
@@ -91,7 +90,6 @@ public class bigt {
     }
 
     public MID insertMap(byte[] mapPtr){
-
 
         return heapfile.insertMap(mapPtr);
 
