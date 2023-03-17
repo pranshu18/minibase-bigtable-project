@@ -8,6 +8,7 @@ package catalog;
 
 import java.io.*;
 
+import BigT.Map;
 import global.*;
 import heap.*;
 import bufmgr.*;
@@ -130,7 +131,7 @@ public class IndexCatalog extends Heapfile
 	{
 	  try {
 	    tuple = pscan.getNext(rid);
-	    if (tuple == null) 
+	    if (tuple == null)
 	      throw new Catalogindexnotfound(null,
 					     "Catalog: Index not Found!");
 	    read_tuple(tuple, indexes[count]);
@@ -271,7 +272,7 @@ public class IndexCatalog extends Heapfile
 	{
 	  try {
 	    tuple = pscan.getNext(rid);
-	    if (tuple == null) 
+	    if (tuple == null)
 	      throw new Catalogindexnotfound(null,
 					     "Catalog: Index not Found!");
 	    read_tuple(tuple, indexes[count]);
@@ -378,7 +379,7 @@ public class IndexCatalog extends Heapfile
 	{
 	  try {
 	    tuple = pscan.getNext(rid);
-	    if (tuple == null) 
+	    if (tuple == null)
 	      throw new Catalogattrnotfound(null,
 					    "Catalog: Attribute not Found!");
 	    read_tuple(tuple, record);
@@ -607,7 +608,7 @@ public class IndexCatalog extends Heapfile
 	
 	if (accessType.indexType == IndexType.B_Index) {
 	  try {
-	    btree.insert(key, rid); 
+	    btree.insert(key, rid);
 	  }
 	  catch (Exception e) {
 	    throw new IndexCatalogException(e, "insert failed");	

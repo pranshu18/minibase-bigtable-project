@@ -76,7 +76,7 @@ public class BTIndexPage extends BTSortedPage{
   /** It inserts a <key, pageNo> value into the index page,
    *@key  the key value in <key, pageNO>. Input parameter. 
    *@pageNo the pageNo  in <key, pageNO>. Input parameter.
-   *@return It returns the rid where the record is inserted;
+   *@return It returns the mid where the record is inserted;
    null if no space left.
    *@exception IndexInsertRecException error when insert
    */
@@ -98,12 +98,12 @@ public class BTIndexPage extends BTSortedPage{
   
   /*  OPTIONAL: fullDeletekey 
    * This is optional, and is only needed if you want to do full deletion.
-   * Return its RID.  delete key may != key.  But delete key <= key,
+   * Return its mid.  delete key may != key.  But delete key <= key,
    * and the delete key is the first biggest key such that delete key <= key 
    *@param key the key used to search. Input parameter.
    *@exception IndexFullDeleteException if no record deleted or failed by
    * any reason
-   *@return  RID of the record deleted. Can not return null.
+   *@return  mid of the record deleted. Can not return null.
    */
   MID deleteKey(KeyClass key)
     throws IndexFullDeleteException 
@@ -184,7 +184,7 @@ public class BTIndexPage extends BTSortedPage{
   /**  Iterators. 
    * One of the two functions: getFirst and getNext
    * which  provide an iterator interface to the records on a BTIndexPage.
-   *@param mid It will be modified and the first rid in the index page
+   *@param mid It will be modified and the first mid in the index page
    * will be passed out by itself. Input and Output parameter. 
    *@return return the first KeyDataEntry in the index page.
    *null if NO MORE RECORD
@@ -220,7 +220,7 @@ public class BTIndexPage extends BTSortedPage{
   /**Iterators.  
    * One of the two functions: get_first and get_next which  provide an
    * iterator interface to the records on a BTIndexPage.
-   *@param mid It will be modified and next rid will be passed out by itself.
+   *@param mid It will be modified and next mid will be passed out by itself.
    *         Input and Output parameter.
    *@return return the next KeyDataEntry in the index page. 
    *null if no more record
@@ -346,10 +346,10 @@ public class BTIndexPage extends BTSortedPage{
 	if (entry == null) return false;
 	
 	MID mid=deleteKey( entry.key );
-	if (mid==null) throw new IndexFullDeleteException(null, "Rid is null");
+	if (mid==null) throw new IndexFullDeleteException(null, "Mid is null");
 	
 	mid=insertKey( newKey, ((IndexData)entry.data).getData());
-	if (mid==null) throw new IndexFullDeleteException(null, "Rid is null");
+	if (mid==null) throw new IndexFullDeleteException(null, "Mid is null");
 	
 	return true;
       }

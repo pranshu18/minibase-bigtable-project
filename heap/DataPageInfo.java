@@ -27,10 +27,6 @@ public class DataPageInfo implements GlobalConst{
     
   /** auxiliary fields of DataPageInfo */
 
-  /**
-   * @TODO
-   * verify this size is correct since maps have fixed size
-   */
   public static final int size = 12;// size of DataPageInfo object in bytes
 
   private byte [] data;  // a data buffer

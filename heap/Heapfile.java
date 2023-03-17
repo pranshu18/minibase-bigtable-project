@@ -83,13 +83,13 @@ public class Heapfile implements Filetype,  GlobalConst {
   
   /* Internal HeapFile function (used in getRecord and updateRecord):
      returns pinned directory page and pinned data page of the specified 
-     user record(rid) and true if record is found.
+     user record(mid) and true if record is found.
      If the user record cannot be found, return false.
   */
   private boolean  _findDataPage( MID mid,
 				  PageId dirPageId, HFPage dirpage,
 				  PageId dataPageId, HFPage datapage,
-				  MID rpDataPageRid)
+				  MID rpDataPageMid)
     throws InvalidSlotNumberException, 
 	   InvalidTupleSizeException, 
 	   HFException,
@@ -159,8 +159,8 @@ public class Heapfile implements Filetype,  GlobalConst {
 		  datapage.setpage(currentDataPage.getpage());
 		  dataPageId.pid = dpinfo.pageId.pid;
 		  
-		  rpDataPageRid.pageNo.pid = currentDataPageMid.pageNo.pid;
-		  rpDataPageRid.slotNo = currentDataPageMid.slotNo;
+		  rpDataPageMid.pageNo.pid = currentDataPageMid.pageNo.pid;
+		  rpDataPageMid.slotNo = currentDataPageMid.slotNo;
 		  return true;
 		}
 	      else
@@ -323,7 +323,7 @@ public class Heapfile implements Filetype,  GlobalConst {
 	   MID mid = new MID();
 	   Map aMap;
 	   for (mid = currentDirPage.firstRecord();
-	        mid != null;	// rid==NULL means no more record
+	        mid != null;	// mid==NULL means no more record
 	        mid = currentDirPage.nextRecord(mid))
 	     {
 	       aMap = currentDirPage.getRecord(mid);
@@ -350,7 +350,7 @@ public class Heapfile implements Filetype,  GlobalConst {
       return answer;
     } // end of getRecCnt
   
-  /** Insert record into file, return its Rid.
+  /** Insert record into file, return its mid.
    *
    * @param mapPtr pointer of the record
    *
@@ -362,7 +362,7 @@ public class Heapfile implements Filetype,  GlobalConst {
    * @exception HFDiskMgrException exception thrown from diskmgr layer
    * @exception IOException I/O errors
    *
-   * @return the rid of the record
+   * @return the mid of the record
    */
   public MID insertMap(byte[] mapPtr)
     throws InvalidSlotNumberException,  
@@ -461,7 +461,7 @@ public class Heapfile implements Filetype,  GlobalConst {
 		  byte [] tmpData = aMap.getMapByteArray();
 		  currentDataPageMid = currentDirPage.insertRecord(tmpData);
 		  
-		  MID tmprid = currentDirPage.firstRecord();
+		  MID tmpMid = currentDirPage.firstRecord();
 		  
 		  
 		  // need catch error here!
@@ -560,7 +560,7 @@ public class Heapfile implements Filetype,  GlobalConst {
       
       // ASSERTIONS:
       // - currentDirPageId, currentDirPage valid and pinned
-      // - dpinfo.pageId, currentDataPageRid valid
+      // - dpinfo.pageId, currentDataPagemid valid
       // - currentDataPage is pinned!
       
       if ((dpinfo.pageId).pid == INVALID_PAGE) // check error!
@@ -600,7 +600,7 @@ public class Heapfile implements Filetype,  GlobalConst {
       
     }
   
-  /** Delete record from file with given rid.
+  /** Delete record from file with given mid.
    *
    * @exception InvalidSlotNumberException invalid slot number
    * @exception InvalidTupleSizeException invalid tuple size
@@ -676,7 +676,7 @@ public class Heapfile implements Filetype,  GlobalConst {
 	  freePage(currentDataPageId);
 	  
 	  // delete corresponding DataPageInfo-entry on the directory page:
-	  // currentDataPageRid points to datapage (from for loop above)
+	  // currentDataPagemid points to datapage (from for loop above)
 	  
 	  currentDirPage.deleteRecord(currentDataPageMid);
 	  
@@ -787,11 +787,6 @@ public class Heapfile implements Filetype,  GlobalConst {
       
       // Assume update a record with a record whose length is equal to
       // the original record
-      /**
-       * @TODO
-	   * Double check if lenght isn't needed in MAP obj
-	   * commenting out if statement for now
-       */
       //if(newMap.getLength() != aMap.getLength()) {
 	  //unpinPage(currentDataPageId, false /*undirty*/);
 	  //unpinPage(currentDirPageId, false /*undirty*/);
@@ -850,7 +845,7 @@ public class Heapfile implements Filetype,  GlobalConst {
       aMap = dataPage.getRecord(mid);
       
       /*
-       * getRecord has copied the contents of rid into recPtr and fixed up
+       * getRecord has copied the contents of mid into recPtr and fixed up
        * recLen also.  We simply have to unpin dirpage and datapage which
        * were originally pinned by _findDataPage.
        */    

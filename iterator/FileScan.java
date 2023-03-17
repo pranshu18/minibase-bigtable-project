@@ -1,10 +1,10 @@
 package iterator;
    
 
+import BigT.Map;
 import heap.*;
 import global.*;
 import bufmgr.*;
-import diskmgr.*;
 
 
 import java.lang.*;
@@ -21,8 +21,8 @@ public class FileScan extends  Iterator
   private short[] s_sizes; 
   private Heapfile f;
   private Scan scan;
-  private Tuple     tuple1;
-  private Tuple    Jtuple;
+  private Map map1;
+  private Map JMap;
   private int        t1_size;
   private int nOutFlds;
   private CondExpr[]  OutputFilter;
@@ -52,31 +52,30 @@ public class FileScan extends  Iterator
 		    FldSpec[] proj_list,
 		    CondExpr[]  outFilter        		    
 		    )
-    throws IOException,
-	   FileScanException,
-	   TupleUtilsException, 
-	   InvalidRelation
-    {
+          throws IOException,
+          FileScanException,
+          TupleUtilsException,
+          InvalidRelation, MapUtilsException {
       _in1 = in1; 
       in1_len = len_in1;
       s_sizes = s1_sizes;
       
-      Jtuple =  new Tuple();
+      JMap =  new Map();
       AttrType[] Jtypes = new AttrType[n_out_flds];
       short[]    ts_size;
-      ts_size = TupleUtils.setup_op_tuple(Jtuple, Jtypes, in1, len_in1, s1_sizes, proj_list, n_out_flds);
+      ts_size = MapUtils.setup_op_map(JMap, s1_sizes);
       
       OutputFilter = outFilter;
       perm_mat = proj_list;
       nOutFlds = n_out_flds; 
-      tuple1 =  new Tuple();
+      map1 =  new Map();
 
       try {
-	tuple1.setHdr(in1_len, _in1, s1_sizes);
+	map1.setHdr(s1_sizes);
       }catch (Exception e){
 	throw new FileScanException(e, "setHdr() failed");
       }
-      t1_size = tuple1.size();
+      t1_size = map1.size();
       
       try {
 	f = new Heapfile(file_name);
@@ -114,7 +113,7 @@ public class FileScan extends  Iterator
    *@exception FieldNumberOutOfBoundException array out of bounds
    *@exception WrongPermat exception for wrong FldSpec argument
    */
-  public Tuple get_next()
+  public Map get_next()
     throws JoinsException,
 	   IOException,
 	   InvalidTupleSizeException,
@@ -125,17 +124,18 @@ public class FileScan extends  Iterator
 	   FieldNumberOutOfBoundException,
 	   WrongPermat
     {     
-      RID rid = new RID();;
+      MID mid = new MID();;
       
       while(true) {
-	if((tuple1 =  scan.getNext(rid)) == null) {
+	if((map1 =  scan.getNext(mid)) == null) {
 	  return null;
 	}
 	
-	tuple1.setHdr(in1_len, _in1, s_sizes);
-	if (PredEval.Eval(OutputFilter, tuple1, null, _in1, null) == true){
-	  Projection.Project(tuple1, _in1,  Jtuple, perm_mat, nOutFlds); 
-	  return  Jtuple;
+	map1.setHdr(s_sizes);
+	if (PredEval.Eval(OutputFilter, map1, null, _in1, null) == true){
+	  //Projection.Project(map1, _in1, JMap, perm_mat, nOutFlds);
+        JMap = map1;
+	  return JMap;
 	}        
       }
     }
