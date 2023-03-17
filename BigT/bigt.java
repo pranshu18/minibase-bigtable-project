@@ -105,7 +105,11 @@ public class bigt {
 
     }
 
-    public Heapfile heapfile() {
+    public int getType() {
+        return this.type;
+    }
+
+    public Heapfile heapfile(){
         return this.heapfile;
     }
 

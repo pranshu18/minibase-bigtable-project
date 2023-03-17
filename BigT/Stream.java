@@ -1,316 +1,128 @@
 package BigT;
 
-import diskmgr.Page;
-import global.*;
-import heap.*;
+import global.AttrOperator;
+import global.AttrType;
+import global.IndexType;
+import global.TupleOrder;
+import index.IndexScan;
+import iterator.*;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
+
+import static global.GlobalConst.MINIBASE_BUFFER_POOL_SIZE;
 
 public class Stream implements GlobalConst {
+    private bigt _bigt;
+    private FileScan filescanObject;
+    private IndexScan indexscanObject;
+    private Sort sorter;
 
-    private bigt bigtable;
-    private int orderType;
-    private String rowFilter, columnFilter, valueFilter;
+    public Stream(bigt bigtable, int orderType, String rowFilter, String columnFilter, String valueFilter) throws InvalidRelation, FileScanException, IOException, TupleUtilsException, MapUtilsException, SortException {
+        this._bigt = bigtable;
 
-    private PageId dirpageId = new PageId();
-    private HFPage dirpage = new HFPage();
-    private MID datapageMid = new MID();
-    private PageId datapageId = new PageId();
-    private HFPage datapage = new HFPage();
-    private MID userMid = new MID();
-    private boolean nextUserStatus;
+        AttrType[] attributes = {
+                new AttrType(AttrType.attrString),
+                new AttrType(AttrType.attrString),
+                new AttrType(AttrType.attrInteger),
+                new AttrType(AttrType.attrString)
+        };
 
-    public Stream(bigt bigtable, int orderType, String rowFilter, String columnFilter, String valueFilter) throws IOException, InvalidTupleSizeException, HFBufMgrException {
-        this.bigtable = bigtable;
-        this.orderType = orderType;
-        this.rowFilter = rowFilter;
-        this.columnFilter = columnFilter;
-        this.valueFilter = valueFilter;
-        firstDataPage();
+        short[] attributeSizes = {Map.STRING_ATTR_SIZE, Map.STRING_ATTR_SIZE, Map.INT_ATTR_SIZE, Map.STRING_ATTR_SIZE}; // attribute byte sizes
+
+        List<CondExpr> condExprs = new ArrayList<>(); // store all the condition expressions from the filters
+        List<CondExpr> indexExprs = new ArrayList<>(); // store all the index expressions from the filters
+
+        if(_bigt.getType() == 1 ||
+                (_bigt.getType() == 2 && emptyFilter(rowFilter)) ||
+                (_bigt.getType() == 3 && emptyFilter(columnFilter)) ||
+                (_bigt.getType() == 4 && (emptyFilter(rowFilter) || emptyFilter(columnFilter) || rangeFilter(rowFilter) || rangeFilter(columnFilter))) ||
+                (_bigt.getType() == 4 && (rangeFilter(rowFilter) || emptyFilter(rowFilter) || emptyFilter(valueFilter) || rangeFilter(columnFilter)))
+        ) {
+            parseFilter(condExprs, rowFilter, 1);
+            parseFilter(condExprs, columnFilter, 2);
+            parseFilter(condExprs, valueFilter, 4);
+
+            filescanObject = new FileScan(_bigt.name, attributes, attributeSizes, (short) 4, 4, (FldSpec[]) null, getCondExprArray(condExprs));
+            sorter = new Sort(attributes, (short) 4, attributeSizes, filescanObject, orderType, TupleOrder.Ascending, Map.STRING_ATTR_SIZE, MINIBASE_BUFFER_POOL_SIZE );
+
+        } else if(_bigt.getType() == 2) {
+            parseFilter(indexExprs, rowFilter, 1);
+            parseFilter(condExprs, columnFilter, 2);
+            parseFilter(condExprs, valueFilter, 4);
+
+            indexscanObject = new IndexScan(new IndexType(IndexType.Row_Index))
+
+        } else if(_bigt.getType() == 3) {
+
+
+        } else if(_bigt.getType() == 4) {
+
+
+        } else if(_bigt.getType() == 5) {
+
+
+        }
     }
 
-    public Map getNext(MID mid) throws InvalidTupleSizeException, IOException {
-        Map recmap = null;
+    private void parseFilter(List<CondExpr> condExprs , String filter, int fldno) {
+        if(emptyFilter(filter))
+            condExprs.add(null);
 
-        if (!nextUserStatus) {
-            nextDataPage();
-        }
+        else if(rangeFilter(filter)) {
+            filter = filter.substring(1, filter.length() - 1);
+            List<String> operands = new ArrayList<>();
 
-        if (datapage == null)
-            return null;
+            for(String operand: filter.split(","))
+                operands.add(operand.trim());
 
-        mid.pageNo.pid = userMid.pageNo.pid;
-        mid.slotNo = userMid.slotNo;
+            // [x, y] is basically two operands value >= x and value <= y
 
-        try {
-            recmap = datapage.getRecord(mid);
-        }
+            CondExpr greaterOperand = new CondExpr(
+                    new AttrOperator(AttrOperator.aopGE),
+                    new AttrType(AttrType.attrSymbol),
+                    new AttrType(AttrType.attrString),
+                    new FldSpec(new RelSpec(RelSpec.outer), fldno),
+                    operands.get(0));
 
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+            CondExpr lesserOperand = new CondExpr(
+                    new AttrOperator(AttrOperator.aopLE),
+                    new AttrType(AttrType.attrSymbol),
+                    new AttrType(AttrType.attrString),
+                    new FldSpec(new RelSpec(RelSpec.outer), fldno),
+                    operands.get(1));
 
-        assert recmap != null;
+            condExprs.add(greaterOperand);
+            condExprs.add(lesserOperand);
 
-        userMid = datapage.nextRecord(mid);
-        nextUserStatus = userMid != null;
-
-        if((this.rowFilter != null && !Objects.equals(recmap.getRowLabel(), this.rowFilter)) ||
-                (this.columnFilter != null && !Objects.equals(recmap.getColumnLabel(), this.columnFilter)) ||
-                (this.valueFilter != null && !Objects.equals(recmap.getValue(), this.valueFilter)))
-            return getNext(mid);
-
-        return recmap;
-    }
-
-    private boolean firstDataPage() throws InvalidTupleSizeException, IOException, HFBufMgrException {
-        DataPageInfo dpinfo;
-        Map recordMap = null;
-        Boolean bst;
-
-        dirpageId.pid = bigtable.heapfile()._firstDirPageId.pid;
-        nextUserStatus = true;
-
-        try {
-            dirpage = new HFPage();
-            pinPage(dirpageId, dirpage, false);
-        } catch (HFBufMgrException e) {
-            e.printStackTrace();
-        }
-
-        datapageMid = dirpage.firstRecord();
-
-        if(datapageMid != null) {
-            try {
-                recordMap = dirpage.getRecord(datapageMid);
-            } catch (InvalidSlotNumberException e) {
-                e.printStackTrace();
-            }
-
-            assert recordMap != null;
-            dpinfo = new DataPageInfo(recordMap);
-            datapageId.pid = dpinfo.pageId.pid;
         } else {
-            PageId nextDirPageId = dirpage.getNextPage();
-
-            if (nextDirPageId.pid != INVALID_PAGE) {
-                unpinPage(dirpageId, false);
-                dirpage = null;
-
-                try {
-                    dirpage = new HFPage();
-                    pinPage(nextDirPageId, dirpage, false);
-
-                } catch (HFBufMgrException e) {
-                    e.printStackTrace();
-                }
-
-                try {
-                    datapageMid = dirpage.firstRecord();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    datapageId.pid = INVALID_PAGE;
-                }
-
-                if (datapageMid != null) {
-                    try {
-                        recordMap = dirpage.getRecord(datapageMid);
-                    } catch (InvalidSlotNumberException e) {
-                        e.printStackTrace();
-                    }
-
-                    assert recordMap != null;
-                    dpinfo = new DataPageInfo(recordMap);
-                    datapageId.pid = dpinfo.pageId.pid;
-                } else {
-                    datapageId.pid = INVALID_PAGE;
-                }
-            } else {
-                datapageId.pid = INVALID_PAGE;
-            }
-
-        }
-        datapage = null;
-        try{
-            nextDataPage();
-        }
-
-	    catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return true;
-    }
-    private boolean nextDataPage() throws InvalidTupleSizeException, IOException {
-        DataPageInfo dpinfo;
-
-        PageId nextDirPageId;
-        Map recordmap = null;
-
-        if ((dirpage == null) && (datapageId.pid == INVALID_PAGE))
-            return false;
-
-        if (datapage == null) {
-            if (datapageId.pid == INVALID_PAGE) {
-                try{
-                    unpinPage(dirpageId, false);
-                    dirpage = null;
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                }
-
-            } else {
-
-                try {
-                    datapage  = new HFPage();
-                    pinPage(datapageId, datapage, false);
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                }
-
-                try {
-                    userMid = datapage.firstRecord();
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                return true;
-            }
-        }
-
-        try{
-            unpinPage(datapageId, false /* no dirty */);
-            datapage = null;
-        }
-        catch (Exception e){
-
-        }
-
-
-        if (dirpage == null) {
-            return false;
-        }
-
-        datapageMid = dirpage.nextRecord(datapageMid);
-
-        if (datapageMid == null) {
-
-            nextDirPageId = dirpage.getNextPage();
-
-            try {
-                unpinPage(dirpageId, false /* not dirty */);
-                dirpage = null;
-
-                datapageId.pid = INVALID_PAGE;
-            }
-
-            catch (Exception e) {
-
-            }
-
-            if (nextDirPageId.pid == INVALID_PAGE)
-                return false;
-            else {
-                dirpageId = nextDirPageId;
-
-                try {
-                    dirpage  = new HFPage();
-                    pinPage(dirpageId, (Page)dirpage, false);
-                }
-
-                catch (Exception e){
-
-                }
-
-                if (dirpage == null)
-                    return false;
-
-                try {
-                    datapageMid = dirpage.firstRecord();
-                }
-                catch (Exception e){
-                    return false;
-                }
-            }
-        }
-        try {
-            recordmap = dirpage.getRecord(datapageMid);
-        }
-
-        catch (Exception e) {
-            System.err.println("HeapFile: Error in Scan" + e);
-        }
-
-        assert recordmap != null;
-
-        dpinfo = new DataPageInfo(recordmap);
-        datapageId.pid = dpinfo.pageId.pid;
-
-        try {
-            datapage = new HFPage();
-            pinPage(dpinfo.pageId, (Page) datapage, false);
-        }
-
-        catch (Exception e) {
-            System.err.println("HeapFile: Error in Scan" + e);
-        }
-
-        userMid = datapage.firstRecord();
-
-        if(userMid == null)
-        {
-            nextUserStatus = false;
-            return false;
-        }
-
-        return true;
-    }
-
-    private void pinPage(PageId pageId, Page page, boolean emptyPage) throws HFBufMgrException {
-        try {
-            SystemDefs.JavabaseBM.pinPage(pageId, page, emptyPage);
-        } catch (Exception e) {
-            throw new HFBufMgrException(e,"Scan.java: pinPage() failed");
+            // an equality expression with no range
+            CondExpr expr = new CondExpr(
+                    new AttrOperator(AttrOperator.aopEQ),
+                    new AttrType(AttrType.attrSymbol),
+                    new AttrType(AttrType.attrString),
+                    new FldSpec(new RelSpec(RelSpec.outer), fldno),
+                    filter);
+            condExprs.add(expr);
         }
     }
 
-    private void unpinPage(PageId pageno, boolean dirty) throws HFBufMgrException {
-        try {
-            SystemDefs.JavabaseBM.unpinPage(pageno, dirty);
-        }
-        catch (Exception e) {
-            throw new HFBufMgrException(e,"Scan.java: unpinPage() failed");
-        }
-
+    private boolean emptyFilter(String filter) {
+        return filter == null || filter.isEmpty() || filter.equals("*");
     }
 
+    private boolean rangeFilter(String filter) {
+        return filter.charAt(0) == '[' && filter.charAt(filter.length() - 1) == ']';
+    }
 
-    public void closestream() {
-        if (datapage != null) {
-            try{
-                unpinPage(datapageId, false);
-            }
-            catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-        datapageId.pid = 0;
-        datapage = null;
+    private CondExpr[] getCondExprArray(List<CondExpr> condExprs) {
+        CondExpr[] condExprsArr = new CondExpr[condExprs.size()];
+        int i = 0;
 
-        if (dirpage != null) {
+        for(i = 0; i < condExprs.size(); i++)
+            condExprsArr[i] = condExprs.get(i);
 
-            try{
-                unpinPage(dirpageId, false);
-            }
-            catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-        dirpage = null;
-        nextUserStatus = true;
+        return condExprsArr;
     }
 }

@@ -47,5 +47,21 @@ public class CondExpr {
     
     next = null;
   }
+
+  public CondExpr(AttrOperator attrOperator, AttrType type1, AttrType type2, FldSpec operand1Symbol, String operand2String) {
+    operand1 = new Operand();
+    operand2 = new Operand();
+
+    operand1.integer = 0;
+    operand2.integer = 0;
+
+    this.op = attrOperator;
+    this.type1 = type1;
+    this.type2 = type2;
+    this.operand1.symbol = operand1Symbol;
+    this.operand2.string = operand2String;
+
+    next = null;
+  }
 }
 
