@@ -3,12 +3,32 @@
 package diskmgr;
 
 import java.io.*;
+
+import BigT.bigt;
+import btree.AddFileEntryException;
+import btree.BTreeFile;
+import btree.ConstructPageException;
+import btree.DeleteFileEntryException;
+import btree.FreePageException;
+import btree.GetFileEntryException;
+import btree.IteratorException;
+import btree.PinPageException;
+import btree.UnpinPageException;
 import bufmgr.*;
 import global.*;
+import heap.HFBufMgrException;
+import heap.HFDiskMgrException;
+import heap.HFException;
+import heap.InvalidTypeException;
+import iterator.FileScanException;
+import iterator.InvalidRelation;
+import iterator.TupleUtilsException;
 
 public class bigDB implements GlobalConst {
 
     private static final int bits_per_page = MAX_SPACE * 8;
+    private int indexType;
+    bigt b = null;
 
     /**
      * Open the database with the given name.
@@ -52,8 +72,29 @@ public class bigDB implements GlobalConst {
     public bigDB() {
     }
 
-    public bigDB(int type) {
+    public bigDB(int type) throws HFException, HFBufMgrException, HFDiskMgrException, GetFileEntryException,
+            ConstructPageException, AddFileEntryException, IOException, FileScanException, TupleUtilsException,
+            InvalidRelation, InvalidTypeException {
+        this.indexType = type;
+    }
 
+    public void destroyIndex()
+            throws GetFileEntryException, ConstructPageException, AddFileEntryException, IOException, IteratorException,
+            UnpinPageException, FreePageException, DeleteFileEntryException, PinPageException {
+        if (b.type == 2 || b.type == 3) {
+            b._bf0 = new BTreeFile(b.name + "Index0", AttrType.attrString, 22, 1);
+        } else {
+            b._bf0 = new BTreeFile(b.name + "Index0", AttrType.attrString, 44, 1);
+            b._bf1 = new BTreeFile(b.name + "Index1", AttrType.attrInteger, 4, 1);
+        }
+        b._bftemp = new BTreeFile(b.name + "Temp", AttrType.attrString, 64, 1);
+        if (b.type != 1 && b._bf0 != null)
+            b._bf0.destroyFile();
+        if ((b.type == 4 || b.type == 5) && b._bf1 != null && b.type != 1)
+            b._bf1.destroyFile();
+
+        if (b._bftemp != null)
+            b._bftemp.destroyFile();
     }
 
     /**
