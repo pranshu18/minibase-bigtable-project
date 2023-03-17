@@ -4,7 +4,7 @@ import global.AttrType;
 import global.Convert;
 import heap.InvalidTupleSizeException;
 import heap.InvalidTypeException;
-
+import global.MID;
 import java.io.IOException;
 
 import static global.GlobalConst.MINIBASE_PAGESIZE;
@@ -19,7 +19,11 @@ public class Map {
 
     private int data_offset;
 
+    //Assigning a MID identifier to each map
+    private MID mid;
+
     public static final int max_size = MINIBASE_PAGESIZE;
+
 
     public Map(){
         data = new byte[max_size];
@@ -245,6 +249,14 @@ public class Map {
         }
 
         return newFldOffset;
+    }
+
+    public MID getMid() {
+        return mid;
+    }
+
+    public void setMid(MID mid) {
+        this.mid = mid;
     }
 
 }
