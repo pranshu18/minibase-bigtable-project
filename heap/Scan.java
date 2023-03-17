@@ -10,7 +10,6 @@ import java.io.*;
 
 import BigT.Map;
 import global.*;
-import bufmgr.*;
 import diskmgr.*;
 
 
@@ -42,7 +41,7 @@ public class Scan implements GlobalConst{
     /** record ID of the DataPageInfo struct (in the directory page) which
      * describes the data page where our current record lives.
      */
-    private MID datapageRid = new MID();
+    private MID datapageMid = new MID();
 
     /** the actual PageId of the data page with the current record */
     private PageId datapageId = new PageId();
@@ -51,7 +50,7 @@ public class Scan implements GlobalConst{
     private HFPage datapage = new HFPage();
 
     /** record ID of the current record (from the current data page) */
-    private MID userrid = new MID();
+    private MID userMid = new MID();
 
     /** Status of next user status */
     private boolean nextUserStatus;
@@ -96,8 +95,8 @@ public class Scan implements GlobalConst{
     if (datapage == null)
       return null;
     
-    mid.pageNo.pid = userrid.pageNo.pid;
-    mid.slotNo = userrid.slotNo;
+    mid.pageNo.pid = userMid.pageNo.pid;
+    mid.slotNo = userMid.slotNo;
          
     try {
       recptrMap = datapage.getRecord(mid);
@@ -108,15 +107,15 @@ public class Scan implements GlobalConst{
       e.printStackTrace();
     }   
     
-    userrid = datapage.nextRecord(mid);
-    if(userrid == null) nextUserStatus = false;
+    userMid = datapage.nextRecord(mid);
+    if(userMid == null) nextUserStatus = false;
     else nextUserStatus = true;
      
     return recptrMap;
   }
 
 
-    /** Position the scan cursor to the record with the given rid.
+    /** Position the scan cursor to the record with the given mid.
      * 
      * @exception InvalidTupleSizeException Invalid tuple size
      * @exception IOException I/O errors
@@ -160,14 +159,14 @@ public class Scan implements GlobalConst{
     // Now we are on the correct page.
     
     try{
-    	userrid = datapage.firstRecord();
+    	userMid = datapage.firstRecord();
 	}
     catch (Exception e) {
       e.printStackTrace();
     }
 	
 
-    if (userrid == null)
+    if (userMid == null)
       {
     	bst = false;
         return bst;
@@ -268,13 +267,13 @@ public class Scan implements GlobalConst{
 	}
     
     /** now try to get a pointer to the first datapage */
-	 datapageRid = dirpage.firstRecord();
+	 datapageMid = dirpage.firstRecord();
 	 
-    	if (datapageRid != null) {
+    	if (datapageMid != null) {
     /** there is a datapage record on the first directory page: */
 	
 	try {
-          recMap = dirpage.getRecord(datapageRid);
+          recMap = dirpage.getRecord(datapageMid);
 	}  
 				
 	catch (Exception e) {
@@ -323,7 +322,7 @@ public class Scan implements GlobalConst{
 	/** now try again to read a data record: */
 	
 	try {
-	  datapageRid = dirpage.firstRecord();
+	  datapageMid = dirpage.firstRecord();
 	}
         
 	catch (Exception e) {
@@ -332,11 +331,11 @@ public class Scan implements GlobalConst{
 	  datapageId.pid = INVALID_PAGE;
 	}
        
-	if(datapageRid != null) {
+	if(datapageMid != null) {
           
 	  try {
 	  
-	    recMap = dirpage.getRecord(datapageRid);
+	    recMap = dirpage.getRecord(datapageMid);
 	  }
 	  
 	  catch (Exception e) {
@@ -344,11 +343,6 @@ public class Scan implements GlobalConst{
 	    e.printStackTrace();
 	  }
 
-        /**
-         * @TODO
-         * verify if this is needed since Map has set size
-         * commenting out for now
-         */
 	  //if (recMap.getLength() != DataPageInfo.size)
 	    //return false;
 	  
@@ -385,7 +379,7 @@ public class Scan implements GlobalConst{
        * - if heapfile empty:
        *    - this->datapage == NULL, this->datapageId==INVALID_PAGE
        * - if heapfile nonempty:
-       *    - this->datapage == NULL, this->datapageId, this->datapageRid valid
+       *    - this->datapage == NULL, this->datapageId, this->datapagemid valid
        *    - first datapage is not yet pinned
        */
     
@@ -415,10 +409,10 @@ public class Scan implements GlobalConst{
   //    - this->datapage==NULL; this->datapageId == INVALID_PAGE
   // (2) if overall first record in heapfile:
   //    - this->datapage==NULL, but this->datapageId valid
-  //    - this->datapageRid valid
+  //    - this->datapagemid valid
   //    - current data page unpinned !!!
   // (3) if somewhere in heapfile
-  //    - this->datapageId, this->datapage, this->datapageRid valid
+  //    - this->datapageId, this->datapage, this->datapagemid valid
   //    - current data page pinned
   // (4)- if the scan had already been done,
   //        dirpage = NULL;  datapageId = INVALID_PAGE
@@ -451,7 +445,7 @@ public class Scan implements GlobalConst{
 	}
 	
 	try {
-	  userrid = datapage.firstRecord();
+	  userMid = datapage.firstRecord();
 	}
 	catch (Exception e) {
 	  e.printStackTrace();
@@ -462,7 +456,7 @@ public class Scan implements GlobalConst{
     }
   
   // ASSERTIONS:
-  // - this->datapage, this->datapageId, this->datapageRid valid
+  // - this->datapage, this->datapageId, this->datapagemid valid
   // - current datapage pinned
 
     // unpin the current datapage
@@ -481,9 +475,9 @@ public class Scan implements GlobalConst{
       return false;
     }
     
-    datapageRid = dirpage.nextRecord(datapageRid);
+    datapageMid = dirpage.nextRecord(datapageMid);
     
-    if (datapageRid == null) {
+    if (datapageMid == null) {
       nextDataPageStatus = false;
       // we have read all datapage records on the current directory page
       
@@ -523,7 +517,7 @@ public class Scan implements GlobalConst{
 	  return false;
 	
     	try {
-	  datapageRid = dirpage.firstRecord();
+	  datapageMid = dirpage.firstRecord();
 	  nextDataPageStatus = true;
 	}
 	catch (Exception e){
@@ -537,23 +531,18 @@ public class Scan implements GlobalConst{
     // - this->dirpageId, this->dirpage valid
     // - this->dirpage pinned
     // - the new datapage to be read is on dirpage
-    // - this->datapageRid has the Rid of the next datapage to be read
+    // - this->datapagemid has the mid of the next datapage to be read
     // - this->datapage, this->datapageId invalid
   
     // data page is not yet loaded: read its record from the directory page
    	try {
-	  recMap = dirpage.getRecord(datapageRid);
+	  recMap = dirpage.getRecord(datapageMid);
 	}
 	
 	catch (Exception e) {
 	  System.err.println("HeapFile: Error in Scan" + e);
 	}
 
-      /**
-       * @TODO
-       * verify if this is needed since Map has set size
-       * commenting out for now
-       */
 	//if (recMap.getLength() != DataPageInfo.size)
 	  //return false;
                         
@@ -573,11 +562,11 @@ public class Scan implements GlobalConst{
      // - directory page is pinned
      // - datapage is pinned
      // - this->dirpageId, this->dirpage correct
-     // - this->datapageId, this->datapage, this->datapageRid correct
+     // - this->datapageId, this->datapage, this->datapagemid correct
 
-     userrid = datapage.firstRecord();
+     userMid = datapage.firstRecord();
      
-     if(userrid == null)
+     if(userMid == null)
      {
        nextUserStatus = false;
        return false;
@@ -589,15 +578,15 @@ public class Scan implements GlobalConst{
 
   private boolean peekNext(MID mid) {
     
-    mid.pageNo.pid = userrid.pageNo.pid;
-    mid.slotNo = userrid.slotNo;
+    mid.pageNo.pid = userMid.pageNo.pid;
+    mid.slotNo = userMid.slotNo;
     return true;
     
   }
 
 
   /** Move to the next record in a sequential scan.
-   * Also returns the RID of the (new) current record.
+   * Also returns the mid of the (new) current record.
    */
   private boolean mvNext(MID mid)
     throws InvalidTupleSizeException,
@@ -612,16 +601,16 @@ public class Scan implements GlobalConst{
     	nextMid = datapage.nextRecord(mid);
 	
 	if( nextMid != null ){
-	  userrid.pageNo.pid = nextMid.pageNo.pid;
-	  userrid.slotNo = nextMid.slotNo;
+	  userMid.pageNo.pid = nextMid.pageNo.pid;
+	  userMid.slotNo = nextMid.slotNo;
 	  return true;
 	} else {
 	  
 	  status = nextDataPage();
 
 	  if (status==true){
-	    mid.pageNo.pid = userrid.pageNo.pid;
-	    mid.slotNo = userrid.slotNo;
+	    mid.pageNo.pid = userMid.pageNo.pid;
+	    mid.slotNo = userMid.slotNo;
 	  }
 	
 	}

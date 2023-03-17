@@ -61,10 +61,9 @@ public class IndexScan extends Iterator {
     AttrType[] Jtypes = new AttrType[noOutFlds];
     short[] ts_sizes;
     JMap = new Map();
-      /**
-       * @TODO
-       * not sure what to change here
-       */
+
+    //Not needed for Map type classes
+    /*
     try {
       ts_sizes = TupleUtils.setup_op_tuple(JMap, Jtypes, types, noInFlds, str_sizes, outFlds, noOutFlds);
     }
@@ -74,6 +73,7 @@ public class IndexScan extends Iterator {
     catch (InvalidRelation e) {
       throw new IndexException(e, "IndexScan.java: InvalidRelation caught from TupleUtils.setup_op_tuple()");
     }
+     */
      
     _selects = selects;
     perm_mat = outFlds;
@@ -135,11 +135,6 @@ public class IndexScan extends Iterator {
    * @exception UnknownKeyTypeException key type unknown
    * @exception IOException from the lower layer
    */
-    /**
-     *
-     * @TODO
-     * how to handle different types in Map?
-     */
   public Map get_next()
     throws IndexException, 
 	   UnknownKeyTypeException,
@@ -162,28 +157,7 @@ public class IndexScan extends Iterator {
 
 	AttrType[] attrType = new AttrType[1];
 	short[] s_sizes = new short[1];
-	
-	if (_types[_fldNum -1].attrType == AttrType.attrInteger) {
-	  attrType[0] = new AttrType(AttrType.attrInteger);
-	  try {
-	    JMap.setHdr(s_sizes);
-	  }
-	  catch (Exception e) {
-	    throw new IndexException(e, "IndexScan.java: Heapfile error");
-	  }
-	  
-	  try {
-          /**
-           * @TODO
-           * what map metod would I use here?
-            */
-	    JMap.setIntFld(1, ((IntegerKey)nextentry.key).getKey().intValue());
-	  }
-	  catch (Exception e) {
-	    throw new IndexException(e, "IndexScan.java: Heapfile error");
-	  }	  
-	}
-	else if (_types[_fldNum -1].attrType == AttrType.attrString) {
+	JMap = new Map();
 	  
 	  attrType[0] = new AttrType(AttrType.attrString);
 	  // calculate string size of _fldNum
@@ -202,21 +176,12 @@ public class IndexScan extends Iterator {
 	  }
 	  
 	  try {
-          /**
-           * @TODO
-           * what map metod would I use here?
-           */
-          JMap.setStrFld(1, ((StringKey)nextentry.key).getKey());
+          JMap.setValue(((StringKey)nextentry.key).getKey());
 	  }
 	  catch (Exception e) {
 	    throw new IndexException(e, "IndexScan.java: Heapfile error");
-	  }	  
-	}
-	else {
-	  // attrReal not supported for now
-	  throw new UnknownKeyTypeException("Only Integer and String keys are supported so far"); 
-	}
-	return JMap;
+	  }
+	    return JMap;
       }
       
       // not index_only, need to return the whole tuple
@@ -246,7 +211,8 @@ public class IndexScan extends Iterator {
       if (eval) {
 	// need projection.java
 	try {
-	  Projection.Project(map1, _types, JMap, perm_mat, _noOutFlds);
+        JMap = map1;
+	  //Projection.Project(map1, _types, JMap, perm_mat, _noOutFlds);
 	}
 	catch (Exception e) {
 	  throw new IndexException(e, "IndexScan.java: Heapfile error");

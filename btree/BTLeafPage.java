@@ -14,7 +14,7 @@ import heap.*;
 
 /**
  * A BTLeafPage is a leaf page on a B+ tree.  It holds abstract 
- * <key, RID> pairs; it doesn't know anything about the keys 
+ * <key, MID> pairs; it doesn't know anything about the keys
  * (their lengths or their types), instead relying on the abstract
  * interface consisting of BT.java.
  */
@@ -72,23 +72,20 @@ public class BTLeafPage extends BTSortedPage {
 
   
   /** insertRecord
-   * READ THIS DESCRIPTION CAREFULLY. THERE ARE TWO RIDs
+   * READ THIS DESCRIPTION CAREFULLY. THERE ARE TWO MIDs
    * WHICH MEAN TWO DIFFERENT THINGS.
-   * Inserts a key, rid value into the leaf node. This is
+   * Inserts a key, mid value into the leaf node. This is
    * accomplished by a call to SortedPage::insertRecord()
    *  Parameters:
    *@param key - the key value of the data record. Input parameter.
-   *@param dataMid - the rid of the data record. This is
+   *@param dataMid - the mid of the data record. This is
    *               stored on the leaf page along with the
    *               corresponding key value. Input parameter.
    *
-   *@return - the rid of the inserted leaf record data entry,
-   *           i.e., the <key, dataRid> pair.
+   *@return - the mid of the inserted leaf record data entry,
+   *           i.e., the <key, datamid> pair.
    *@exception  LeafInsertRecException error when insert
    *
-   * @TODO
-   * Change KeyData Entry Method
-   */
   public MID insertRecord(KeyClass key, MID dataMid)
     throws  LeafInsertRecException
     {
@@ -108,7 +105,7 @@ public class BTLeafPage extends BTSortedPage {
   /**  Iterators. 
    * One of the two functions: getFirst and getNext
    * which  provide an iterator interface to the records on a BTLeafPage.
-   *@param mid It will be modified and the first rid in the leaf page
+   *@param mid It will be modified and the first mid in the leaf page
    * will be passed out by itself. Input and Output parameter.
    *@return return the first KeyDataEntry in the leaf page.
    * null if no more record
@@ -142,7 +139,7 @@ public class BTLeafPage extends BTSortedPage {
    /**Iterators.  
     * One of the two functions: getFirst and getNext which  provide an
     * iterator interface to the records on a BTLeafPage.
-    *@param mid It will be modified and the next rid will be passed out
+    *@param mid It will be modified and the next mid will be passed out
     *by itself. Input and Output parameter.
     *@return return the next KeyDataEntry in the leaf page. 
     *null if no more record.
@@ -178,7 +175,7 @@ public class BTLeafPage extends BTSortedPage {
   /**
    * getCurrent returns the current record in the iteration; it is like
    * getNext except it does not advance the iterator.
-   *@param mid  the current rid. Input and Output parameter. But
+   *@param mid  the current mid. Input and Output parameter. But
    *    Output=Input.
    *@return return the current KeyDataEntry
    *@exception  IteratorException iterator error

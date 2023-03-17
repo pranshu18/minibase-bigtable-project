@@ -329,11 +329,11 @@ public class HFPage extends Page
   
   
   /**
-   * inserts a new record onto the page, returns RID of this record 
+   * inserts a new record onto the page, returns MID of this record
    * @param	record 	a record to be inserted
-   * @return	RID of record, null if sufficient space does not exist
+   * @return	MID of record, null if sufficient space does not exist
    * @exception IOException I/O errors
-   * in C++ Status insertRecord(char *recPtr, int recLen, RID& rid)
+   * in C++ Status insertRecord(char *recPtr, int recLen, MID& mid)
    */
   public MID insertRecord ( byte [] record)
     throws IOException
@@ -397,11 +397,11 @@ public class HFPage extends Page
     } 
   
   /**
-   * delete the record with the specified rid
+   * delete the record with the specified mid
    * @param	mid 	the record ID
    * @exception	InvalidSlotNumberException Invalid slot number
    * @exception IOException I/O errors
-   * in C++ Status deleteRecord(const RID& rid)
+   * in C++ Status deleteRecord(const MID& mid)
    */
   public void deleteRecord ( MID mid )
     throws IOException,  
@@ -460,9 +460,9 @@ public class HFPage extends Page
     }
   
   /**
-   * @return RID of first record on page, null if page contains no records.  
+   * @return MID of first record on page, null if page contains no records.
    * @exception  IOException I/O errors
-   * in C++ Status firstRecord(RID& firstRid)
+   * in C++ Status firstRecord(MID& firstmid)
    * 
    */ 
   public MID firstRecord()
@@ -496,11 +496,11 @@ public class HFPage extends Page
     }
   
   /**
-   * @return RID of next record on the page, null if no more 
+   * @return MID of next record on the page, null if no more
    * records exist on the page
    * @param    curMID    current record ID
    * @exception  IOException I/O errors
-   * in C++ Status nextRecord (RID curRid, RID& nextRid)
+   * in C++ Status nextRecord (MID curmid, MID& nextmid)
    */
   public MID nextRecord (MID curMID) throws IOException
     {
@@ -530,9 +530,9 @@ public class HFPage extends Page
     }
   
   /**
-   * copies out record with RID rid into record pointer.
+   * copies out record with MID mid into record pointer.
    * <br>
-   * Status getRecord(RID rid, char *recPtr, int& recLen)
+   * Status getRecord(MID mid, char *recPtr, int& recLen)
    * @param    mid    the record ID
    * @return 	a map containing the record
    * @exception   InvalidSlotNumberException Invalid slot number
@@ -572,9 +572,9 @@ public class HFPage extends Page
     }
   
   /**
-   * returns a tuple in a byte array[pageSize] with given RID rid.
+   * returns a tuple in a byte array[pageSize] with given MID mid.
    * <br>
-   * in C++	Status returnRecord(RID rid, char*& recPtr, int& recLen)
+   * in C++	Status returnRecord(MID mid, char*& recPtr, int& recLen)
    * @param       mid     the record ID
    * @return      a tuple  with its length and offset in the byte array
    * @exception   InvalidSlotNumberException Invalid slot number
@@ -649,7 +649,7 @@ public class HFPage extends Page
   
   /**
    * Compacts the slot directory on an HFPage.
-   * WARNING -- this will probably lead to a change in the RIDs of
+   * WARNING -- this will probably lead to a change in the MIDs of
    * records on the page.  You CAN'T DO THIS on most kinds of pages.
    * @exception  IOException I/O errors
    */

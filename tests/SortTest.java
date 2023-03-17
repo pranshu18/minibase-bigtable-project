@@ -1,6 +1,6 @@
 package tests;
 
-import java.io.*; 
+import java.io.*;
 import global.*;
 import heap.*;
 import iterator.*;

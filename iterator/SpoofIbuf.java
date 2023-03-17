@@ -1,6 +1,7 @@
 package iterator;
 
-import heap.*;          
+import BigT.Map;
+import heap.*;
 import global.*;
 import diskmgr.*;
 import bufmgr.*;
@@ -119,19 +120,19 @@ public class SpoofIbuf implements GlobalConst  {
   private int readin()throws IOException,InvalidTupleSizeException
     {
       int   t_read = 0, tot_read = 0;
-      Tuple t      = new Tuple ();
-      byte[] t_copy;
+      Map m      = new Map ();
+      byte[] m_copy;
       
       curr_page = 0;
       while (curr_page < _n_pages)
 	{
 	  while (t_read < t_per_pg)
 	    {
-	      RID rid =new RID();
+	      MID mid =new MID();
 	      try {
-		if ( (t = hf_scan.getNext(rid)) == null) return tot_read;
-		t_copy = t.getTupleByteArray();
-		System.arraycopy(t_copy,0,_bufs[curr_page],t_read*t_size,t_size); 
+		if ( (m = hf_scan.getNext(mid)) == null) return tot_read;
+		m_copy = m.getMapByteArray();
+		System.arraycopy(m_copy,0,_bufs[curr_page],t_read*t_size,t_size);
 	      }
 	      catch (Exception e) {
 		System.err.println (""+e);
