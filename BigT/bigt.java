@@ -123,6 +123,7 @@ public class bigt {
 
             map_it = stream.getNext(stream_mid);
         }
+        stream.closestream();
 
         return mid;
     }
