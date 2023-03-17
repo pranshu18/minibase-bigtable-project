@@ -3,12 +3,26 @@
 package diskmgr;
 
 import java.io.*;
+
+import BigT.bigt;
+import btree.AddFileEntryException;
+import btree.ConstructPageException;
+import btree.GetFileEntryException;
 import bufmgr.*;
 import global.*;
+import heap.HFBufMgrException;
+import heap.HFDiskMgrException;
+import heap.HFException;
+import heap.InvalidTypeException;
+import iterator.FileScanException;
+import iterator.InvalidRelation;
+import iterator.TupleUtilsException;
 
 public class bigDB implements GlobalConst {
 
     private static final int bits_per_page = MAX_SPACE * 8;
+    private int indexType;
+    private bigt b = null;
 
     /**
      * Open the database with the given name.
@@ -52,8 +66,10 @@ public class bigDB implements GlobalConst {
     public bigDB() {
     }
 
-    public bigDB(int type) {
-
+    public bigDB(int type) throws HFException, HFBufMgrException, HFDiskMgrException, GetFileEntryException,
+            ConstructPageException, AddFileEntryException, IOException, FileScanException, TupleUtilsException,
+            InvalidRelation, InvalidTypeException {
+        this.indexType = type;
     }
 
     /**
