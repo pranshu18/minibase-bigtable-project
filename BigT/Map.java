@@ -17,6 +17,9 @@ public class Map {
 
     private short [] fldOffset;
 
+    public static final int STRING_ATTR_SIZE = 22;
+    public static final int INT_ATTR_SIZE = 4;
+
     private int data_offset;
 
     //Assigning a MID identifier to each map

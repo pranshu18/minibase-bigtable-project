@@ -4,12 +4,10 @@ import global.AttrType;
 import global.MID;
 import global.MapMidPair;
 import heap.*;
-import iterator.FileScan;
-import iterator.FileScanException;
-import iterator.InvalidRelation;
-import iterator.JoinsException;
-import iterator.PredEvalException;
-import iterator.UnknowAttrType;
+import index.IndexException;
+import index.InvalidSelectionException;
+import index.UnknownIndexTypeException;
+import iterator.*;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -105,7 +103,11 @@ public class bigt {
 
     }
 
-    public Heapfile heapfile() {
+    public int getType() {
+        return this.type;
+    }
+
+    public Heapfile heapfile(){
         return this.heapfile;
     }
 
@@ -296,7 +298,7 @@ public class bigt {
     // Requires the Stream class
     Stream openStream(int orderType, java.lang.String rowFilter,
             java.lang.String columnFilter, java.lang.String valueFilter)
-            throws IOException, InvalidTupleSizeException, HFBufMgrException {
+            throws IOException, InvalidTupleSizeException, HFBufMgrException, IteratorException, ConstructPageException, InvalidRelation, IndexException, FileScanException, GetFileEntryException, PinPageException, MapUtilsException, UnknownIndexTypeException, InvalidSelectionException, UnpinPageException, SortException, UnknownKeyTypeException, KeyNotMatchException, TupleUtilsException, InvalidTypeException {
 
         // placeholder constructor
         return new Stream(this, orderType, rowFilter, columnFilter, valueFilter);

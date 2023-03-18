@@ -25,7 +25,7 @@ public class IndexScan extends Iterator {
    * @param noInFlds number of fields in input tuple
    * @param noOutFlds number of fields in output tuple
    * @param outFlds fields to project
-   * @param selects conditions to apply, first one is primary
+   * @param indexFilters conditions to apply, first one is primary
    * @param fldNum field number of the indexed field
    * @param indexOnly whether the answer requires only the key or the tuple
    * @exception IndexException error from the lower layer
@@ -43,16 +43,16 @@ public class IndexScan extends Iterator {
 	   int           noInFlds,          
 	   int           noOutFlds,         
 	   FldSpec       outFlds[],     
-	   CondExpr      selects[],  
+	   CondExpr      indexFilters[],
+       CondExpr      allFilters[],
 	   final int     fldNum,
 	   final boolean indexOnly
-	   ) 
-    throws IndexException, 
-	   InvalidTypeException,
-	   InvalidTupleSizeException,
-	   UnknownIndexTypeException,
-	   IOException
-  {
+	   )
+          throws IndexException,
+          InvalidTypeException,
+          InvalidTupleSizeException,
+          UnknownIndexTypeException,
+          IOException, IteratorException, ConstructPageException, UnknownKeyTypeException, KeyNotMatchException, PinPageException, InvalidSelectionException, UnpinPageException, GetFileEntryException {
     _fldNum = fldNum;
     _noInFlds = noInFlds;
     _types = types;
@@ -75,7 +75,8 @@ public class IndexScan extends Iterator {
     }
      */
      
-    _selects = selects;
+    _index_filters = indexFilters;
+    _all_filters = allFilters;
     perm_mat = outFlds;
     _noOutFlds = noOutFlds;
     map1 = new Map();
@@ -91,38 +92,19 @@ public class IndexScan extends Iterator {
     
     try {
       f = new Heapfile(relName);
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       throw new IndexException(e, "IndexScan.java: Heapfile not created");
     }
-    
-    switch(index.indexType) {
-      // linear hashing is not yet implemented
-    case IndexType.B_Index:
-      // error check the select condition
-      // must be of the type: value op symbol || symbol op value
-      // but not symbol op symbol || value op value
-      try {
-	indFile = new BTreeFile(indName); 
-      }
-      catch (Exception e) {
-	throw new IndexException(e, "IndexScan.java: BTreeFile exceptions caught from BTreeFile constructor");
-      }
-      
-      try {
-	indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
-      }
-      catch (Exception e) {
-	throw new IndexException(e, "IndexScan.java: BTreeFile exceptions caught from IndexUtils.BTree_scan().");
-      }
-      
-      break;
-    case IndexType.None:
-    default:
-      throw new UnknownIndexTypeException("Only BTree index is supported so far");
-      
+
+    switch (index.indexType){
+        case IndexType.ROW, IndexType.COL, IndexType.ROW_COL, IndexType.ROW_VAL:
+            indFile = new BTreeFile(indName);
+            indScan = IndexUtils.BTree_scan(indexFilters, indFile);
+            break;
+        case IndexType.None:
+        default:
+            throw new UnknownIndexTypeException("Only BTree index is supported so far");
     }
-    
   }
   
   /**
@@ -202,7 +184,7 @@ public class IndexScan extends Iterator {
     
       boolean eval;
       try {
-	eval = PredEval.Eval(_selects, map1, null, _types, null);
+	eval = PredEval.Eval(_all_filters, map1, null, _types, null);
       }
       catch (Exception e) {
 	throw new IndexException(e, "IndexScan.java: Heapfile error");
@@ -259,7 +241,8 @@ public class IndexScan extends Iterator {
   private IndexFileScan indScan;
   private AttrType[]    _types;
   private short[]       _s_sizes; 
-  private CondExpr[]    _selects;
+  private CondExpr[]    _index_filters;
+  private CondExpr[]    _all_filters;
   private int           _noInFlds;
   private int           _noOutFlds;
   private Heapfile      f;
