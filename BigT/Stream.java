@@ -18,9 +18,7 @@ import static global.GlobalConst.MINIBASE_BUFFER_POOL_SIZE;
 
 public class Stream implements GlobalConst {
     private bigt _bigt;
-    private FileScan filescanObject;
-    private IndexScan indexscanObject;
-    private Sort sorter;
+    private Iterator iterator;
 
     public Stream(bigt bigtable, int orderType, String rowFilter, String columnFilter, String valueFilter) throws InvalidRelation, FileScanException, IOException, TupleUtilsException, MapUtilsException, SortException, IndexException, InvalidTupleSizeException, UnknownIndexTypeException, InvalidTypeException, IteratorException, ConstructPageException, UnknownKeyTypeException, KeyNotMatchException, GetFileEntryException, PinPageException, InvalidSelectionException, UnpinPageException {
         this._bigt = bigtable;
@@ -47,12 +45,7 @@ public class Stream implements GlobalConst {
                 (_bigt.getType() == 4 && (emptyFilter(rowFilter) || emptyFilter(columnFilter) || rangeFilter(rowFilter) || rangeFilter(columnFilter))) ||
                 (_bigt.getType() == 4 && (rangeFilter(rowFilter) || emptyFilter(rowFilter) || emptyFilter(valueFilter) || rangeFilter(columnFilter)))
         ) {
-            filescanObject = new FileScan(_bigt.name, attributes, attributeSizes, (short) 4, 4, (FldSpec[]) null, getCondExprArray(condExprs));
-            sorter = new Sort(attributes, (short) 4,
-                    attributeSizes, filescanObject,
-                    orderType, new TupleOrder(TupleOrder.Ascending),
-                    Map.STRING_ATTR_SIZE, MINIBASE_BUFFER_POOL_SIZE);
-
+            iterator = new FileScan(_bigt.name, attributes, attributeSizes, (short) 4, 4, (FldSpec[]) null, getCondExprArray(condExprs));
             return;
         }
 
@@ -65,16 +58,12 @@ public class Stream implements GlobalConst {
         else if(_bigt.getType() == IndexType.ROW_VAL)
             parseFilter(indexExprs, rowFilter + valueFilter, 6);
 
-        indexscanObject = new IndexScan(
+        iterator = new IndexScan(
                 new IndexType(IndexType.ROW), _bigt.name,
                 _bigt.name + "Index0",
                 attributes, attributeSizes, 4, 4, null,
                 getCondExprArray(indexExprs), getCondExprArray(condExprs), 1, false);
 
-        sorter = new Sort(attributes, (short) 4,
-                attributeSizes, indexscanObject,
-                orderType, new TupleOrder(TupleOrder.Ascending),
-                Map.STRING_ATTR_SIZE, MINIBASE_BUFFER_POOL_SIZE);
     }
 
     private void parseFilter(List<CondExpr> condExprs , String filter, int fldno) {
@@ -138,10 +127,10 @@ public class Stream implements GlobalConst {
     }
 
     public Map getNext() throws Exception {
-        return sorter.get_next();
+        return iterator.get_next();
     }
 
     public void closestream() throws Exception {
-        sorter.close();
+        iterator.close();
     }
 }
