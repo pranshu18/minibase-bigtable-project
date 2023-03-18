@@ -252,7 +252,8 @@ class Clock extends Replacer {
    *
    * @return -1 if no frame is available.
    *         head of the list otherwise.
-   * @throws BufferPoolExceededException.
+   * @exception BufferPoolExceededException
+   * @exception PagePinnedException
    */
   public int pick_victim() 
     throws BufferPoolExceededException, 
@@ -465,7 +466,7 @@ public class BufMgr implements GlobalConst{
    * if emptyPage==TRUE, then actually no read is done to bring
    * the page in.
    *
-   * @param Page_Id_in_a_DB page number in the minibase.
+   * @param pin_pgid page number in the minibase.
    * @param page the pointer poit to the page.       
    * @param emptyPage true (empty page); false (non-empty page)
    *
@@ -580,7 +581,7 @@ public class BufMgr implements GlobalConst{
    * put it in a group of replacement candidates.
    * if pincount=0 before this call, return error.
    *
-   * @param globalPageId_in_a_DB page number in the minibase.
+   * @param PageId_in_a_DB page number in the minibase.
    * @param dirty the dirty bit of the frame
    *
    * @exception ReplacerException if there is a replacer error. 
@@ -792,7 +793,13 @@ public class BufMgr implements GlobalConst{
       privFlushPages(pageId ,1); 
     }
   
-  
+  public void unpinAllPages() {
+      for (int i = 0; i < numBuffers; i++){
+          while (frmeTable[i].pin_count() != 0)
+              frmeTable[i].unpin();
+      }
+  }
+
   /** Gets the total number of buffers.
    *
    * @return total number of buffer frames.

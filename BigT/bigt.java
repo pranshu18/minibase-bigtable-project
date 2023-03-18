@@ -218,11 +218,10 @@ public class bigt {
     }
 
     // Requires the Stream class
-    public int getRowCnt() throws IOException, InvalidTupleSizeException, HFBufMgrException {
+    public int getRowCnt() throws Exception {
 
         Stream stream = this.openStream(1, "", "", "");
-        MID mid = null;
-        Map map = stream.getNext(mid);
+        Map map = stream.getNext();
 
         // stores distinct row labels
         HashSet noDupSet = new HashSet();
@@ -230,18 +229,17 @@ public class bigt {
         while (map != null) {
 
             noDupSet.add(map.getRowLabel());
-            map = stream.getNext(mid);
+            map = stream.getNext();
         }
 
         return noDupSet.size();
     }
 
     // Requires the Stream class
-    public int getColumnCnt() throws IOException, InvalidTupleSizeException, HFBufMgrException {
+    public int getColumnCnt() throws Exception {
 
         Stream stream = this.openStream(1, "", "", "");
-        MID mid = null;
-        Map map = stream.getNext(mid);
+        Map map = stream.getNext();
 
         // stores distinct column labels
         HashSet noDupSet = new HashSet();
@@ -249,7 +247,7 @@ public class bigt {
         while (map != null) {
 
             noDupSet.add(map.getColumnLabel());
-            map = stream.getNext(mid);
+            map = stream.getNext();
         }
 
         return noDupSet.size();
@@ -269,8 +267,7 @@ public class bigt {
         String colLabel = map.getColumnLabel();
 
         Stream stream = this.openStream(1, "", "", "");
-        MID stream_mid = null;
-        Map map_it = stream.getNext(stream_mid);
+        Map map_it = stream.getNext();
         int count = 0;
         int minTimestamp = Integer.MAX_VALUE;
         MID minTimestampMID = null;
@@ -288,7 +285,7 @@ public class bigt {
                 heapfile.deleteMap(minTimestampMID);
             }
 
-            map_it = stream.getNext(stream_mid);
+            map_it = stream.getNext();
         }
         stream.closestream();
 
@@ -296,7 +293,7 @@ public class bigt {
     }
 
     // Requires the Stream class
-    Stream openStream(int orderType, java.lang.String rowFilter,
+    public Stream openStream(int orderType, java.lang.String rowFilter,
             java.lang.String columnFilter, java.lang.String valueFilter)
             throws IOException, InvalidTupleSizeException, HFBufMgrException, IteratorException, ConstructPageException, InvalidRelation, IndexException, FileScanException, GetFileEntryException, PinPageException, MapUtilsException, UnknownIndexTypeException, InvalidSelectionException, UnpinPageException, SortException, UnknownKeyTypeException, KeyNotMatchException, TupleUtilsException, InvalidTypeException {
 
@@ -305,4 +302,7 @@ public class bigt {
 
     }
 
+    public String getName() {
+        return name;
+    }
 }

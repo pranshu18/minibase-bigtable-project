@@ -90,13 +90,11 @@ public class Heapfile implements Filetype,  GlobalConst {
 				  PageId dirPageId, HFPage dirpage,
 				  PageId dataPageId, HFPage datapage,
 				  MID rpDataPageMid)
-    throws InvalidSlotNumberException, 
-	   InvalidTupleSizeException, 
-	   HFException,
-	   HFBufMgrException,
-	   HFDiskMgrException,
-	   Exception
-    {
+		  throws InvalidSlotNumberException,
+		  InvalidTupleSizeException,
+		  HFException,
+		  HFBufMgrException,
+		  HFDiskMgrException, IOException {
       PageId currentDirPageId = new PageId(_firstDirPageId.pid);
       
       HFPage currentDirPage = new HFPage();
@@ -612,14 +610,11 @@ public class Heapfile implements Filetype,  GlobalConst {
    * @return true record deleted  false:record not found
    */
   public boolean deleteMap(MID mid)
-    throws InvalidSlotNumberException, 
-	   InvalidTupleSizeException, 
-	   HFException, 
-	   HFBufMgrException,
-	   HFDiskMgrException,
-	   Exception
-  
-    {
+		  throws InvalidSlotNumberException,
+		  InvalidTupleSizeException,
+		  HFException,
+		  HFBufMgrException,
+		  HFDiskMgrException, IOException {
       boolean status;
       HFPage currentDirPage = new HFPage();
       PageId currentDirPageId = new PageId();
@@ -820,13 +815,11 @@ public class Heapfile implements Filetype,  GlobalConst {
    * @return a Tuple. if Tuple==null, no more tuple
    */
   public Map getMap(MID mid)
-    throws InvalidSlotNumberException, 
-	   InvalidTupleSizeException, 
-	   HFException, 
-	   HFDiskMgrException,
-	   HFBufMgrException,
-	   Exception
-    {
+		  throws InvalidSlotNumberException,
+		  InvalidTupleSizeException,
+		  HFException,
+		  HFDiskMgrException,
+		  HFBufMgrException, IOException {
       boolean status;
       HFPage dirPage = new HFPage();
       PageId currentDirPageId = new PageId();

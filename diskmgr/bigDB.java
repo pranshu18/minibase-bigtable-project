@@ -28,12 +28,12 @@ public class bigDB implements GlobalConst {
 
     private static final int bits_per_page = MAX_SPACE * 8;
     private int indexType;
-    bigt b = null;
+    public bigt b = null;
 
     /**
      * Open the database with the given name.
      *
-     * @param name DB_name
+     * @param fname DB_name
      *
      * @exception IOException                I/O errors
      * @exception FileIOException            file I/O error
@@ -102,8 +102,8 @@ public class bigDB implements GlobalConst {
      * Create a database with the specified number of pages where the page
      * size is the default page size.
      *
-     * @param name      DB name
-     * @param num_pages number of pages in DB
+     * @param fname      DB name
+     * @param num_pgs number of pages in DB
      *
      * @exception IOException                I/O errors
      * @exception InvalidPageNumberException invalid page number
