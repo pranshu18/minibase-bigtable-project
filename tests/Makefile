@@ -70,6 +70,16 @@ SMJoin:SM_JoinTest.java
 sortmerge: SMJoin
 	$(JAVA) tests.SM_JoinTest
 
+# main program
+
+TestRun:TestRun.java
+	$(JAVAC) TestRun.java
+
+testrun: TestRun
+	$(JAVA) tests.TestRun
+
+
+
 
 
 

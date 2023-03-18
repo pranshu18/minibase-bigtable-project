@@ -4,7 +4,7 @@
 #the assignment to be generated
 
 JARFILES=bufmgr/*.class diskmgr/*.class global/*.class iterator/*.class\
-         heap/*.class chainexception/*.class  btree/*.class index/*.class tests/*.class
+         heap/*.class chainexception/*.class  btree/*.class index/*.class tests/*.class BigT/*.class
 
 JDKPATH = /usr/java/jdk1.3.1_02
 LIBPATH = .:..
@@ -13,7 +13,7 @@ BINPATH = $(JDKPATH)/bin
 JAVAC = $(JDKPATH)/bin/javac -classpath $(CLASSPATH)
 JAVA  = $(JDKPATH)/bin/java  -classpath $(CLASSPATH)
 
-DOCFILES=bufmgr diskmgr global chainexception heap btree iterator index
+DOCFILES=bufmgr diskmgr global chainexception heap btree iterator index BigT
 
 ##############  update the above for each assignment in making
 
@@ -37,6 +37,7 @@ db:
 	make -C heap
 	make -C index
 	make -C iterator
+	make -C BigT
 	
 doc:
 	$(JAVADOC) $(DOCFILES)
