@@ -7,9 +7,11 @@ package global;
 
 public class IndexType {
 
-  public static final int None    = 0;
-  public static final int B_Index = 1;
-  public static final int Hash    = 2;
+  public static final int None = 0;
+  public static final int ROW = 1;
+  public static final int COL  = 2;
+  public static final int ROW_COL = 3;
+  public static final int ROW_VAL  = 4;
 
   public int indexType;
 
@@ -33,15 +35,18 @@ public class IndexType {
   }
 
     public String toString() {
-
-    switch (indexType) {
-    case None:
-      return "None";
-    case B_Index:
-      return "B_Index";
-    case Hash:
-      return "Hash";
-    }
-    return ("Unexpected IndexType " + indexType);
+      switch (indexType) {
+        case None:
+          return "no index";
+        case ROW:
+          return "row index";
+        case COL:
+          return "col index";
+        case ROW_COL:
+          return "row_col index";
+        case ROW_VAL:
+          return "row_val index";
+      }
+      return ("Unexpected IndexType " + indexType);
   }
 }

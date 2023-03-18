@@ -1,10 +1,16 @@
 package BigT;
 
+import btree.*;
 import global.AttrOperator;
 import global.AttrType;
 import global.IndexType;
 import global.TupleOrder;
+import heap.InvalidTupleSizeException;
+import heap.InvalidTypeException;
+import index.IndexException;
 import index.IndexScan;
+import index.InvalidSelectionException;
+import index.UnknownIndexTypeException;
 import iterator.*;
 
 import java.io.IOException;
@@ -19,7 +25,7 @@ public class Stream implements GlobalConst {
     private IndexScan indexscanObject;
     private Sort sorter;
 
-    public Stream(bigt bigtable, int orderType, String rowFilter, String columnFilter, String valueFilter) throws InvalidRelation, FileScanException, IOException, TupleUtilsException, MapUtilsException, SortException {
+    public Stream(bigt bigtable, int orderType, String rowFilter, String columnFilter, String valueFilter) throws InvalidRelation, FileScanException, IOException, TupleUtilsException, MapUtilsException, SortException, IndexException, InvalidTupleSizeException, UnknownIndexTypeException, InvalidTypeException, IteratorException, ConstructPageException, UnknownKeyTypeException, KeyNotMatchException, GetFileEntryException, PinPageException, InvalidSelectionException, UnpinPageException {
         this._bigt = bigtable;
 
         AttrType[] attributes = {
@@ -34,36 +40,44 @@ public class Stream implements GlobalConst {
         List<CondExpr> condExprs = new ArrayList<>(); // store all the condition expressions from the filters
         List<CondExpr> indexExprs = new ArrayList<>(); // store all the index expressions from the filters
 
-        if(_bigt.getType() == 1 ||
+        parseFilter(condExprs, rowFilter, 1);
+        parseFilter(condExprs, columnFilter, 2);
+        parseFilter(condExprs, valueFilter, 4);
+
+        if(_bigt.getType() == IndexType.None ||
                 (_bigt.getType() == 2 && emptyFilter(rowFilter)) ||
                 (_bigt.getType() == 3 && emptyFilter(columnFilter)) ||
                 (_bigt.getType() == 4 && (emptyFilter(rowFilter) || emptyFilter(columnFilter) || rangeFilter(rowFilter) || rangeFilter(columnFilter))) ||
                 (_bigt.getType() == 4 && (rangeFilter(rowFilter) || emptyFilter(rowFilter) || emptyFilter(valueFilter) || rangeFilter(columnFilter)))
         ) {
-            parseFilter(condExprs, rowFilter, 1);
-            parseFilter(condExprs, columnFilter, 2);
-            parseFilter(condExprs, valueFilter, 4);
-
             filescanObject = new FileScan(_bigt.name, attributes, attributeSizes, (short) 4, 4, (FldSpec[]) null, getCondExprArray(condExprs));
-            sorter = new Sort(attributes, (short) 4, attributeSizes, filescanObject, orderType, TupleOrder.Ascending, Map.STRING_ATTR_SIZE, MINIBASE_BUFFER_POOL_SIZE );
+            sorter = new Sort(attributes, (short) 4,
+                    attributeSizes, filescanObject,
+                    orderType, new TupleOrder(TupleOrder.Ascending),
+                    Map.STRING_ATTR_SIZE, MINIBASE_BUFFER_POOL_SIZE);
 
-        } else if(_bigt.getType() == 2) {
-            parseFilter(indexExprs, rowFilter, 1);
-            parseFilter(condExprs, columnFilter, 2);
-            parseFilter(condExprs, valueFilter, 4);
-
-            indexscanObject = new IndexScan(new IndexType(IndexType.Row_Index))
-
-        } else if(_bigt.getType() == 3) {
-
-
-        } else if(_bigt.getType() == 4) {
-
-
-        } else if(_bigt.getType() == 5) {
-
-
+            return;
         }
+
+        if(_bigt.getType() == IndexType.ROW)
+            parseFilter(indexExprs, rowFilter, 1);
+        else if(_bigt.getType() == IndexType.COL)
+            parseFilter(indexExprs, columnFilter, 2);
+        else if(_bigt.getType() == IndexType.ROW_COL)
+            parseFilter(indexExprs, columnFilter + rowFilter, 5);
+        else if(_bigt.getType() == IndexType.ROW_VAL)
+            parseFilter(indexExprs, rowFilter + valueFilter, 6);
+
+        indexscanObject = new IndexScan(
+                new IndexType(IndexType.ROW), _bigt.name,
+                _bigt.name + "Index0",
+                attributes, attributeSizes, 4, 4, null,
+                getCondExprArray(indexExprs), getCondExprArray(condExprs), 1, false);
+
+        sorter = new Sort(attributes, (short) 4,
+                attributeSizes, indexscanObject,
+                orderType, new TupleOrder(TupleOrder.Ascending),
+                Map.STRING_ATTR_SIZE, MINIBASE_BUFFER_POOL_SIZE);
     }
 
     private void parseFilter(List<CondExpr> condExprs , String filter, int fldno) {
