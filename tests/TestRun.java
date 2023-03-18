@@ -187,24 +187,31 @@ public class TestRun {
             while((line = br.readLine()) != null) {
                 tempArr = line.split(",");
                 Map map = new Map();
-                map.setHdr(new short[]{(short) tempArr[0].length(), (short) tempArr[1].length(), (short) tempArr[3].length()});
+//                map.setHdr(new short[]{(short) tempArr[0].length(), (short) tempArr[1].length(), (short) tempArr[3].length()});
+                map.setHdr(null);
                 map.setRowLabel(tempArr[0]);
                 map.setColumnLabel(tempArr[1]);
                 map.setTimeStamp(Integer.parseInt(tempArr[2]));
                 map.setValue(tempArr[3]);
+                
+                System.out.println(map.getRowLabel());
+                System.out.println(map.getColumnLabel());
+                System.out.println(map.getTimeStamp());
+                System.out.println(map.getValue());
+
                 MID mid = SystemDefs.JavabaseDB.b.insertMap(map.getMapByteArray());
             }
             br.close();
         } catch(IOException ioe) {
             ioe.printStackTrace();
         } catch (InvalidTupleSizeException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         } catch (SpaceNotAvailableException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         } catch (InvalidSlotNumberException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
         System.out.println("Disk pages read = "+ PCounter.rcounter);

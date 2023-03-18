@@ -179,13 +179,13 @@ public class Map {
     public void setHdr (short strSizes[])
             throws IOException, InvalidTypeException, InvalidTupleSizeException
     {
+    	if(strSizes==null)
+    		strSizes= new short[] {(short) 20, (short) 20, (short) 20};
+    	
         short numFlds = 4;
 
         AttrType types[] = new AttrType[]{new AttrType(AttrType.attrString), new AttrType(AttrType.attrString),
                 new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrString)};
-
-        if((numFlds +2)*2 > max_size)
-            throw new InvalidTupleSizeException (null, "TUPLE: TUPLE_TOOBIG_ERROR");
 
         fldCnt = numFlds;
         Convert.setShortValue(numFlds, data_offset, data);
@@ -243,6 +243,7 @@ public class Map {
         if(map_length > max_size)
             throw new InvalidTupleSizeException (null, "TUPLE: TUPLE_TOOBIG_ERROR");
     }
+
 
     public short[] copyFldOffset()
     {
