@@ -172,9 +172,9 @@ public class TestRun {
 
 				MID mid = SystemDefs.JavabaseDB.b.insertMap(map.getMapByteArray());
 			}
-			SystemDefs.JavabaseDB.b.populateBtree();
-
 			br.close();
+			
+			SystemDefs.JavabaseDB.b.populateBtree();
 
 			SystemDefs.JavabaseDB.b.removeDuplicates();
 
