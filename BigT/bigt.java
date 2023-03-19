@@ -261,33 +261,33 @@ public class bigt {
 
         // Checks for more than three maps with the same row and column label, and
         // deletes the map with the oldest timestamp
-        Map map = heapfile.getMap(mid);
-        map.setMid(mid);
-        String rowLabel = map.getRowLabel();
-        String colLabel = map.getColumnLabel();
-
-        Stream stream = this.openStream(1, "", "", "");
-        Map map_it = stream.getNext();
-        int count = 0;
-        int minTimestamp = Integer.MAX_VALUE;
-        MID minTimestampMID = null;
-        while (map_it != null) {
-
-            if (mid != map_it.getMid() && map_it.getRowLabel().equalsIgnoreCase(rowLabel)
-                    && map_it.getColumnLabel().equalsIgnoreCase(colLabel)) {
-                count++;
-                if (minTimestamp > map_it.getTimeStamp()) {
-                    minTimestamp = map_it.getTimeStamp();
-                    minTimestampMID = map_it.getMid();
-                }
-            }
-            if (count == 3) {
-                heapfile.deleteMap(minTimestampMID);
-            }
-
-            map_it = stream.getNext();
-        }
-        stream.closestream();
+//        Map map = heapfile.getMap(mid);
+//        map.setMid(mid);
+//        String rowLabel = map.getRowLabel();
+//        String colLabel = map.getColumnLabel();
+//
+//        Stream stream = this.openStream(1, "", "", "");
+//        Map map_it = stream.getNext();
+//        int count = 0;
+//        int minTimestamp = Integer.MAX_VALUE;
+//        MID minTimestampMID = null;
+//        while (map_it != null) {
+//
+//            if (mid != map_it.getMid() && map_it.getRowLabel().equalsIgnoreCase(rowLabel)
+//                    && map_it.getColumnLabel().equalsIgnoreCase(colLabel)) {
+//                count++;
+//                if (minTimestamp > map_it.getTimeStamp()) {
+//                    minTimestamp = map_it.getTimeStamp();
+//                    minTimestampMID = map_it.getMid();
+//                }
+//            }
+//            if (count == 3) {
+//                heapfile.deleteMap(minTimestampMID);
+//            }
+//
+//            map_it = stream.getNext();
+//        }
+//        stream.closestream();
 
         return mid;
     }
