@@ -22,6 +22,7 @@ public class PredEval
    *@exception InvalidTypeException type of map not valid
    *@exception FieldNumberOutOfBoundException field number exceeds limit
    *@exception PredEvalException exception from this method
+ * @throws InvalidTupleSizeException 
    */
   public static boolean Eval(CondExpr p[], Map t1, Map t2, AttrType in1[], 
 			     AttrType in2[])
@@ -29,7 +30,7 @@ public class PredEval
 	   UnknowAttrType,
 	   InvalidTypeException,
 	   FieldNumberOutOfBoundException,
-	   PredEvalException
+	   PredEvalException, InvalidTupleSizeException
     {
       CondExpr temp_ptr;
       int       i = 0;
@@ -53,7 +54,7 @@ public class PredEval
       
       
       Map value = new Map();
-      value.setHdr();
+      value.setHdr(null);
       
       
       

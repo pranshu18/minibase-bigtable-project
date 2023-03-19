@@ -83,7 +83,7 @@ public class IndexScan extends Iterator {
 		_noOutFlds = noOutFlds;
 		Map map1 = new Map();
 		try {
-			map1.setHdr();
+			map1.setHdr(null);
 		} catch (Exception e) {
 			throw new IndexException(e, "IndexScan.java: Heapfile error");
 		}
@@ -177,7 +177,7 @@ public class IndexScan extends Iterator {
 		_noOutFlds = noOutFlds;
 		Map map1 = new Map();
 		try {
-			map1.setHdr();
+			map1.setHdr(null);
 		} catch (Exception e) {
 			throw new IndexException(e, "IndexScan.java: Heapfile error");
 		}
@@ -277,7 +277,7 @@ public class IndexScan extends Iterator {
 		    	  s_sizes[0] = _s_sizes[count-1];
 		    	  
 		    	  try {
-		    		  Jmap.setHdr();
+		    		  Jmap.setHdr(null);
 		    	  }
 		    	  catch (Exception e) {
 		    	    throw new IndexException(e, "IndexScan.java: Heapfile error");
@@ -298,7 +298,7 @@ public class IndexScan extends Iterator {
 			
 			mid = ((LeafData) nextentry.data).getData();
 			Map1 = f.getRecord(mid);
-			Map1.setHdr();
+			Map1.setHdr(null);
 			
 			//System.out.println("Map1 in iscan is "+Map1.getRowLabel());
 			
@@ -360,7 +360,7 @@ public class IndexScan extends Iterator {
 				
 				mid = ((LeafData) nextentry.data).getData();
 				Map1 = f.getRecord(mid);
-				Map1.setHdr();
+				Map1.setHdr(null);
 				
 				//System.out.println("Map1 in index scan is ");
 				//Map1.print();

@@ -47,6 +47,7 @@ public class FileScan extends  Iterator
    *@exception TupleUtilsException exception from this class
    *@exception InvalidRelation invalid relation 
  * @throws InvalidTypeException 
+ * @throws InvalidTupleSizeException 
    */
   public  FileScan (String  file_name,
    AttrType in1[],                
@@ -59,14 +60,14 @@ public class FileScan extends  Iterator
     throws IOException,
   FileScanException,
   TupleUtilsException, 
-  InvalidRelation, InvalidTypeException
+  InvalidRelation, InvalidTypeException, InvalidTupleSizeException
     {
       _in1 = in1; 
       in1_len = len_in1;
       s_sizes = s1_sizes;
       
       Jtuple =  new Map();
-      Jtuple.setHdr();
+      Jtuple.setHdr(null);
       AttrType[] Jtypes = new AttrType[n_out_flds];
       short[]    ts_size;
       try {
@@ -83,7 +84,7 @@ e1.printStackTrace();
       tuple1 =  new Map();
 
       try {
-tuple1.setHdr();
+tuple1.setHdr(null);
       }catch (Exception e){
 throw new FileScanException(e, "setHdr() failed");
       }
@@ -148,7 +149,7 @@ if((tuple1 =  scan.getNext(rid)) == null) {
 e.printStackTrace();
 }
 
-tuple1.setHdr();
+tuple1.setHdr(null);
 if (PredEval.Eval(OutputFilter, tuple1, null, _in1, null) == true){
 //	 Projection.Project(tuple1, _in1,  Jtuple, perm_mat, nOutFlds); 
 Jtuple = tuple1;
@@ -178,7 +179,7 @@ Jtuple = tuple1;
 				e.printStackTrace();
 			}
 
-			tuple1.setHdr();
+			tuple1.setHdr(null);
 			if (PredEval.Eval(OutputFilter, tuple1, null, _in1, null) == true) {
 				//	 Projection.Project(tuple1, _in1,  Jtuple, perm_mat, nOutFlds); 
 				Jtuple = tuple1;

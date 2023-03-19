@@ -540,11 +540,12 @@ public class HFPage extends Page
    * @return 	a tuple contains the record
    * @exception   InvalidSlotNumberException Invalid slot number
    * @exception  	IOException I/O errors
+ * @throws InvalidTupleSizeException 
    * @see 	Map
    */
   public Map getRecord ( MID mid ) 
     throws IOException,  
-	   InvalidSlotNumberException
+	   InvalidSlotNumberException, InvalidTupleSizeException
     {
       short recLen;
       short offset;
@@ -568,14 +569,14 @@ public class HFPage extends Page
 	  Map map = new Map();
 	  
 	  try {
-			map.setHdr();
+			map.setHdr(null);
 		} 
 	  
 	  catch (InvalidTypeException e) {
 			e.printStackTrace();
 		}
 	  
-	  map.mapInit(record, 0, 82);
+	  map.mapInit(record, 0);
 	  
 	  //map.print();
 	  

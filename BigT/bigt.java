@@ -399,10 +399,11 @@ public class bigt {
 	 * @return
 	 * @throws InvalidTypeException
 	 * @throws IOException
+	 * @throws InvalidTupleSizeException 
 	 */
-	public Map constructMap(byte[] mapPtr) throws InvalidTypeException, IOException {
+	public Map constructMap(byte[] mapPtr) throws InvalidTypeException, IOException, InvalidTupleSizeException {
 		Map map = new Map(mapPtr, 0);
-		map.setHdr();
+		map.setHdr(null);
 		return map;
 	}
 
@@ -513,7 +514,7 @@ public class bigt {
 
 		for (int i = 0; i < row.length; i++) {
 			Map newmap = new Map();
-			newmap.setHdr();
+			newmap.setHdr(null);
 			newmap.setRowLabel(row[i]);
 			newmap.setColumnLabel(col[i]);
 			newmap.setTimeStamp(i);

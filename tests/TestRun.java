@@ -163,7 +163,7 @@ public class TestRun {
 			while((line = br.readLine()) != null) {
 				tempArr = line.split(",");
 				Map map = new Map();
-				map.setHdr();
+				map.setHdr(null);
 				map.setRowLabel(tempArr[0]);
 				map.setColumnLabel(tempArr[1]);
 				map.setTimeStamp(Integer.parseInt(tempArr[2]));
