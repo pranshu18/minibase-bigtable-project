@@ -571,6 +571,71 @@ public class HFPage extends Page
       
     }
   
+  public Info getRecordInfo ( MID mid ) 
+  throws IOException,  
+	   InvalidSlotNumberException
+  {
+    short recLen;
+    short offset;
+    byte []record;
+    PageId pageNo = new PageId();
+    pageNo.pid= mid.pageNo.pid;
+    curPage.pid = Convert.getIntValue (CUR_PAGE, data);
+    int slotNo = mid.slotNo;
+    
+    // length of record being returned
+    recLen = getSlotLength (slotNo);
+    slotCnt = Convert.getShortValue (SLOT_CNT, data);
+    if (( slotNo >=0) && (slotNo < slotCnt) && (recLen >0) 
+	  && (pageNo.pid == curPage.pid))
+	{
+	  offset = getSlotOffset (slotNo);
+	  record = new byte[recLen];
+	  System.arraycopy(data, offset, record, 0, recLen);
+	  Info info = new Info(record, 0, 12);
+	  return info;
+	}
+    
+    else {
+      throw new InvalidSlotNumberException (null, "HEAPFILE: INVALID_SLOTNO");
+    }
+   
+    
+  }
+  
+  public Info returnRecordInfo ( MID mid )
+  throws IOException, 
+	   InvalidSlotNumberException
+  {
+    short recLen;
+    short offset;
+    PageId pageNo = new PageId();
+    pageNo.pid = mid.pageNo.pid;
+    
+    curPage.pid = Convert.getIntValue (CUR_PAGE, data);
+    int slotNo = mid.slotNo;
+    
+
+    // length of record being returned
+    recLen = getSlotLength (slotNo);
+    slotCnt = Convert.getShortValue (SLOT_CNT, data);
+
+    if (( slotNo >=0) && (slotNo < slotCnt) && (recLen >0)
+	  && (pageNo.pid == curPage.pid))
+	{
+	  
+	  offset = getSlotOffset (slotNo);
+	  Info info = new Info(data, offset , 12);
+	  return info;
+	}
+    
+    else {   
+      throw new InvalidSlotNumberException (null, "HEAPFILE: INVALID_SLOTNO");
+    }
+    
+  }
+
+
   /**
    * returns a tuple in a byte array[pageSize] with given MID mid.
    * <br>
