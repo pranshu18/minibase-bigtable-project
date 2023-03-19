@@ -1,308 +1,552 @@
 package BigT;
 
-import global.AttrType;
-import global.MID;
-import global.MapMidPair;
+import java.io.IOException;
+import java.util.*;
+
+import BigT.Map;
+import global.*;
 import heap.*;
 import index.IndexException;
+import index.IndexScan;
 import index.InvalidSelectionException;
 import index.UnknownIndexTypeException;
 import iterator.*;
-
-import java.io.IOException;
-import java.util.HashSet;
-
-import btree.AddFileEntryException;
-import btree.BTreeFile;
-import btree.ConstructPageException;
-import btree.ConvertException;
-import btree.DeleteFileEntryException;
-import btree.DeleteRecException;
-import btree.FreePageException;
-import btree.GetFileEntryException;
-import btree.IndexInsertRecException;
-import btree.IndexSearchException;
-import btree.InsertException;
-import btree.IntegerKey;
-import btree.IteratorException;
-import btree.KeyNotMatchException;
-import btree.KeyTooLongException;
-import btree.LeafDeleteException;
-import btree.LeafInsertRecException;
-import btree.NodeNotMatchException;
-import btree.PinPageException;
-import btree.StringKey;
-import btree.UnpinPageException;
+import btree.*;
 import bufmgr.PageNotReadException;
 
+/**
+ * 
+ * Creation of a bigTable
+ *
+ */
 public class bigt {
 
-    public int type;
+	public String name;
+	public int type;
+	public Heapfile _hf;
+	public BTreeFile _bf0 = null;
+	public BTreeFile _bf1 = null;
+	public BTreeFile _bftemp = null;
+	FileScan fscan;
+	IndexScan iscan;
+	CondExpr[] expr;
+	AttrType[] attrType;
+	short[] attrSize;
+	String key;
 
-    public String name;
+	/**
+	 * 
+	 * @param name - name of the bigT
+	 * @param type - type of the Database
+	 * @throws HFException
+	 * @throws HFBufMgrException
+	 * @throws HFDiskMgrException
+	 * @throws IOException
+	 * @throws GetFileEntryException
+	 * @throws ConstructPageException
+	 * @throws AddFileEntryException
+	 * @throws FileScanException
+	 * @throws TupleUtilsException
+	 * @throws InvalidRelation
+	 * @throws InvalidTypeException
+	 */
+	public bigt(String name, int type) throws HFException, HFBufMgrException, HFDiskMgrException, IOException,
+			GetFileEntryException, ConstructPageException, AddFileEntryException, FileScanException,
+			TupleUtilsException, InvalidRelation, InvalidTypeException {
 
-    private Heapfile heapfile;
+		this.name = name;
+		this.type = type;
+		this._hf = new Heapfile(name);
 
-    AttrType[] attrType;
-    short[] attrSize;
-    FileScan fscan;
+		switch (type) {
+		case 1: {
+			break;
+		}
 
-    public BTreeFile _bf0 = null;
-    public BTreeFile _bf1 = null;
-    public BTreeFile _bftemp = null;
+		case 2: {
+			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
+			break;
+		}
 
-    public bigt(java.lang.String name, int type)
-            throws InvalidTypeException, HFDiskMgrException, HFException, HFBufMgrException, IOException,
-            GetFileEntryException, ConstructPageException, AddFileEntryException {
+		case 3: {
+			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
+			break;
+		}
 
-        this.type = type;
+		case 4: {
+			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
+			this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
+			break;
+		}
+		case 5: {
+			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
+			this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
+			break;
+		}
+		}
 
-        if (type < 1 || type > 5)
-            throw new InvalidTypeException(null, "TUPLE: TUPLE_TYPE_ERROR");
+		attrType = new AttrType[4];
+		attrType[0] = new AttrType(AttrType.attrString);
+		attrType[1] = new AttrType(AttrType.attrString);
+		attrType[2] = new AttrType(AttrType.attrInteger);
+		attrType[3] = new AttrType(AttrType.attrString);
+		attrSize = new short[4];
+		attrSize[0] = 22;
+		attrSize[1] = 22;
+		attrSize[2] = 4;
+		attrSize[3] = 22;
 
-        this.name = name;
+	}
 
-        this.heapfile = new Heapfile(name);
+	/**
+	 * 
+	 * Delete the bigt within the Database
+	 * 
+	 * @throws InvalidSlotNumberException
+	 * @throws FileAlreadyDeletedException
+	 * @throws InvalidInfoSizeException
+	 * @throws HFBufMgrException
+	 * @throws HFDiskMgrException
+	 * @throws IOException
+	 * @throws IteratorException
+	 * @throws UnpinPageException
+	 * @throws FreePageException
+	 * @throws DeleteFileEntryException
+	 * @throws ConstructPageException
+	 * @throws PinPageException
+	 */
+	void deleteBigT() throws InvalidSlotNumberException, FileAlreadyDeletedException, InvalidInfoSizeException,
+			HFBufMgrException, HFDiskMgrException, IOException, IteratorException, UnpinPageException,
+			FreePageException, DeleteFileEntryException, ConstructPageException, PinPageException {
 
-        switch (type) {
-            case 1: {
-                break;
-            }
+		_hf.deleteFile();
 
-            case 2: {
-                this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
-                break;
-            }
+		switch (type) {
+		case 1: {
+			break;
+		}
 
-            case 3: {
-                this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
-                break;
-            }
+		case 2: {
+			_bf0.destroyFile();
+			break;
 
-            case 4: {
-                this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
-                this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
-                break;
-            }
-            case 5: {
-                this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
-                this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
-                break;
-            }
-        }
-        attrType = new AttrType[4];
-        attrType[0] = new AttrType(AttrType.attrString);
-        attrType[1] = new AttrType(AttrType.attrString);
-        attrType[2] = new AttrType(AttrType.attrInteger);
-        attrType[3] = new AttrType(AttrType.attrString);
-        attrSize = new short[4];
-        attrSize[0] = 22;
-        attrSize[1] = 22;
-        attrSize[2] = 4;
-        attrSize[3] = 22;
+		}
 
-    }
+		case 3: {
+			_bf0.destroyFile();
+			break;
 
-    public int getType() {
-        return this.type;
-    }
+		}
+		case 4: {
+			_bf0.destroyFile();
+			_bf1.destroyFile();
+			break;
+		}
+		case 5: {
+			_bf0.destroyFile();
+			_bf1.destroyFile();
+			break;
+		}
+		}
+	}
 
-    public Heapfile heapfile(){
-        return this.heapfile;
-    }
+	/**
+	 * Initializing temporary index file to handle versioning
+	 * 
+	 * @throws KeyTooLongException
+	 * @throws KeyNotMatchException
+	 * @throws LeafInsertRecException
+	 * @throws IndexInsertRecException
+	 * @throws ConstructPageException
+	 * @throws UnpinPageException
+	 * @throws PinPageException
+	 * @throws NodeNotMatchException
+	 * @throws ConvertException
+	 * @throws DeleteRecException
+	 * @throws IndexSearchException
+	 * @throws IteratorException
+	 * @throws LeafDeleteException
+	 * @throws InsertException
+	 * @throws IOException
+	 * @throws FileScanException
+	 * @throws TupleUtilsException
+	 * @throws InvalidRelation
+	 * @throws InvalidTypeException
+	 * @throws JoinsException
+	 * @throws InvalidTupleSizeException
+	 * @throws PageNotReadException
+	 * @throws PredEvalException
+	 * @throws UnknowAttrType
+	 * @throws FieldNumberOutOfBoundException
+	 * @throws WrongPermat
+	 * @throws GetFileEntryException
+	 * @throws AddFileEntryException
+	 */
 
-    // Requires the modified Heapfile class
-    public void deleteBigt() throws HFDiskMgrException, InvalidSlotNumberException, InvalidTupleSizeException,
-            HFBufMgrException, FileAlreadyDeletedException, IOException, IteratorException, UnpinPageException,
-            FreePageException, DeleteFileEntryException, ConstructPageException, PinPageException {
+	public void populateBtree() throws KeyTooLongException, KeyNotMatchException, LeafInsertRecException,
+			IndexInsertRecException, ConstructPageException, UnpinPageException, PinPageException,
+			NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException,
+			LeafDeleteException, InsertException, IOException, FileScanException, TupleUtilsException, InvalidRelation,
+			InvalidTypeException, JoinsException, InvalidTupleSizeException, PageNotReadException, PredEvalException,
+			UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat, GetFileEntryException, AddFileEntryException {
 
-        heapfile.deleteFile();
+		_bftemp = new BTreeFile(name + "Temp", AttrType.attrString, 64, 1);
+		fscan = new FileScan(name, attrType, attrSize, (short) 4, 4, null, null);
+		MapMidPair mpair = fscan.get_nextMidPair();
+		while (mpair != null) {
+			String  s = String.format("%06d", mpair.map.getTimeStamp());
+			String key = mpair.map.getRowLabel() + mpair.map.getColumnLabel()+"%"+s;
+			_bftemp.insert(new StringKey(key), mpair.mid);
+//			_bftemp.insert(new StringKey(mpair.map.getRowLabel() + mpair.map.getColumnLabel()), mpair.mid);
+			mpair = fscan.get_nextMidPair();
+		}
 
-        switch (type) {
-            case 1: {
-                break;
-            }
+		fscan.close();
 
-            case 2: {
-                _bf0.destroyFile();
-                break;
+	}
 
-            }
+	/**
+	 * Get the count of total number of maps
+	 * 
+	 * @return
+	 * @throws InvalidSlotNumberException
+	 * @throws InvalidInfoSizeException
+	 * @throws HFDiskMgrException
+	 * @throws HFBufMgrException
+	 * @throws IOException
+	 */
+	public int getMapCnt() throws InvalidSlotNumberException, InvalidInfoSizeException, HFDiskMgrException,
+			HFBufMgrException, IOException {
+		return _hf.getRecCnt();
+	}
 
-            case 3: {
-                _bf0.destroyFile();
-                break;
+	/**
+	 * Gets the total number of unique rows in the database
+	 * 
+	 * @param numbuf - number of buffers used for sorting functionality to get the
+	 *               row count
+	 * @return
+	 * @throws UnknowAttrType
+	 * @throws LowMemException
+	 * @throws JoinsException
+	 * @throws Exception
+	 */
+	public int getRowCnt(int numbuf) throws UnknowAttrType, LowMemException, JoinsException, Exception {
+		Map map = new Map();
+		fscan = new FileScan(name, attrType, attrSize, (short) 4, 4, null, null);
+		Sort sort = new Sort(attrType, (short) 4, attrSize, fscan, 1, new TupleOrder(TupleOrder.Ascending), 22, numbuf);
+		int count = 0;
+		map = sort.get_next();
+		String prev = "";
+		String curr = "";
+		if (map != null) {
+			prev = map.getRowLabel();
+		}
+		while (map != null) {
+			curr = map.getRowLabel();
+			if (!curr.equals(prev)) {
+				count++;
 
-            }
-            case 4: {
-                _bf0.destroyFile();
-                _bf1.destroyFile();
-                break;
-            }
-            case 5: {
-                _bf0.destroyFile();
-                _bf1.destroyFile();
-                break;
-            }
-        }
+			}
+			prev = curr;
 
-    }
+			map = sort.get_next();
 
-    public void insertIndex() throws KeyTooLongException, KeyNotMatchException, LeafInsertRecException,
-            IndexInsertRecException, ConstructPageException, UnpinPageException, PinPageException,
-            NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException,
-            LeafDeleteException, InsertException, IOException, FieldNumberOutOfBoundException,
-            FreePageException, DeleteFileEntryException, GetFileEntryException, AddFileEntryException,
-            InvalidTupleSizeException {
-        Scan scan = new Scan(heapfile);
-        MID mid = new MID();
-        String key = null;
-        int key_timeStamp = 0;
-        Map temp = null;
+		}
+		if (curr.equals(prev)) {
+			count++;
 
-        if (type == 1) {
-            return;
-        }
-        if (!(type == 4 || type == 5)) {
-            this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
+		}
+		sort.close();
+		System.out.println("Row count is " + count);
+		return count;
+	}
 
-        } else {
-            this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
-            this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
-        }
+	/**
+	 * 
+	 * Gets the total number of unique columns in the database
+	 * 
+	 * @param numbuf - number of buffers used for sorting functionality to get the
+	 *               column count
+	 * @return
+	 * @throws UnknowAttrType
+	 * @throws LowMemException
+	 * @throws JoinsException
+	 * @throws Exception
+	 */
+	public int getColumnCnt(int numbuf) throws UnknowAttrType, LowMemException, JoinsException, Exception {
+		Map map = new Map();
+		fscan = new FileScan(name, attrType, attrSize, (short) 4, 4, null, null);
+		Sort sort = new Sort(attrType, (short) 4, attrSize, fscan, 2, new TupleOrder(TupleOrder.Ascending), 22, numbuf);
+		int count = 0;
+		map = sort.get_next();
+		String prev = "";
+		String curr = "";
+		if (map != null) {
+			prev = map.getColumnLabel();
 
-        temp = scan.getNext(mid);
-        while (temp != null) {
-            switch (type) {
+		}
+		while (map != null) {
+			curr = map.getColumnLabel();
+			if (!curr.equals(prev)) {
+				count++;
 
-                case 2: {
-                    key = temp.getRowLabel();
-                    _bf0.insert(new StringKey(key), mid);
-                    break;
-                }
+			}
+			prev = curr;
 
-                case 3: {
-                    key = temp.getColumnLabel();
-                    _bf0.insert(new StringKey(key), mid);
-                    break;
-                }
+			map = sort.get_next();
 
-                case 4: {
-                    key = temp.getColumnLabel() + temp.getRowLabel();
-                    key_timeStamp = temp.getTimeStamp();
-                    _bf0.insert(new StringKey(key), mid);
-                    _bf1.insert(new IntegerKey(key_timeStamp), mid);
-                    break;
-                }
+		}
+		if (curr.equals(prev)) {
+			count++;
 
-                case 5: {
-                    key = temp.getRowLabel() + temp.getValue();
-                    key_timeStamp = temp.getTimeStamp();
-                    _bf0.insert(new StringKey(key), mid);
-                    _bf1.insert(new IntegerKey(key_timeStamp), mid);
-                    break;
-                }
+		}
+		sort.close();
 
-            }
-            temp = scan.getNext(mid);
-        }
-        scan.closescan();
-    }
+		System.out.println("Col count is " + count);
+		return count;
+	}
 
-    // Requires the modified Heapfile class
-    public int getMapCnt() throws HFDiskMgrException, InvalidSlotNumberException, InvalidTupleSizeException,
-            HFBufMgrException, IOException {
+	/**
+	 * Generate the index files for the maps corresponding to the desired type
+	 * 
+	 * @throws KeyTooLongException
+	 * @throws KeyNotMatchException
+	 * @throws LeafInsertRecException
+	 * @throws IndexInsertRecException
+	 * @throws ConstructPageException
+	 * @throws UnpinPageException
+	 * @throws PinPageException
+	 * @throws NodeNotMatchException
+	 * @throws ConvertException
+	 * @throws DeleteRecException
+	 * @throws IndexSearchException
+	 * @throws IteratorException
+	 * @throws LeafDeleteException
+	 * @throws InsertException
+	 * @throws IOException
+	 * @throws FieldNumberOutOfBoundException
+	 * @throws InvalidInfoSizeException
+	 * @throws FreePageException
+	 * @throws DeleteFileEntryException
+	 * @throws GetFileEntryException
+	 * @throws AddFileEntryException
+	 */
+	public void insertIndex() throws KeyTooLongException, KeyNotMatchException, LeafInsertRecException,
+			IndexInsertRecException, ConstructPageException, UnpinPageException, PinPageException,
+			NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException,
+			LeafDeleteException, InsertException, IOException, FieldNumberOutOfBoundException, InvalidInfoSizeException,
+			FreePageException, DeleteFileEntryException, GetFileEntryException, AddFileEntryException {
+		Scan scan = new Scan(_hf);
+		MID mid = new MID();
+		String key = null;
+		int key_timeStamp = 0;
+		Map temp = null;
 
-        return heapfile.getMapCnt();
+		if(type==1) {
+			return;
+		}
+		if (!(type == 4 || type == 5)) {
+			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
+			
+		} else {
+			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
+			this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
+		}
 
-    }
+		temp = scan.getNext(mid);
+		while (temp != null) {
+			switch (type) {
 
-    // Requires the Stream class
-    public int getRowCnt() throws Exception {
+			case 2: {
+				key = temp.getRowLabel();
+				_bf0.insert(new StringKey(key), mid);
+				break;
+			}
 
-        Stream stream = this.openStream(1, "", "", "");
-        Map map = stream.getNext();
+			case 3: {
+				key = temp.getColumnLabel();
+				_bf0.insert(new StringKey(key), mid);
+				break;
+			}
 
-        // stores distinct row labels
-        HashSet noDupSet = new HashSet();
+			case 4: {
+				key = temp.getColumnLabel() + temp.getRowLabel();
+				key_timeStamp = temp.getTimeStamp();
+				_bf0.insert(new StringKey(key), mid);
+				_bf1.insert(new IntegerKey(key_timeStamp), mid);
+				break;
+			}
 
-        while (map != null) {
+			case 5: {
+				key = temp.getRowLabel() + temp.getValue();
+				key_timeStamp = temp.getTimeStamp();
+				_bf0.insert(new StringKey(key), mid);
+				_bf1.insert(new IntegerKey(key_timeStamp), mid);
+				break;
+			}
 
-            noDupSet.add(map.getRowLabel());
-            map = stream.getNext();
-        }
+			}
+			temp = scan.getNext(mid);
+		}
+		scan.closescan();
+	}
 
-        return noDupSet.size();
-    }
+	/**
+	 * Initialize a map in the database
+	 * 
+	 * @param mapPtr
+	 * @return
+	 * @throws InvalidTypeException
+	 * @throws IOException
+	 */
+	public Map constructMap(byte[] mapPtr) throws InvalidTypeException, IOException {
+		Map map = new Map(mapPtr, 0);
+		map.setHdr();
+		return map;
+	}
 
-    // Requires the Stream class
-    public int getColumnCnt() throws Exception {
+	/**
+	 * Insert data given into bytes in the map
+	 * 
+	 * @param mapPtr - data to be inserted in bytes
+	 * @return
+	 * @throws InvalidSlotNumberException
+	 * @throws InvalidTupleSizeException
+	 * @throws HFException
+	 * @throws HFBufMgrException
+	 * @throws HFDiskMgrException
+	 * @throws Exception
+	 */
+	public MID insertMap(byte[] mapPtr) throws InvalidSlotNumberException, InvalidTupleSizeException, HFException,
+			HFBufMgrException, HFDiskMgrException, Exception {
+		MID mid = _hf.insertRecord(mapPtr);
+		return mid;
+	}
 
-        Stream stream = this.openStream(1, "", "", "");
-        Map map = stream.getNext();
+	/**
+	 * Remove Duplicates to handle the versioning in the database
+	 * 
+	 * @throws InvalidSlotNumberException
+	 * @throws HFException
+	 * @throws HFDiskMgrException
+	 * @throws HFBufMgrException
+	 * @throws Exception
+	 */
+	public void removeDuplicates()
+			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
+		TupleOrder[] order = new TupleOrder[2];
+		order[0] = new TupleOrder(TupleOrder.Ascending);
+		order[1] = new TupleOrder(TupleOrder.Descending);
+		iscan = new IndexScan(new IndexType(IndexType.Row_Index), name, name + "Temp", attrType, attrSize, 4, 4, null,
+				expr, 1, true);
 
-        // stores distinct column labels
-        HashSet noDupSet = new HashSet();
+		MapMidPair mpair = iscan.get_nextMidPair();
+		String key = "";
+		String oldKey = "";
+		if (mpair != null) {
+			oldKey = mpair.indKey.split("%")[0];
+		}
+		List<MID> list = new ArrayList<MID>();
+		while (mpair != null) {
 
-        while (map != null) {
+			key = mpair.indKey.split("%")[0];
 
-            noDupSet.add(map.getColumnLabel());
-            map = stream.getNext();
-        }
+			if (key.equals(oldKey)) {
+				list.add(mpair.mid);
+			} else {
+				list.clear();
+				oldKey = key;
+				list.add(mpair.mid);
+			}
 
-        return noDupSet.size();
+			if (list.size() == 4) {
+				MID delmid = list.get(0);
 
-    }
+				_hf.deleteRecord(delmid);
+				list.remove(0);
+			}
 
-    public MID insertMap(byte[] mapPtr) throws Exception {
+			mpair = iscan.get_nextMidPair();
+		}
+		iscan.close();
+		_bftemp.destroyFile();
 
-        // Inserts map
-        MID mid = heapfile.insertMap(mapPtr);
+	}
 
-        // Checks for more than three maps with the same row and column label, and
-        // deletes the map with the oldest timestamp
-//        Map map = heapfile.getMap(mid);
-//        map.setMid(mid);
-//        String rowLabel = map.getRowLabel();
-//        String colLabel = map.getColumnLabel();
-//
-//        Stream stream = this.openStream(1, "", "", "");
-//        Map map_it = stream.getNext();
-//        int count = 0;
-//        int minTimestamp = Integer.MAX_VALUE;
-//        MID minTimestampMID = null;
-//        while (map_it != null) {
-//
-//            if (mid != map_it.getMid() && map_it.getRowLabel().equalsIgnoreCase(rowLabel)
-//                    && map_it.getColumnLabel().equalsIgnoreCase(colLabel)) {
-//                count++;
-//                if (minTimestamp > map_it.getTimeStamp()) {
-//                    minTimestamp = map_it.getTimeStamp();
-//                    minTimestampMID = map_it.getMid();
-//                }
-//            }
-//            if (count == 3) {
-//                heapfile.deleteMap(minTimestampMID);
-//            }
-//
-//            map_it = stream.getNext();
-//        }
-//        stream.closestream();
+	/**
+	 * Fucntion to display all the maps in the database
+	 * 
+	 * @throws InvalidInfoSizeException
+	 * @throws IOException
+	 */
+	public void scanAllMaps() throws InvalidInfoSizeException, IOException {
+		Scan scan = _hf.openScan();
+		MID mid = new MID();
+		Map map = scan.getNext(mid);
+		System.out.println("Maps are ");
+		while (map != null) {
+			map.print();
+			System.out.println();
+			map = scan.getNext(mid);
+		}
+	}
 
-        return mid;
-    }
+	/**
+	 * Utility for purpose of testing
+	 * 
+	 * @throws InvalidSlotNumberException
+	 * @throws InvalidTupleSizeException
+	 * @throws HFException
+	 * @throws HFBufMgrException
+	 * @throws HFDiskMgrException
+	 * @throws Exception
+	 */
+	public void generateMapsAndIndex() throws InvalidSlotNumberException, InvalidTupleSizeException, HFException,
+			HFBufMgrException, HFDiskMgrException, Exception {
+		String row[] = new String[] { "aa", "kkdab", "kk", "zz", "ee", "cc", "kk", "ff", "tt", "uu", "kkdaa", "kkdba",
+				"cc", "kkdaa", "aa", "kk", "kk" };
+		String col[] = new String[] { "e", "daaab", "a", "b", "d", "p", "a", "a", "e", "u", "daaa", "p", "s", "f", "b",
+				"a", "b" };
+		String val[] = new String[] { "america", "zzzzz", "ksks", "india", "china", "japan", "pakistan", "korea", "ggs",
+				"australia", "kl", "zimbambwe", "bfgjh", "antarctica", "LKL", "pou", "Italy" };
 
-    // Requires the Stream class
-    public Stream openStream(int orderType, java.lang.String rowFilter,
-            java.lang.String columnFilter, java.lang.String valueFilter)
-            throws IOException, InvalidTupleSizeException, HFBufMgrException, IteratorException, ConstructPageException, InvalidRelation, IndexException, FileScanException, GetFileEntryException, PinPageException, MapUtilsException, UnknownIndexTypeException, InvalidSelectionException, UnpinPageException, SortException, UnknownKeyTypeException, KeyNotMatchException, TupleUtilsException, InvalidTypeException {
+		for (int i = 0; i < row.length; i++) {
+			Map newmap = new Map();
+			newmap.setHdr();
+			newmap.setRowLabel(row[i]);
+			newmap.setColumnLabel(col[i]);
+			newmap.setTimeStamp(i);
+			newmap.setValue(val[i]);
+			insertMap(newmap.getMapByteArray());
 
-        // placeholder constructor
-        return new Stream(this, orderType, rowFilter, columnFilter, valueFilter);
+		}
+	}
 
-    }
+	/**
+	 * Opens the stream of maps
+	 * 
+	 * @param orderType - Desired order of Results
+	 * @param rowFilter - Filtering condition on row
+	 * @param colFilter - Filtering condition on column
+	 * @param valFilter - Filtering condition on value
+	 * @param numbuf    - number of buffers allocated
+	 * @return
+	 * @throws Exception 
+	 * @throws HFBufMgrException 
+	 * @throws HFDiskMgrException 
+	 * @throws HFException 
+	 * @throws InvalidSlotNumberException 
+	 */
+	public Stream openStream(int orderType, String rowFilter, String colFilter, String valFilter, int numbuf)
+			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
+		Stream stream = new Stream(this, orderType, rowFilter, colFilter, valFilter, numbuf);
+		return stream;
 
-    public String getName() {
-        return name;
-    }
+	}
+	
+	public String getName() {
+		return this.name;
+	}
+
 }
