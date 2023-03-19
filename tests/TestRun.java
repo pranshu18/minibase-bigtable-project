@@ -172,13 +172,13 @@ public class TestRun {
 
 				MID mid = SystemDefs.JavabaseDB.b.insertMap(map.getMapByteArray());
 			}
-			SystemDefs.JavabaseDB.populatedb();
+			SystemDefs.JavabaseDB.b.populateBtree();
 
 			br.close();
 
-			SystemDefs.JavabaseDB.removeDuplicates();
+			SystemDefs.JavabaseDB.b.removeDuplicates();
 
-			SystemDefs.JavabaseDB.insertindex();
+			SystemDefs.JavabaseDB.b.insertIndex();
 
 		} catch(IOException ioe) {
 			ioe.printStackTrace();
