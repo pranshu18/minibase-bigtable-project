@@ -1,12 +1,10 @@
 package iterator;
 
-import java.io.*; 
+import java.io.*;
+
+import BigT.Map;
 import global.*;
-import bufmgr.*;
-import diskmgr.*;
 import heap.*;
-import index.*;
-import chainexception.*;
 
 /**
  * The Sort class sorts a file. All necessary information are passed as 
@@ -23,7 +21,7 @@ public class Sort extends Iterator implements GlobalConst
   private short       n_cols;
   private short[]     str_lens;
   private Iterator    _am;
-  private int         _sort_fld;
+  private int _sort_type;
   private TupleOrder  order;
   private int         _n_pages;
   private byte[][]    bufs;
@@ -36,10 +34,10 @@ public class Sort extends Iterator implements GlobalConst
   private pnodeSplayPQ Q;
   private Heapfile[]   temp_files; 
   private int          n_tempfiles;
-  private Tuple        output_tuple;  
+  private Map          output_map;
   private int[]        n_tuples;
   private int          n_runs;
-  private Tuple        op_buf;
+  private Map          op_buf;
   private OBuf         o_buf;
   private SpoofIbuf[]  i_buf;
   private PageId[]     bufs_pids;
@@ -89,23 +87,23 @@ public class Sort extends Iterator implements GlobalConst
       
       // may need change depending on whether Get() returns the original
       // or make a copy of the tuple, need io_bufs.java ???
-      Tuple temp_tuple = new Tuple(tuple_size);
+      Map temp_map = new Map();
 
       try {
-	temp_tuple.setHdr(n_cols, _in, str_lens);
+          temp_map.setHdr(new short[]{Map.STRING_ATTR_SIZE, Map.STRING_ATTR_SIZE, Map.INT_ATTR_SIZE, Map.STRING_ATTR_SIZE});
       }
       catch (Exception e) {
-	throw new SortException(e, "Sort.java: Tuple.setHdr() failed");
+	throw new SortException(e, "Sort.java: Map.setHdr() failed");
       }
       
-      temp_tuple =i_buf[i].Get(temp_tuple);  // need io_bufs.java
+      temp_map =i_buf[i].Get(temp_map);  // need io_bufs.java
             
-      if (temp_tuple != null) {
+      if (temp_map != null) {
 	/*
 	System.out.print("Get tuple from run " + i);
-	temp_tuple.print(_in);
+	temp_map.print(_in);
 	*/
-	cur_node.tuple = temp_tuple; // no copy needed
+	cur_node.map = temp_map; // no copy needed
 	try {
 	  Q.enq(cur_node);
 	}
@@ -118,7 +116,6 @@ public class Sort extends Iterator implements GlobalConst
 
       }
     }
-    return; 
   }
   
   /**
@@ -140,15 +137,15 @@ public class Sort extends Iterator implements GlobalConst
 	   JoinsException,
 	   Exception
   {
-    Tuple tuple; 
+    Map map;
     pnode cur_node;
-    pnodeSplayPQ Q1 = new pnodeSplayPQ(_sort_fld, sortFldType, order);
-    pnodeSplayPQ Q2 = new pnodeSplayPQ(_sort_fld, sortFldType, order);
+    pnodeSplayPQ Q1 = new pnodeSplayPQ(_sort_type, sortFldType, order);
+    pnodeSplayPQ Q2 = new pnodeSplayPQ(_sort_type, sortFldType, order);
     pnodeSplayPQ pcurr_Q = Q1;
     pnodeSplayPQ pother_Q = Q2; 
-    Tuple lastElem = new Tuple(tuple_size);  // need tuple.java
+    Map lastElem = new Map();  // need map.java
     try {
-      lastElem.setHdr(n_cols, _in, str_lens);
+        lastElem.setHdr(new short[]{Map.STRING_ATTR_SIZE, Map.STRING_ATTR_SIZE, Map.INT_ATTR_SIZE, Map.STRING_ATTR_SIZE});
     }
     catch (Exception e) {
       throw new SortException(e, "Sort.java: setHdr() failed");
@@ -187,17 +184,17 @@ public class Sort extends Iterator implements GlobalConst
     // maintain a fixed maximum number of elements in the heap
     while ((p_elems_curr_Q + p_elems_other_Q) < max_elems) {
       try {
-	tuple = _am.get_next();  // according to Iterator.java
+	map = _am.get_next();  // according to Iterator.java
       } catch (Exception e) {
 	e.printStackTrace(); 
 	throw new SortException(e, "Sort.java: get_next() failed");
       } 
       
-      if (tuple == null) {
+      if (map == null) {
 	break;
       }
       cur_node = new pnode();
-      cur_node.tuple = new Tuple(tuple); // tuple copy needed --  Bingjie 4/29/98 
+      cur_node.map = new Map(map); // map copy needed --  Bingjie 4/29/98
 
       pcurr_Q.enq(cur_node);
       p_elems_curr_Q ++;
@@ -211,7 +208,7 @@ public class Sort extends Iterator implements GlobalConst
       if (cur_node == null) break; 
       p_elems_curr_Q --;
       
-      comp_res = TupleUtils.CompareTupleWithValue(sortFldType, cur_node.tuple, _sort_fld, lastElem);  // need tuple_utils.java
+      comp_res = MapUtils.CompareForSorting(cur_node.map, lastElem, _sort_type);  // need tuple_utils.java
       
       if ((comp_res < 0 && order.tupleOrder == TupleOrder.Ascending) || (comp_res > 0 && order.tupleOrder == TupleOrder.Descending)) {
 	// doesn't fit in current run, put into the other queue
@@ -224,14 +221,14 @@ public class Sort extends Iterator implements GlobalConst
 	p_elems_other_Q ++;
       }
       else {
-	// set lastElem to have the value of the current tuple,
+	// set lastElem to have the value of the current map,
 	// need tuple_utils.java
-	TupleUtils.SetValue(lastElem, cur_node.tuple, _sort_fld, sortFldType);
-	// write tuple to output file, need io_bufs.java, type cast???
-	//	System.out.println("Putting tuple into run " + (run_num + 1)); 
-	//	cur_node.tuple.print(_in);
+	MapUtils.SetValue(lastElem, cur_node.map);
+	// write map to output file, need io_bufs.java, type cast???
+	//	System.out.println("Putting map into run " + (run_num + 1));
+	//	cur_node.map.print(_in);
 	
-	o_buf.Put(cur_node.tuple);
+	o_buf.Put(cur_node.map);
       }
       
       // check whether the other queue is full
@@ -300,16 +297,16 @@ public class Sort extends Iterator implements GlobalConst
       else if (p_elems_curr_Q == 0) {
 	while ((p_elems_curr_Q + p_elems_other_Q) < max_elems) {
 	  try {
-	    tuple = _am.get_next();  // according to Iterator.java
+	    map = _am.get_next();  // according to Iterator.java
 	  } catch (Exception e) {
 	    throw new SortException(e, "get_next() failed");
 	  } 
 	  
-	  if (tuple == null) {
+	  if (map == null) {
 	    break;
 	  }
 	  cur_node = new pnode();
-	  cur_node.tuple = new Tuple(tuple); // tuple copy needed --  Bingjie 4/29/98 
+	  cur_node.map = new Map(map); // map copy needed --  Bingjie 4/29/98
 
 	  try {
 	    pcurr_Q.enq(cur_node);
@@ -406,16 +403,16 @@ public class Sort extends Iterator implements GlobalConst
    * @exception IOException from lower layers
    * @exception SortException something went wrong in the lower layer. 
    */
-  private Tuple delete_min() 
+  private Map delete_min()
     throws IOException, 
 	   SortException,
 	   Exception
   {
     pnode cur_node;                // needs pq_defs.java  
-    Tuple new_tuple, old_tuple;  
+    Map new_tuple, old_tuple;
 
     cur_node = Q.deq();
-    old_tuple = cur_node.tuple;
+    old_tuple = cur_node.map;
     /*
     System.out.print("Get ");
     old_tuple.print(_in);
@@ -424,10 +421,10 @@ public class Sort extends Iterator implements GlobalConst
     // tuple of the same run into the queue
     if (i_buf[cur_node.run_num].empty() != true) { 
       // run not exhausted 
-      new_tuple = new Tuple(tuple_size); // need tuple.java??
+      new_tuple = new Map(); // need tuple.java??
 
       try {
-	new_tuple.setHdr(n_cols, _in, str_lens);
+	new_tuple.setHdr(new short[]{Map.STRING_ATTR_SIZE, Map.STRING_ATTR_SIZE, Map.INT_ATTR_SIZE, Map.STRING_ATTR_SIZE});
       }
       catch (Exception e) {
 	throw new SortException(e, "Sort.java: setHdr() failed");
@@ -439,7 +436,7 @@ public class Sort extends Iterator implements GlobalConst
 	System.out.print(" fill in from run " + cur_node.run_num);
 	new_tuple.print(_in);
 	*/
-	cur_node.tuple = new_tuple;  // no copy needed -- I think Bingjie 4/22/98
+	cur_node.map = new_tuple;  // no copy needed -- I think Bingjie 4/22/98
 	try {
 	  Q.enq(cur_node);
 	} catch (UnknowAttrType e) {
@@ -465,7 +462,7 @@ public class Sort extends Iterator implements GlobalConst
    * @exception IOException from lower layers
    * @exception UnknowAttrType attrSymbol or attrNull encountered
    */
-  private void MIN_VAL(Tuple lastElem, AttrType sortFldType) 
+  private void MIN_VAL(Map lastElem, AttrType sortFldType)
     throws IOException, 
 	   FieldNumberOutOfBoundException,
 	   UnknowAttrType {
@@ -476,28 +473,10 @@ public class Sort extends Iterator implements GlobalConst
     char[] c = new char[1];
     c[0] = Character.MIN_VALUE; 
     String s = new String(c);
-    //    short fld_no = 1;
-    
-    switch (sortFldType.attrType) {
-    case AttrType.attrInteger: 
-      //      lastElem.setHdr(fld_no, junk, null);
-      lastElem.setIntFld(_sort_fld, Integer.MIN_VALUE);
-      break;
-    case AttrType.attrReal:
-      //      lastElem.setHdr(fld-no, junk, null);
-      lastElem.setFloFld(_sort_fld, Float.MIN_VALUE);
-      break;
-    case AttrType.attrString:
-      //      lastElem.setHdr(fld_no, junk, s_size);
-      lastElem.setStrFld(_sort_fld, s);
-      break;
-    default:
-      // don't know how to handle attrSymbol, attrNull
-      //System.err.println("error in sort.java");
-      throw new UnknowAttrType("Sort.java: don't know how to handle attrSymbol, attrNull");
-    }
-    
-    return;
+    lastElem.setRowLabel(s);
+    lastElem.setColumnLabel(s);
+    lastElem.setTimeStamp(Integer.MIN_VALUE);
+    lastElem.setValue(s);
   }
 
   /**
@@ -507,7 +486,7 @@ public class Sort extends Iterator implements GlobalConst
    * @exception IOException from lower layers
    * @exception UnknowAttrType attrSymbol or attrNull encountered
    */
-  private void MAX_VAL(Tuple lastElem, AttrType sortFldType) 
+  private void MAX_VAL(Map lastElem, AttrType sortFldType)
     throws IOException, 
 	   FieldNumberOutOfBoundException,
 	   UnknowAttrType {
@@ -516,30 +495,12 @@ public class Sort extends Iterator implements GlobalConst
     //    AttrType[] junk = new AttrType[1];
     //    junk[0] = new AttrType(sortFldType.attrType);
     char[] c = new char[1];
-    c[0] = Character.MAX_VALUE; 
+    c[0] = Character.MAX_VALUE;
     String s = new String(c);
-    //    short fld_no = 1;
-    
-    switch (sortFldType.attrType) {
-    case AttrType.attrInteger: 
-      //      lastElem.setHdr(fld_no, junk, null);
-      lastElem.setIntFld(_sort_fld, Integer.MAX_VALUE);
-      break;
-    case AttrType.attrReal:
-      //      lastElem.setHdr(fld_no, junk, null);
-      lastElem.setFloFld(_sort_fld, Float.MAX_VALUE);
-      break;
-    case AttrType.attrString:
-      //      lastElem.setHdr(fld_no, junk, s_size);
-      lastElem.setStrFld(_sort_fld, s);
-      break;
-    default:
-      // don't know how to handle attrSymbol, attrNull
-      //System.err.println("error in sort.java");
-      throw new UnknowAttrType("Sort.java: don't know how to handle attrSymbol, attrNull");
-    }
-    
-    return;
+    lastElem.setRowLabel(s);
+    lastElem.setColumnLabel(s);
+    lastElem.setTimeStamp(Integer.MAX_VALUE);
+    lastElem.setValue(s);
   }
   
   /** 
@@ -549,7 +510,7 @@ public class Sort extends Iterator implements GlobalConst
    * @param len_in number of columns in the relation
    * @param str_sizes array of sizes of string attributes
    * @param am an iterator for accessing the tuples
-   * @param sort_fld the field number of the field to sort on
+   * @param sort_type the field number of the field to sort on
    * @param sort_order the sorting order (ASCENDING, DESCENDING)
    * @param sort_field_len the length of the sort field
    * @param n_pages amount of memory (in pages) available for sorting
@@ -560,7 +521,7 @@ public class Sort extends Iterator implements GlobalConst
 	      short      len_in,             
 	      short[]    str_sizes,
 	      Iterator   am,                 
-	      int        sort_fld,          
+	      int        sort_type,
 	      TupleOrder sort_order,     
 	      int        sort_fld_len,  
 	      int        n_pages      
@@ -587,9 +548,9 @@ public class Sort extends Iterator implements GlobalConst
       }
     }
     
-    Tuple t = new Tuple(); // need Tuple.java
+    Map t = new Map(); // need Tuple.java
     try {
-      t.setHdr(len_in, _in, str_sizes);
+      t.setHdr(str_sizes);
     }
     catch (Exception e) {
       throw new SortException(e, "Sort.java: t.setHdr() failed");
@@ -597,7 +558,7 @@ public class Sort extends Iterator implements GlobalConst
     tuple_size = t.size();
     
     _am = am;
-    _sort_fld = sort_fld;
+    _sort_type = sort_type;
     order = sort_order;
     _n_pages = n_pages;
     
@@ -639,14 +600,21 @@ public class Sort extends Iterator implements GlobalConst
     o_buf.init(bufs, _n_pages, tuple_size, temp_files[0], false);
     //    output_tuple = null;
     
-    max_elems_in_heap = 200;
+    max_elems_in_heap = 2000;
     sortFldLen = sort_fld_len;
-    
-    Q = new pnodeSplayPQ(sort_fld, in[sort_fld - 1], order);
 
-    op_buf = new Tuple(tuple_size);   // need Tuple.java
+      AttrType tempAttr;
+      if(sort_type == 5) {
+          tempAttr = new AttrType(AttrType.attrInteger);
+      }
+      else {
+          tempAttr = in[sort_type -1];
+      }
+      Q = new pnodeSplayPQ(sort_type, tempAttr, order);
+
+    op_buf = new Map();   // need Tuple.java
     try {
-      op_buf.setHdr(n_cols, _in, str_lens);
+      op_buf.setHdr(str_lens);
     }
     catch (Exception e) {
       throw new SortException(e, "Sort.java: op_buf.setHdr() failed");
@@ -665,7 +633,7 @@ public class Sort extends Iterator implements GlobalConst
    * @exception LowMemException memory low exception
    * @exception Exception other exceptions
    */
-  public Tuple get_next() 
+  public Map get_next()
     throws IOException, 
 	   SortException, 
 	   UnknowAttrType,
@@ -676,9 +644,17 @@ public class Sort extends Iterator implements GlobalConst
     if (first_time) {
       // first get_next call to the sort routine
       first_time = false;
+
+        AttrType tempAttr ;
+        if(_sort_type == 5) {
+            tempAttr = new AttrType(AttrType.attrInteger);
+        }
+        else {
+            tempAttr = _in[_sort_type -1];
+        }
       
       // generate runs
-      Nruns = generate_runs(max_elems_in_heap, _in[_sort_fld-1], sortFldLen);
+      Nruns = generate_runs(max_elems_in_heap, tempAttr, sortFldLen);
       //      System.out.println("Generated " + Nruns + " runs");
       
       // setup state to perform merge of runs. 
@@ -691,9 +667,9 @@ public class Sort extends Iterator implements GlobalConst
       return null;
     }
     
-    output_tuple = delete_min();
-    if (output_tuple != null){
-      op_buf.tupleCopy(output_tuple);
+    output_map = delete_min();
+    if (output_map != null){
+      op_buf.mapCopy(output_map);
       return op_buf; 
     }
     else 

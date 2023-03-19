@@ -3,7 +3,6 @@ package iterator;
 import BigT.Map;
 import global.AttrType;
 import heap.FieldNumberOutOfBoundException;
-import heap.Tuple;
 
 import java.io.IOException;
 
@@ -64,6 +63,109 @@ public class MapUtils {
         if (t1_s.compareTo( t2_s)<0)return -1;
         return 0;
 
+    }
+
+    public static int CompareForSorting(Map m1, Map m2, int sortType)
+            throws UnknowAttrType {
+        switch (sortType) {
+            case 1:
+                try {
+                    int row_cmp = m1.getRowLabel().compareTo(m2.getRowLabel());
+                    if (row_cmp != 0) {
+                        return row_cmp;
+                    }
+
+                    int col_cmp = m1.getColumnLabel().compareTo(m2.getColumnLabel());
+                    if (col_cmp != 0) {
+                        return col_cmp;
+                    }
+
+                    if (m1.getTimeStamp() == m2.getTimeStamp())
+                        return 0;
+                    if (m1.getTimeStamp() < m2.getTimeStamp())
+                        return -1;
+                    if (m1.getTimeStamp() > m2.getTimeStamp())
+                        return 1;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            case 2:
+                try {
+                    int col_cmp = m1.getColumnLabel().compareTo(m2.getColumnLabel());
+                    if (col_cmp != 0) {
+                        return col_cmp;
+                    }
+
+                    int row_cmp = m1.getRowLabel().compareTo(m2.getRowLabel());
+                    if (row_cmp != 0) {
+                        return row_cmp;
+                    }
+
+                    if (m1.getTimeStamp() == m2.getTimeStamp())
+                        return 0;
+                    if (m1.getTimeStamp() < m2.getTimeStamp())
+                        return -1;
+                    if (m1.getTimeStamp() > m2.getTimeStamp())
+                        return 1;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            case 3:
+                try {
+
+                    int row_cmp = m1.getRowLabel().compareTo(m2.getRowLabel());
+                    if (row_cmp != 0) {
+                        return row_cmp;
+                    }
+
+                    if (m1.getTimeStamp() == m2.getTimeStamp())
+                        return 0;
+                    if (m1.getTimeStamp() < m2.getTimeStamp())
+                        return -1;
+                    if (m1.getTimeStamp() > m2.getTimeStamp())
+                        return 1;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            case 4:
+                try {
+
+                    int col_cmp = m1.getColumnLabel().compareTo(m2.getColumnLabel());
+                    if (col_cmp != 0) {
+                        return col_cmp;
+                    }
+
+                    if (m1.getTimeStamp() == m2.getTimeStamp())
+                        return 0;
+                    if (m1.getTimeStamp() < m2.getTimeStamp())
+                        return -1;
+                    if (m1.getTimeStamp() > m2.getTimeStamp())
+                        return 1;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            case 5:
+                try {
+                    if (m1.getTimeStamp() == m2.getTimeStamp())
+                        return 0;
+                    if (m1.getTimeStamp() < m2.getTimeStamp())
+                        return -1;
+                    if (m1.getTimeStamp() > m2.getTimeStamp())
+                        return 1;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            default:
+                throw new UnknowAttrType(null, "Don't know how to handle attrSymbol, attrNull");
+        }
     }
 
     /**
@@ -127,31 +229,13 @@ public class MapUtils {
      *@exception IOException some I/O fault
      *@exception MapUtilsException exception from this class
      */
-    public static void SetValue(Map value, Map  map, int fld_no)
-            throws IOException, MapUtilsException
-    {
+    public static void SetValue(Map value, Map  map)
+            throws IOException {
+        value.setRowLabel(map.getRowLabel());
+        value.setColumnLabel(map.getColumnLabel());
+        value.setTimeStamp(map.getTimeStamp());
+        value.setValue(map.getValue());
 
-        try{
-            switch (fld_no)
-            {
-                case 1:
-                    value.setRowLabel(map.getRowLabel());
-                    break;
-                case 2:
-                    value.setColumnLabel(map.getColumnLabel());
-                    break;
-                case 3:
-                    value.setTimeStamp(map.getTimeStamp());
-                    break;
-                case 4:
-                    value.setValue(map.getValue());
-                default:
-                    throw new FieldNumberOutOfBoundException();
-
-            }
-        }catch(FieldNumberOutOfBoundException e){
-            throw new MapUtilsException(e, "FieldNumberOutOfBoundException is caught by MapUtils.java");
-        }
     }
 
     /**

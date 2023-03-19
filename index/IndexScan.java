@@ -96,15 +96,8 @@ public class IndexScan extends Iterator {
       throw new IndexException(e, "IndexScan.java: Heapfile not created");
     }
 
-    switch (index.indexType){
-        case IndexType.ROW, IndexType.COL, IndexType.ROW_COL, IndexType.ROW_VAL:
-            indFile = new BTreeFile(indName);
-            indScan = IndexUtils.BTree_scan(indexFilters, indFile);
-            break;
-        case IndexType.None:
-        default:
-            throw new UnknownIndexTypeException("Only BTree index is supported so far");
-    }
+    if(index.indexType != IndexType.None)
+        indScan = IndexUtils.BTree_scan(indexFilters, new BTreeFile(indName));
   }
   
   /**

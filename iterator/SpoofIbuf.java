@@ -68,8 +68,7 @@ public class SpoofIbuf implements GlobalConst  {
    *@exception IOException some I/O fault
    *@exception Exception other exceptions
    */
-  public  Tuple Get(Tuple  buf)throws IOException, Exception
-    {
+  public Map Get(Map  buf)throws IOException, Exception {
       if (tot_t_proc == n_tuples) done = true;
       
       if (done == true){buf = null; return null;}
@@ -89,7 +88,7 @@ public class SpoofIbuf implements GlobalConst  {
 	  done = true; buf = null;return null;
 	}
  
-      buf.tupleSet(_bufs[curr_page],t_rd_from_pg*t_size,t_size); 
+      buf.mapSet(_bufs[curr_page],t_rd_from_pg*t_size);
       tot_t_proc++;
       
       // Setup for next read
