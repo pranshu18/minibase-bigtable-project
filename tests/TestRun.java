@@ -187,17 +187,12 @@ public class TestRun {
             while((line = br.readLine()) != null) {
                 tempArr = line.split(",");
                 Map map = new Map();
-//                map.setHdr(new short[]{(short) tempArr[0].length(), (short) tempArr[1].length(), (short) tempArr[3].length()});
                 map.setHdr(null);
                 map.setRowLabel(tempArr[0]);
                 map.setColumnLabel(tempArr[1]);
                 map.setTimeStamp(Integer.parseInt(tempArr[2]));
-                map.setValue(tempArr[3]);
                 
-                System.out.println(map.getRowLabel());
-                System.out.println(map.getColumnLabel());
-                System.out.println(map.getTimeStamp());
-                System.out.println(map.getValue());
+                map.setValue(tempArr[3]);
 
                 MID mid = SystemDefs.JavabaseDB.b.insertMap(map.getMapByteArray());
             }

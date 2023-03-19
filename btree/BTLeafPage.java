@@ -86,6 +86,7 @@ public class BTLeafPage extends BTSortedPage {
    *           i.e., the <key, datamid> pair.
    *@exception  LeafInsertRecException error when insert
    *
+   **/
   public MID insertRecord(KeyClass key, MID dataMid)
     throws  LeafInsertRecException
     {
@@ -99,7 +100,7 @@ public class BTLeafPage extends BTSortedPage {
       catch(Exception e) {
         throw new LeafInsertRecException(e, "insert record failed");
       }
-    } // end of insertRecord
+    }
   
   
   /**  Iterators. 

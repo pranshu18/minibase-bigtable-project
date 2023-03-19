@@ -24,6 +24,8 @@ public class Map {
 
     //Assigning a MID identifier to each map
     private MID mid;
+    
+    private int length;
 
     public static final int max_size = MINIBASE_PAGESIZE;
 
@@ -31,6 +33,7 @@ public class Map {
     public Map(){
         data = new byte[max_size];
         data_offset = 0;
+        length = max_size;
     }
 
     public Map(byte [] amap, int offset)
@@ -102,8 +105,8 @@ public class Map {
     }
 
     public byte[] getMapByteArray(){
-        byte [] array_copy = new byte [data.length];
-        System.arraycopy(data, 0, array_copy, 0, data.length);
+        byte [] array_copy = new byte [length];
+        System.arraycopy(data, data_offset, array_copy, 0, length);
         return array_copy;
     }
 
@@ -238,9 +241,9 @@ public class Map {
         fldOffset[numFlds] = (short) (fldOffset[i-1] + incr);
         Convert.setShortValue(fldOffset[numFlds], pos, data);
 
-        int map_length = fldOffset[numFlds] - data_offset;
+        length = fldOffset[numFlds] - data_offset;
 
-        if(map_length > max_size)
+        if(length > max_size)
             throw new InvalidTupleSizeException (null, "TUPLE: TUPLE_TOOBIG_ERROR");
     }
 
