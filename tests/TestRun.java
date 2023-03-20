@@ -161,6 +161,7 @@ public class TestRun {
 			String line = "";
 			String[] tempArr;
 			while((line = br.readLine()) != null) {
+				line = line.replaceAll("[^\\x00-\\x7F]", "");
 				tempArr = line.split(",");
 				Map map = new Map();
 				map.setHdr(null);
