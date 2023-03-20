@@ -224,7 +224,7 @@ public class Scan implements GlobalConst {
 	 */
 	private boolean firstDataPage() throws InvalidInfoSizeException, IOException {
 		DataPageInfo dpinfo;
-		Info recinfo = null;
+		DataPageHelper recinfo = null;
 		Boolean bst;
 
 		/** copy data about first directory page */
@@ -369,7 +369,7 @@ public class Scan implements GlobalConst {
 
 		boolean nextDataPageStatus;
 		PageId nextDirPageId = new PageId();
-		Info recinfo = null;
+		DataPageHelper recinfo = null;
 
 		// ASSERTIONS:
 		// - this->dirpageId has Id of current directory page

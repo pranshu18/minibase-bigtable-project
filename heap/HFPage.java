@@ -591,7 +591,7 @@ public class HFPage extends Page
     }
 
 
-    public Info getRecordInfo ( MID mid ) 
+    public DataPageHelper getRecordInfo ( MID mid ) 
     throws IOException,  
 	   InvalidSlotNumberException
     {
@@ -612,7 +612,7 @@ public class HFPage extends Page
 	  offset = getSlotOffset (slotNo);
 	  record = new byte[recLen];
 	  System.arraycopy(data, offset, record, 0, recLen);
-	  Info info = new Info(record, 0, 12);
+	  DataPageHelper info = new DataPageHelper(record, 0, 12);
 	  return info;
 	}
       
@@ -668,7 +668,7 @@ public class HFPage extends Page
 
 // Returning the info from the given MID
 
-    public Info returnRecordInfo ( MID mid )
+    public DataPageHelper returnRecordInfo ( MID mid )
     throws IOException, 
 	   InvalidSlotNumberException
     {
@@ -689,7 +689,7 @@ public class HFPage extends Page
 	{
 	  
 	  offset = getSlotOffset (slotNo);
-	  Info info = new Info(data, offset , 12);
+	  DataPageHelper info = new DataPageHelper(data, offset , 12);
 	  return info;
 	}
       

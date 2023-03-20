@@ -409,16 +409,6 @@ public class bigt {
 		return mid;
 	}
 
-	/**
-	 * Remove Duplicates to handle the versioning in the database
-	 *
-	 * @throws InvalidSlotNumberException
-	 * @throws HFException
-	 * @throws HFDiskMgrException
-	 * @throws HFBufMgrException
-	 * @throws Exception
-	 */
-
 
 	/**
 	 * Fucntion to display all the maps in the database

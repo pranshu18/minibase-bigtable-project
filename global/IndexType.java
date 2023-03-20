@@ -7,11 +7,11 @@ package global;
 
 public class IndexType {
 
-  public static final int No_Index    = 1;
-  public static final int Row_Index = 2;
-  public static final int Col_Index    = 3;
-  public static final int Col_Row_index  = 4;
-  public static final int Row_Value_index  = 5;
+  public static final int None = 1;
+  public static final int ROW = 2;
+  public static final int COL = 3;
+  public static final int COLROW = 4;
+  public static final int ROWVAL = 5;
   public static final int Time_Index  = 6;
 
 
@@ -40,15 +40,15 @@ public class IndexType {
     public String toString() {
 
     switch (indexType) {
-    case No_Index :
+    case None:
       return "No indexing";
-    case Row_Index:
+    case ROW:
       return "row indexing";
-    case Col_Index:
+    case COL:
       return "Column indexing";
-    case Col_Row_index:
+    case COLROW:
       return "One indexing on Column and row and timestamp";
-    case Row_Value_index:
+    case ROWVAL:
       return "Row,value and timestamp";
 
     }

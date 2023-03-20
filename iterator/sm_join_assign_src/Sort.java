@@ -2,11 +2,7 @@ package iterator;
 
 import java.io.*; 
 import global.*;
-import bufmgr.*;
-import diskmgr.*;
 import heap.*;
-import index.*;
-import chainexception.*;
 
 /**
  * The Sort class sorts a file. All necessary information are passed as 
@@ -105,7 +101,7 @@ public class Sort extends Iterator implements GlobalConst
 	System.out.print("Get tuple from run " + i);
 	temp_tuple.print(_in);
 	*/
-	cur_node.tuple = temp_tuple; // no copy needed
+	cur_node.map = temp_tuple; // no copy needed
 	try {
 	  Q.enq(cur_node);
 	}
@@ -197,7 +193,7 @@ public class Sort extends Iterator implements GlobalConst
 	break;
       }
       cur_node = new pnode();
-      cur_node.tuple = new Tuple(tuple); // tuple copy needed --  Bingjie 4/29/98 
+      cur_node.map = new Tuple(tuple); // tuple copy needed --  Bingjie 4/29/98
 
       pcurr_Q.enq(cur_node);
       p_elems_curr_Q ++;
@@ -211,7 +207,7 @@ public class Sort extends Iterator implements GlobalConst
       if (cur_node == null) break; 
       p_elems_curr_Q --;
       
-      comp_res = TupleUtils.CompareTupleWithValue(sortFldType, cur_node.tuple, _sort_fld, lastElem);  // need tuple_utils.java
+      comp_res = TupleUtils.CompareTupleWithValue(sortFldType, cur_node.map, _sort_fld, lastElem);  // need tuple_utils.java
       
       if ((comp_res < 0 && order.tupleOrder == TupleOrder.Ascending) || (comp_res > 0 && order.tupleOrder == TupleOrder.Descending)) {
 	// doesn't fit in current run, put into the other queue
@@ -226,12 +222,12 @@ public class Sort extends Iterator implements GlobalConst
       else {
 	// set lastElem to have the value of the current tuple,
 	// need tuple_utils.java
-	TupleUtils.SetValue(lastElem, cur_node.tuple, _sort_fld, sortFldType);
+	TupleUtils.SetValue(lastElem, cur_node.map, _sort_fld, sortFldType);
 	// write tuple to output file, need io_bufs.java, type cast???
 	//	System.out.println("Putting tuple into run " + (run_num + 1)); 
 	//	cur_node.tuple.print(_in);
 	
-	o_buf.Put(cur_node.tuple);
+	o_buf.Put(cur_node.map);
       }
       
       // check whether the other queue is full
@@ -309,7 +305,7 @@ public class Sort extends Iterator implements GlobalConst
 	    break;
 	  }
 	  cur_node = new pnode();
-	  cur_node.tuple = new Tuple(tuple); // tuple copy needed --  Bingjie 4/29/98 
+	  cur_node.map = new Tuple(tuple); // tuple copy needed --  Bingjie 4/29/98
 
 	  try {
 	    pcurr_Q.enq(cur_node);
@@ -415,7 +411,7 @@ public class Sort extends Iterator implements GlobalConst
     Tuple new_tuple, old_tuple;  
 
     cur_node = Q.deq();
-    old_tuple = cur_node.tuple;
+    old_tuple = cur_node.map;
     /*
     System.out.print("Get ");
     old_tuple.print(_in);
@@ -439,7 +435,7 @@ public class Sort extends Iterator implements GlobalConst
 	System.out.print(" fill in from run " + cur_node.run_num);
 	new_tuple.print(_in);
 	*/
-	cur_node.tuple = new_tuple;  // no copy needed -- I think Bingjie 4/22/98
+	cur_node.map = new_tuple;  // no copy needed -- I think Bingjie 4/22/98
 	try {
 	  Q.enq(cur_node);
 	} catch (UnknowAttrType e) {

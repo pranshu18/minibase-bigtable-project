@@ -1,14 +1,11 @@
 package index;
 
 import global.*;
-import bufmgr.*;
-import diskmgr.*;
 import btree.*;
 import iterator.*;
 import heap.*;
 import java.io.*;
 import BigT.*;
-import iterator.*;
 
 /**
  * Index Scan iterator will directly access the required tuple using the
@@ -97,45 +94,8 @@ public class IndexScan extends Iterator {
 			throw new IndexException(e, "IndexScan.java: Heapfile not created");
 		}
 
-		switch (index.indexType) {
-
-		case IndexType.Row_Index: {
-			indFile = new BTreeFile(indName);
-			indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
-			break;
-		}
-		
-		case IndexType.Col_Index: {
-			indFile = new BTreeFile(indName);
-			indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
-			break;
-		}
-		
-		
-		case IndexType.Col_Row_index: {
-			indFile = new BTreeFile(indName);
-			indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
-			break;
-		}
-		
-		case IndexType.Row_Value_index: {
-			indFile = new BTreeFile(indName);
-			indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
-			break;
-		}
-		
-		case IndexType.Time_Index: {
-			indFile = new BTreeFile(indName);
-			indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
-			break;
-		}
-		
-
-		case IndexType.No_Index:
-		default:
-			throw new UnknownIndexTypeException("Only BTree index is supported so far");
-
-		}
+		if(index.indexType != IndexType.None)
+			indScan = IndexUtils.BTree_scan(selects, new BTreeFile(indName));
 
 	}
 
@@ -193,26 +153,26 @@ public class IndexScan extends Iterator {
 
 		switch (index.indexType) {
 
-		case IndexType.Row_Index: {
+		case IndexType.ROW: {
 			indFile = new BTreeFile(indName);
 			indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
 			break;
 		}
 		
-		case IndexType.Col_Index: {
+		case IndexType.COL: {
 			indFile = new BTreeFile(indName);
 			indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
 			break;
 		}
 		
 		
-		case IndexType.Col_Row_index: {
+		case IndexType.COLROW: {
 			indFile = new BTreeFile(indName);
 			indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
 			break;
 		}
 		
-		case IndexType.Row_Value_index: {
+		case IndexType.ROWVAL: {
 			indFile = new BTreeFile(indName);
 			indScan = (BTFileScan) IndexUtils.BTree_scan(selects, indFile);
 			break;
@@ -225,7 +185,7 @@ public class IndexScan extends Iterator {
 		}
 		
 
-		case IndexType.No_Index:
+		case IndexType.None:
 		default:
 			throw new UnknownIndexTypeException("Only BTree index is supported so far");
 

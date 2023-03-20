@@ -3,7 +3,6 @@
 package bufmgr;
 
 import java.io.*;
-import java.util.*;
 import diskmgr.*;
 import global.*;
 
