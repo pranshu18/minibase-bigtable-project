@@ -55,26 +55,26 @@ public class bigt {
 		this._hf = new Heapfile(name);
 
 		switch (type) {
-		case 1: {
+		case IndexType.None: {
 			break;
 		}
 
-		case 2: {
+		case IndexType.ROW: {
 			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
 			break;
 		}
 
-		case 3: {
+		case IndexType.COL: {
 			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
 			break;
 		}
 
-		case 4: {
+		case IndexType.COLROW: {
 			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
 			this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
 			break;
 		}
-		case 5: {
+		case IndexType.ROWVAL: {
 			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
 			this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
 			break;
@@ -118,27 +118,27 @@ public class bigt {
 		_hf.deleteFile();
 
 		switch (type) {
-		case 1: {
+		case IndexType.None: {
 			break;
 		}
 
-		case 2: {
+		case IndexType.ROW: {
 			_bf0.destroyFile();
 			break;
 
 		}
 
-		case 3: {
+		case IndexType.COL: {
 			_bf0.destroyFile();
 			break;
 
 		}
-		case 4: {
+		case IndexType.COLROW: {
 			_bf0.destroyFile();
 			_bf1.destroyFile();
 			break;
 		}
-		case 5: {
+		case IndexType.ROWVAL: {
 			_bf0.destroyFile();
 			_bf1.destroyFile();
 			break;
