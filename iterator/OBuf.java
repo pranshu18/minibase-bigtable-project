@@ -52,18 +52,18 @@ public class OBuf implements GlobalConst{
   
   /**
    * Writes a tuple to the output buffer
-   *@param tuple the tuple written to buffer
+   *@param map the tuple written to buffer
    *@return the position of tuple which is in buffer 
    *@exception IOException  some I/O fault
    *@exception Exception other exceptions
    */
-  public Tuple  Put(Map tuple)
+  public Tuple Put(Map map)
     throws IOException,
 	   Exception
     {
       
       byte[] copybuf;
-      copybuf = tuple.getMapByteArray();
+      copybuf = map.getMapByteArray();
       System.arraycopy(copybuf,0,_bufs[curr_page],t_wr_to_pg*t_size,t_size); 
       Tuple tuple_ptr = new Tuple(_bufs[curr_page] , t_wr_to_pg * t_size,t_size);
       
@@ -103,7 +103,7 @@ public class OBuf implements GlobalConst{
 	{
 	  for (count = 0; count <= curr_page; count++)
 	    {
-	      MID rid;
+	      MID mid;
 	      // Will have to go thru entire buffer writing tuples to disk
 	      
 	      if (count == curr_page)
@@ -111,7 +111,7 @@ public class OBuf implements GlobalConst{
 		  {
 		    System.arraycopy(_bufs[count],t_size*i,tempbuf,0,t_size);
 		    try {
-		      rid =  _temp_fd.insertRecord(tempbuf);
+		      mid =  _temp_fd.insertRecord(tempbuf);
 		    }
 		    catch (Exception e){
 		      throw e;
@@ -122,7 +122,7 @@ public class OBuf implements GlobalConst{
 		  {       
 		    System.arraycopy(_bufs[count],t_size*i,tempbuf,0,t_size);
 		    try {
-		      rid =  _temp_fd.insertRecord(tempbuf);
+		      mid =  _temp_fd.insertRecord(tempbuf);
 		    }
 		    catch (Exception e){
 		      throw e;

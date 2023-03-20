@@ -3,13 +3,9 @@ package BigT;
 import java.io.IOException;
 import java.util.*;
 
-import BigT.Map;
 import global.*;
 import heap.*;
-import index.IndexException;
 import index.IndexScan;
-import index.InvalidSelectionException;
-import index.UnknownIndexTypeException;
 import iterator.*;
 import btree.*;
 import bufmgr.PageNotReadException;
@@ -439,7 +435,7 @@ public class bigt {
 		TupleOrder[] order = new TupleOrder[2];
 		order[0] = new TupleOrder(TupleOrder.Ascending);
 		order[1] = new TupleOrder(TupleOrder.Descending);
-		iscan = new IndexScan(new IndexType(IndexType.Row_Index), name, name + "Temp", attrType, attrSize, 4, 4, null,
+		iscan = new IndexScan(new IndexType(IndexType.ROW), name, name + "Temp", attrType, attrSize, 4, 4, null,
 				expr, 1, true);
 
 		MapMidPair mpair = iscan.get_nextMidPair();
