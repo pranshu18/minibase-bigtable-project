@@ -1,7 +1,9 @@
 
 package iterator;
 import global.*;
-
+import bufmgr.*;
+import diskmgr.*;
+import heap.*;
 import java.io.*;
 
 /**
@@ -67,12 +69,14 @@ public abstract class pnodePQ
    * @return  <code>0</code> if the two are equal,
    *          <code>1</code> if <code>a</code> is greater,
    *         <code>-1</code> if <code>b</code> is greater
-   * @exception UnknowAttrType <code>attrSymbol</code> or
-
+   * @exception IOException from lower layers
+   * @exception UnknowAttrType <code>attrSymbol</code> or 
+   *                           <code>attrNull</code> encountered
+   * @exception TupleUtilsException error in tuple compare routines
    */
   public int pnodeCMP(pnode a, pnode b) 
-         throws UnknowAttrType {
-    int ans = MapUtils.SortingComparator(fld_type, a.map, b.map, fld_no);
+         throws IOException, UnknowAttrType, TupleUtilsException {
+    int ans = TupleUtils.CompareTupleWithTuple(fld_type, a.tuple, fld_no, b.tuple, fld_no);
     return ans;
   }
 
@@ -86,9 +90,8 @@ public abstract class pnodePQ
    * @exception UnknowAttrType <code>attrSymbol</code> or 
    *                           <code>attrNull</code> encountered
    * @exception TupleUtilsException error in tuple compare routines
- * @throws MapUtilsException 
    */  
-  public boolean pnodeEQ(pnode a, pnode b) throws IOException, UnknowAttrType, TupleUtilsException, MapUtilsException {
+  public boolean pnodeEQ(pnode a, pnode b) throws IOException, UnknowAttrType, TupleUtilsException {
     return pnodeCMP(a, b) == 0;
   }
   

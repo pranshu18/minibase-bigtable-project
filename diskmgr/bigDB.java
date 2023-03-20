@@ -1,8 +1,8 @@
+/* File DB.java */
+
 package diskmgr;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 
 import BigT.bigt;
 import btree.AddFileEntryException;
@@ -14,11 +14,8 @@ import btree.GetFileEntryException;
 import btree.IteratorException;
 import btree.PinPageException;
 import btree.UnpinPageException;
-import global.AttrType;
-import global.Convert;
-import global.GlobalConst;
-import global.PageId;
-import global.SystemDefs;
+import bufmgr.*;
+import global.*;
 import heap.HFBufMgrException;
 import heap.HFDiskMgrException;
 import heap.HFException;
@@ -81,7 +78,6 @@ public class bigDB implements GlobalConst {
         this.indexType = type;
     }
 
-    //TODO modify file name, move to bigt
     public void destroyIndex()
             throws GetFileEntryException, ConstructPageException, AddFileEntryException, IOException, IteratorException,
             UnpinPageException, FreePageException, DeleteFileEntryException, PinPageException {

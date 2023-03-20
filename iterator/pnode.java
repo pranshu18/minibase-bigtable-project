@@ -1,6 +1,9 @@
 package iterator; 
 
-import BigT.Map;
+import global.*;
+import bufmgr.*;
+import diskmgr.*;
+import heap.*;
 
 /**
  * A structure describing a tuple.
@@ -11,7 +14,7 @@ public class pnode {
   public int     run_num;
 
   /** the tuple reference */
-  public Map map;
+  public Tuple   tuple;
 
   /**
    * class constructor, sets <code>run_num</code> to 0 and <code>tuple</code>
@@ -20,18 +23,18 @@ public class pnode {
   public pnode() 
   {
     run_num = 0;  // this may need to be changed
-    map = null;
+    tuple = null; 
   }
   
   /**
    * class constructor, sets <code>run_num</code> and <code>tuple</code>.
    * @param runNum the run number
-   * @param m      the tuple
+   * @param t      the tuple
    */
-  public pnode(int runNum, Map m)
+  public pnode(int runNum, Tuple t) 
   {
     run_num = runNum;
-    map = m;
+    tuple = t;
   }
   
 }

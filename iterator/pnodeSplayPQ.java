@@ -55,9 +55,8 @@ public class pnodeSplayPQ extends pnodePQ
    * @exception UnknowAttrType <code>attrSymbol</code> or 
    *                           <code>attrNull</code> encountered
    * @exception TupleUtilsException error in tuple compare routines
- * @throws MapUtilsException 
    */
-  public void enq(pnode item) throws IOException, UnknowAttrType, TupleUtilsException
+  public void enq(pnode item) throws IOException, UnknowAttrType, TupleUtilsException 
   {
     count ++;
     pnodeSplayNode newnode = new pnodeSplayNode(item);
@@ -67,7 +66,6 @@ public class pnodeSplayPQ extends pnodePQ
       root = newnode;
       return;
     }
-    try {
     
     int comp = pnodeCMP(item, t.item);
     
@@ -145,12 +143,8 @@ public class pnodeSplayPQ extends pnodePQ
     if ((t.rt = pnodeSplayNode.dummy.lt) != null) t.rt.par = t;
     t.par = null;
     root = t;
-    }
-    catch(Exception e) {
-    	e.printStackTrace();
-    }
+	    
     return; 
-    
   }
   
   /**
