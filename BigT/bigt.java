@@ -354,19 +354,19 @@ public class bigt {
 		while (temp != null) {
 			switch (type) {
 
-			case 2: {
+			case IndexType.ROW: {
 				key = temp.getRowLabel();
 				_bf0.insert(new StringKey(key), mid);
 				break;
 			}
 
-			case 3: {
+			case IndexType.COL: {
 				key = temp.getColumnLabel();
 				_bf0.insert(new StringKey(key), mid);
 				break;
 			}
 
-			case 4: {
+			case IndexType.COLROW: {
 				key = temp.getColumnLabel() + temp.getRowLabel();
 				key_timeStamp = temp.getTimeStamp();
 				_bf0.insert(new StringKey(key), mid);
@@ -374,7 +374,7 @@ public class bigt {
 				break;
 			}
 
-			case 5: {
+			case IndexType.ROWVAL: {
 				key = temp.getRowLabel() + temp.getValue();
 				key_timeStamp = temp.getTimeStamp();
 				_bf0.insert(new StringKey(key), mid);
