@@ -1,8 +1,5 @@
 package iterator; 
 
-import global.*;
-import bufmgr.*;
-import diskmgr.*;
 import heap.*;
 
 /**
@@ -23,7 +20,7 @@ public class pnode {
   public pnode() 
   {
     run_num = 0;  // this may need to be changed
-    tuple = null; 
+    map = null;
   }
   
   /**
@@ -34,7 +31,7 @@ public class pnode {
   public pnode(int runNum, Tuple t) 
   {
     run_num = runNum;
-    tuple = t;
+    map = t;
   }
   
 }

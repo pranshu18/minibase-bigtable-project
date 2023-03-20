@@ -5,7 +5,6 @@ import java.io.IOException;
 import BigT.*;
 import global.*;
 import heap.FieldNumberOutOfBoundException;
-import heap.Tuple;
 
 public class MapUtils {
 
@@ -114,27 +113,27 @@ public class MapUtils {
 	 * @return 0 if the two are equal, 1 if the map is greater, -1 if the map is
 	 *         smaller,
 	 */
-	public static int CompareMapWithMapForSorting(AttrType fldType, Map m1, Map m2, int map_fld_no)
-			throws IOException, UnknowAttrType, MapUtilsException {
-		switch (map_fld_no) {
+	public static int SortingComparator(AttrType fldType, Map map1, Map map2, int map_field_num)
+			throws UnknowAttrType {
+		switch (map_field_num) {
 		case 1: 
 
 			try {
-				int rowCmp = m1.getRowLabel().compareTo(m2.getRowLabel());
-				if (rowCmp != 0) {
-					return rowCmp;
+				int row_compare = map1.getRowLabel().compareTo(map2.getRowLabel());
+				if (row_compare != 0) {
+					return row_compare;
 				}
 
-				int colCmp = m1.getColumnLabel().compareTo(m2.getColumnLabel());
-				if (colCmp != 0) {
-					return colCmp;
+				int column_compare = map1.getColumnLabel().compareTo(map2.getColumnLabel());
+				if (column_compare != 0) {
+					return column_compare;
 				}
 
-				if (m1.getTimeStamp() == m2.getTimeStamp())
+				if (map1.getTimeStamp() == map2.getTimeStamp())
 					return 0;
-				if (m1.getTimeStamp() < m2.getTimeStamp())
+				if (map1.getTimeStamp() < map2.getTimeStamp())
 					return -1;
-				if (m1.getTimeStamp() > m2.getTimeStamp())
+				if (map1.getTimeStamp() > map2.getTimeStamp())
 					return 1;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -142,21 +141,21 @@ public class MapUtils {
 
 		case 2:
 			try {
-				int colCmp = m1.getColumnLabel().compareTo(m2.getColumnLabel());
+				int colCmp = map1.getColumnLabel().compareTo(map2.getColumnLabel());
 				if (colCmp != 0) {
 					return colCmp;
 				}
 
-				int rowCmp = m1.getRowLabel().compareTo(m2.getRowLabel());
+				int rowCmp = map1.getRowLabel().compareTo(map2.getRowLabel());
 				if (rowCmp != 0) {
 					return rowCmp;
 				}
 
-				if (m1.getTimeStamp() == m2.getTimeStamp())
+				if (map1.getTimeStamp() == map2.getTimeStamp())
 					return 0;
-				if (m1.getTimeStamp() < m2.getTimeStamp())
+				if (map1.getTimeStamp() < map2.getTimeStamp())
 					return -1;
-				if (m1.getTimeStamp() > m2.getTimeStamp())
+				if (map1.getTimeStamp() > map2.getTimeStamp())
 					return 1;
 
 			} catch (Exception e) {
@@ -166,16 +165,16 @@ public class MapUtils {
 		case 3:
 			try {
 
-				int rowCmp = m1.getRowLabel().compareTo(m2.getRowLabel());
+				int rowCmp = map1.getRowLabel().compareTo(map2.getRowLabel());
 				if (rowCmp != 0) {
 					return rowCmp;
 				}
 
-				if (m1.getTimeStamp() == m2.getTimeStamp())
+				if (map1.getTimeStamp() == map2.getTimeStamp())
 					return 0;
-				if (m1.getTimeStamp() < m2.getTimeStamp())
+				if (map1.getTimeStamp() < map2.getTimeStamp())
 					return -1;
-				if (m1.getTimeStamp() > m2.getTimeStamp())
+				if (map1.getTimeStamp() > map2.getTimeStamp())
 					return 1;
 
 			} catch (Exception e) {
@@ -185,16 +184,16 @@ public class MapUtils {
 		case 4:
 			try {
 
-				int colCmp = m1.getColumnLabel().compareTo(m2.getColumnLabel());
+				int colCmp = map1.getColumnLabel().compareTo(map2.getColumnLabel());
 				if (colCmp != 0) {
 					return colCmp;
 				}
 
-				if (m1.getTimeStamp() == m2.getTimeStamp())
+				if (map1.getTimeStamp() == map2.getTimeStamp())
 					return 0;
-				if (m1.getTimeStamp() < m2.getTimeStamp())
+				if (map1.getTimeStamp() < map2.getTimeStamp())
 					return -1;
-				if (m1.getTimeStamp() > m2.getTimeStamp())
+				if (map1.getTimeStamp() > map2.getTimeStamp())
 					return 1;
 
 			} catch (Exception e) {
@@ -203,11 +202,11 @@ public class MapUtils {
 
 		case 5:
 			try {
-				if (m1.getTimeStamp() == m2.getTimeStamp())
+				if (map1.getTimeStamp() == map2.getTimeStamp())
 					return 0;
-				if (m1.getTimeStamp() < m2.getTimeStamp())
+				if (map1.getTimeStamp() < map2.getTimeStamp())
 					return -1;
-				if (m1.getTimeStamp() > m2.getTimeStamp())
+				if (map1.getTimeStamp() > map2.getTimeStamp())
 					return 1;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -215,7 +214,7 @@ public class MapUtils {
 
 		default:
 
-			throw new UnknowAttrType(null, "Don't know how to handle attrSymbol, attrNull");
+			throw new UnknowAttrType(null, "Undefined attr type");
 		}
 	}
 
