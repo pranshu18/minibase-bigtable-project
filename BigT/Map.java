@@ -40,7 +40,6 @@ public class Map {
     {
         data = amap;
         data_offset = offset;
-        length = 82;
     }
 
     public Map(Map fromMap)
@@ -48,15 +47,7 @@ public class Map {
         data = fromMap.getMapByteArray();
         data_offset = 0;
         fldOffset = fromMap.copyFldOffset();
-        length = fromMap.getLength();
     }
-
-	public Map(int size) {
-		// Create a new map
-		data = new byte[size];
-		data_offset = 0;
-		length = size;
-	}
 
     public int getOffset() {
         return data_offset;
@@ -176,19 +167,16 @@ public class Map {
     public void mapCopy(Map fromMap){
         byte [] temparray = fromMap.getMapByteArray();
         System.arraycopy(temparray, 0, data, data_offset, temparray.length);
-        length = fromMap.getLength();
     }
 
     public void mapInit(byte[] amap, int offset){
         data = amap;
         data_offset = offset;
-        length = 82;
     }
 
-    public void mapSet(byte[] frommap, int offset, int size){
-        System.arraycopy(frommap, offset, data, 0, size);
+    public void mapSet(byte[] frommap, int offset){
+        System.arraycopy(frommap, offset, data, 0, frommap.length - offset);
         data_offset = 0;
-        length = size;
     }
 
     public void setHdr (short strSizes[])
@@ -277,9 +265,6 @@ public class Map {
     public void setMid(MID mid) {
         this.mid = mid;
     }
-    
-    public int getLength() {
-    	return length;
-    }
 
 }
+
