@@ -181,27 +181,7 @@ public class bigt {
 	 * @throws AddFileEntryException
 	 */
 
-	public void populateBtree() throws KeyTooLongException, KeyNotMatchException, LeafInsertRecException,
-			IndexInsertRecException, ConstructPageException, UnpinPageException, PinPageException,
-			NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException,
-			LeafDeleteException, InsertException, IOException, FileScanException, TupleUtilsException, InvalidRelation,
-			InvalidTypeException, JoinsException, InvalidTupleSizeException, PageNotReadException, PredEvalException,
-			UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat, GetFileEntryException, AddFileEntryException {
 
-		_bftemp = new BTreeFile(name + "Temp", AttrType.attrString, 64, 1);
-		fscan = new FileScan(name, attrType, attrSize, (short) 4, 4, null, null);
-		MapMidPair mpair = fscan.get_nextMidPair();
-		while (mpair != null) {
-			String  s = String.format("%06d", mpair.map.getTimeStamp());
-			String key = mpair.map.getRowLabel() + mpair.map.getColumnLabel()+"%"+s;
-			_bftemp.insert(new StringKey(key), mpair.mid);
-//			_bftemp.insert(new StringKey(mpair.map.getRowLabel() + mpair.map.getColumnLabel()), mpair.mid);
-			mpair = fscan.get_nextMidPair();
-		}
-
-		fscan.close();
-
-	}
 
 	/**
 	 * Get the count of total number of maps
@@ -231,19 +211,21 @@ public class bigt {
 	 */
 	public int getRowCnt(int numbuf) throws UnknowAttrType, LowMemException, JoinsException, Exception {
 
-		Stream stream = this.openStream(1, "", "", "",numbuf);
+		Stream stream = this.openStream(1, "*", "*", "*",numbuf);
 		Map map = stream.getNext();
-		System.out.println(map.getRowLabel());
+	
 		// stores distinct row labels
 		HashSet noDupSet = new HashSet();
+		
 
 		while (map != null) {
 
-			System.out.println(map.getRowLabel());
+			//System.out.println(map.getRowLabel());
 			noDupSet.add(map.getRowLabel());
 			map = stream.getNext();
-		}
 
+		}
+		stream.closestream();
 		return noDupSet.size();
 	}
 
@@ -260,7 +242,7 @@ public class bigt {
 	 * @throws Exception
 	 */
 	public int getColumnCnt(int numbuf) throws UnknowAttrType, LowMemException, JoinsException, Exception {
-		Stream stream = this.openStream(1, "", "", "",numbuf);
+		Stream stream = this.openStream(1, "*", "*", "*",numbuf);
 		Map map = stream.getNext();
 
 		// stores distinct column labels
@@ -272,6 +254,7 @@ public class bigt {
 			map = stream.getNext();
 		}
 
+		stream.closestream();
 		return noDupSet.size();
 	}
 
@@ -392,7 +375,8 @@ public class bigt {
 		MID mid = heapfile.insertRecord(mapPtr);
 		
 //        // Checks for more than three maps with the same row and column label, and
-//        // deletes the map with the oldest timestamp
+//        // deletes the oldest map
+		
         Map map = heapfile.getRecord(mid);
         map.setMid(mid);
         String rowLabel = map.getRowLabel();
@@ -400,10 +384,7 @@ public class bigt {
 		ArrayList<String> key = new ArrayList<String>();
 		key.add(rowLabel);
 		key.add(colLabel);
-		//String key = rowLabel + "/-/" + colLabel;
 
-
-//
 		if(rocolMID.containsKey(key)){
 			ArrayList<MID> mid_arr = rocolMID.get(key);
 			mid_arr.add(mid);
@@ -414,6 +395,14 @@ public class bigt {
 			ArrayList<MID> mid_arr2 = new ArrayList<MID>();
 			mid_arr2.add(mid);
 			rocolMID.put(key,mid_arr2);
+		}
+		
+		
+		if(rocolMID.get(key).size()>3){
+			
+			MID mid_to_be_removed = rocolMID.get(key).get(0);
+			heapfile.deleteRecord(mid_to_be_removed);
+			rocolMID.get(key).remove(0);
 		}
 
 
@@ -429,27 +418,7 @@ public class bigt {
 	 * @throws HFBufMgrException
 	 * @throws Exception
 	 */
-	public void purgeOldestMap()
-			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
 
-
-		for (ArrayList<String> key :rocolMID.keySet()) {
-
-			if(rocolMID.get(key).size()>=3){
-				MID mid_to_be_removed = rocolMID.get(key).get(0);
-				heapfile.deleteRecord(mid_to_be_removed);
-				rocolMID.get(key).remove(0);
-			}
-
-		}
-//
-//		if(rocolMID.containsKey(key) && rocolMID.get(key).size()==3){
-//			MID mid_to_be_removed = rocolMID.get(key).get(0);
-//			_hf.deleteRecord(mid_to_be_removed);
-//			rocolMID.get(key).remove(0);
-//		}
-
-	}
 
 	/**
 	 * Fucntion to display all the maps in the database
@@ -500,6 +469,8 @@ public class bigt {
 		}
 	}
 
+
+	
 	/**
 	 * Opens the stream of maps
 	 * 
