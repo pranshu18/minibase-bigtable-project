@@ -436,9 +436,9 @@ public class bigt {
 		order[0] = new TupleOrder(TupleOrder.Ascending);
 		order[1] = new TupleOrder(TupleOrder.Descending);
 		iscan = new IndexScan(new IndexType(IndexType.ROW), name, name + "Temp", attrType, attrSize, 4, 4, null,
-				expr, 1, true);
+				expr, null, 1, true);
 
-		MapMidPair mpair = iscan.get_nextMidPair();
+		MapMidPair mpair = iscan.getNextMIDPair();
 		String key = "";
 		String oldKey = "";
 		if (mpair != null) {
@@ -464,7 +464,7 @@ public class bigt {
 				list.remove(0);
 			}
 
-			mpair = iscan.get_nextMidPair();
+			mpair = iscan.getNextMIDPair();
 		}
 		iscan.close();
 		_bftemp.destroyFile();
