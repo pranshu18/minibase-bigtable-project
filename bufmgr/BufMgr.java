@@ -382,59 +382,6 @@ public class BufMgr implements GlobalConst {
 		}
 	}
 
-	
-	
-	private void privFlushPagesForcibly(PageId pageid, int all_pages)
-            throws HashOperationException,
-            PageUnpinnedException,
-            PagePinnedException,
-            PageNotFoundException,
-            BufMgrException,
-            IOException {
-        int i;
-        int unpinned = 0;
-
-        for (i = 0; i < numBuffers; i++)   // write all valid dirty pages to disk
-            if ((all_pages != 0) || (frmeTable[i].pageNo.pid == pageid.pid)) {
-
-                while (frmeTable[i].pin_count() != 0)
-                    frmeTable[i].unpin();
-
-                if (frmeTable[i].dirty != false) {
-
-                    if (frmeTable[i].pageNo.pid == INVALID_PAGE)
-
-                        throw new PageNotFoundException(null, "BUFMGR: INVALID_PAGE_NO");
-                    pageid.pid = frmeTable[i].pageNo.pid;
-
-
-                    Page apage = new Page(bufPool[i]);
-
-                    write_page(pageid, apage);
-
-                    try {
-                        hashTable.remove(pageid);
-                    } catch (Exception e2) {
-                        throw new HashOperationException(e2, "BUFMGR: HASH_TBL_ERROR.");
-                    }
-
-                    frmeTable[i].pageNo.pid = INVALID_PAGE; // frame is empty
-                    frmeTable[i].dirty = false;
-                }
-
-                if (all_pages == 0) {
-
-                    if (unpinned != 0)
-                        throw new PagePinnedException(null, "BUFMGR: PAGE_PINNED.");
-                }
-            }
-
-        if (all_pages != 0) {
-            if (unpinned != 0)
-                throw new PagePinnedException(null, "BUFMGR: PAGE_PINNED.");
-        }
-    }
-
 	 public void unpinAllPages() {
 	      for (int i = 0; i < numBuffers; i++){
 	          while (frmeTable[i].pin_count() != 0)
@@ -637,15 +584,6 @@ public class BufMgr implements GlobalConst {
 
 	}
 
-	public void frmeDsply() {
-		int i = 0;
-		for (FrameDesc frme : frmeTable) {
-			System.out.println("Frame " + i + "-> " + frme.pin_count());
-			i += 1;
-		}
-	}
-
-
 	/**
 	 * Call DB object to allocate a run of new pages and find a frame in the buffer
 	 * pool for the first page and pin it. If buffer is full, ask DB to deallocate
@@ -774,22 +712,25 @@ public class BufMgr implements GlobalConst {
 		privFlushPages(pageid, 0);
 	}
 
-	/**
-	 * Flushes all pages of the buffer pool to disk
-	 * 
-	 * @exception HashOperationException if there is a hashtable error.
-	 * @exception PageUnpinnedException  if there is a page that is already
-	 *                                   unpinned.
-	 * @exception PagePinnedException    if a page is left pinned.
-	 * @exception PageNotFoundException  if a page is not found.
-	 * @exception BufMgrException        other error occured in bufmgr layer
-	 * @exception IOException            if there is other kinds of I/O error.
-	 */
-	public void flushAllPages() throws HashOperationException, PageUnpinnedException, PagePinnedException,
-			PageNotFoundException, BufMgrException, IOException {
-		PageId pageId = new PageId(INVALID_PAGE);
-		privFlushPages(pageId, 1);
-	}
+	  /** Flushes all pages of the buffer pool to disk 
+	   * @exception HashOperationException if there is a hashtable error.  
+	   * @exception PageUnpinnedException if there is a page that is already unpinned.  
+	   * @exception PagePinnedException if a page is left pinned.  
+	   * @exception PageNotFoundException if a page is not found.  
+	   * @exception BufMgrException other error occured in bufmgr layer
+	   * @exception IOException if there is other kinds of I/O error.   
+	   */
+	  public void flushAllPages()
+	    throws HashOperationException, 
+		   PageUnpinnedException,  
+		   PagePinnedException, 
+		   PageNotFoundException,
+		   BufMgrException,
+		   IOException
+	    {
+	      PageId pageId = new PageId(INVALID_PAGE);
+	      privFlushPages(pageId ,1); 
+	    }
 
 	/**
 	 * Gets the total number of buffers.
@@ -854,12 +795,6 @@ public class BufMgr implements GlobalConst {
 
 	} // end of deallocate_page
 	
-	public void flushAll() throws HashOperationException, PageUnpinnedException, PagePinnedException,
-	PageNotFoundException, BufMgrException, IOException {
-PageId pageId = new PageId(INVALID_PAGE);
-privFlushPagesForcibly(pageId, 1);
-}
-
 
 }
 
