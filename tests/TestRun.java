@@ -175,10 +175,6 @@ public class TestRun {
 			}
 			br.close();
 			
-			SystemDefs.JavabaseDB.b.populateBtree();
-
-			SystemDefs.JavabaseDB.b.removeDuplicates();
-
 			SystemDefs.JavabaseDB.b.insertIndex();
 
 		} catch(IOException ioe) {
