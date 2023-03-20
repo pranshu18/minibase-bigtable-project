@@ -1,12 +1,13 @@
 package iterator;
 
-import BigT.Map;
-import heap.*;
+import heap.*;          
 import global.*;
 import diskmgr.*;
 import bufmgr.*;
 
 import java.io.*;
+
+import BigT.Map;
 
 public class SpoofIbuf implements GlobalConst  {
   
@@ -63,16 +64,16 @@ public class SpoofIbuf implements GlobalConst  {
    /** 
    *get a tuple from current buffer,pass reference buf to this method
    *usage:temp_tuple = tuple.Get(buf); 
-   *@param buf write the result to buf
+   *@param temp_map write the result to buf
    *@return the result tuple
    *@exception IOException some I/O fault
    *@exception Exception other exceptions
    */
-  public  Tuple Get(Tuple  buf)throws IOException, Exception
+  public  Map Get(Map  temp_map)throws IOException, Exception
     {
       if (tot_t_proc == n_tuples) done = true;
       
-      if (done == true){buf = null; return null;}
+      if (done == true){temp_map = null; return null;}
       if (t_proc == t_in_buf)
 	{
 	  try {
@@ -86,10 +87,10 @@ public class SpoofIbuf implements GlobalConst  {
       
       if (t_in_buf == 0)                        // No tuples read in?
 	{
-	  done = true; buf = null;return null;
+	  done = true; temp_map = null;return null;
 	}
  
-      buf.tupleSet(_bufs[curr_page],t_rd_from_pg*t_size,t_size); 
+      temp_map.mapSet(_bufs[curr_page],t_rd_from_pg*t_size, t_size);
       tot_t_proc++;
       
       // Setup for next read
@@ -98,7 +99,7 @@ public class SpoofIbuf implements GlobalConst  {
 	{
 	  t_rd_from_pg = 0; curr_page++;
 	}
-      return buf;
+      return temp_map;
     }
   
    
@@ -121,7 +122,7 @@ public class SpoofIbuf implements GlobalConst  {
     {
       int   t_read = 0, tot_read = 0;
       Map m      = new Map ();
-      byte[] m_copy;
+      byte[] mCopy;
       
       curr_page = 0;
       while (curr_page < _n_pages)
@@ -131,8 +132,8 @@ public class SpoofIbuf implements GlobalConst  {
 	      MID mid =new MID();
 	      try {
 		if ( (m = hf_scan.getNext(mid)) == null) return tot_read;
-		m_copy = m.getMapByteArray();
-		System.arraycopy(m_copy,0,_bufs[curr_page],t_read*t_size,t_size);
+		mCopy = m.getMapByteArray();
+		System.arraycopy(mCopy,0,_bufs[curr_page],t_read*t_size,t_size);
 	      }
 	      catch (Exception e) {
 		System.err.println (""+e);

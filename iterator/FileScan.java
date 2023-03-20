@@ -1,13 +1,16 @@
 package iterator;
    
 
-import BigT.Map;
 import heap.*;
 import global.*;
 import bufmgr.*;
+import diskmgr.*;
 
 
 import java.lang.*;
+
+import BigT.Map;
+
 import java.io.*;
 
 /**
@@ -21,13 +24,13 @@ public class FileScan extends  Iterator
   private short[] s_sizes; 
   private Heapfile f;
   private Scan scan;
-  private Map map1;
-  private Map JMap;
+  private Map     tuple1;
+  private Map    Jtuple;
   private int        t1_size;
   private int nOutFlds;
   private CondExpr[]  OutputFilter;
   public FldSpec[] perm_mat;
-
+ 
  
 
   /**
@@ -43,53 +46,63 @@ public class FileScan extends  Iterator
    *@exception FileScanException exception from this class
    *@exception TupleUtilsException exception from this class
    *@exception InvalidRelation invalid relation 
+ * @throws InvalidTypeException 
+ * @throws InvalidTupleSizeException 
    */
   public  FileScan (String  file_name,
-		    AttrType in1[],                
-		    short s1_sizes[], 
-		    short     len_in1,              
-		    int n_out_flds,
-		    FldSpec[] proj_list,
-		    CondExpr[]  outFilter        		    
-		    )
-          throws IOException,
-          FileScanException,
-          TupleUtilsException,
-          InvalidRelation, MapUtilsException {
+   AttrType in1[],                
+   short s1_sizes[], 
+   short     len_in1,              
+   int n_out_flds,
+   FldSpec[] proj_list,
+   CondExpr[]  outFilter        	   
+   )
+    throws IOException,
+  FileScanException,
+  TupleUtilsException, 
+  InvalidRelation, InvalidTypeException, InvalidTupleSizeException
+    {
       _in1 = in1; 
       in1_len = len_in1;
       s_sizes = s1_sizes;
       
-      JMap =  new Map();
+      Jtuple =  new Map();
+      Jtuple.setHdr(null);
       AttrType[] Jtypes = new AttrType[n_out_flds];
       short[]    ts_size;
-      ts_size = MapUtils.setup_op_map(JMap, s1_sizes);
+      try {
+     
+ts_size = MapUtils.setup_op_map(Jtuple, Jtypes, in1, len_in1, s1_sizes, proj_list, n_out_flds);
+} catch (MapUtilsException | InvalidRelation | IOException e1) {
+// TODO Auto-generated catch block
+e1.printStackTrace();
+}
       
       OutputFilter = outFilter;
       perm_mat = proj_list;
       nOutFlds = n_out_flds; 
-      map1 =  new Map();
+      tuple1 =  new Map();
 
       try {
-	map1.setHdr(s1_sizes);
+tuple1.setHdr(null);
       }catch (Exception e){
-	throw new FileScanException(e, "setHdr() failed");
+throw new FileScanException(e, "setHdr() failed");
       }
-      t1_size = map1.size();
+      t1_size = tuple1.size();
       
       try {
-	f = new Heapfile(file_name);
-	
+f = new Heapfile(file_name);
+
       }
       catch(Exception e) {
-	throw new FileScanException(e, "Create new heapfile failed");
+throw new FileScanException(e, "Create new heapfile failed");
       }
       
       try {
-	scan = f.openScan();
+scan = f.openScan();
       }
       catch(Exception e){
-	throw new FileScanException(e, "openScan() failed");
+throw new FileScanException(e, "openScan() failed");
       }
     }
   
@@ -115,31 +128,69 @@ public class FileScan extends  Iterator
    */
   public Map get_next()
     throws JoinsException,
-	   IOException,
-	   InvalidTupleSizeException,
-	   InvalidTypeException,
-	   PageNotReadException, 
-	   PredEvalException,
-	   UnknowAttrType,
-	   FieldNumberOutOfBoundException,
-	   WrongPermat
+  IOException,
+  InvalidTupleSizeException,
+  InvalidTypeException,
+  PageNotReadException, 
+  PredEvalException,
+  UnknowAttrType,
+  FieldNumberOutOfBoundException,
+  WrongPermat
     {     
-      MID mid = new MID();;
+      MID rid = new MID();;
       
       while(true) {
-	if((map1 =  scan.getNext(mid)) == null) {
-	  return null;
-	}
-	
-	map1.setHdr(s_sizes);
-	if (PredEval.Eval(OutputFilter, map1, null, _in1, null) == true){
-	  //Projection.Project(map1, _in1, JMap, perm_mat, nOutFlds);
-        JMap = map1;
-	  return JMap;
-	}        
+try {
+if((tuple1 =  scan.getNext(rid)) == null) {
+ return null;
+}
+} catch (InvalidInfoSizeException | IOException e) {
+// TODO Auto-generated catch block
+e.printStackTrace();
+}
+
+tuple1.setHdr(null);
+if (PredEval.Eval(OutputFilter, tuple1, null, _in1, null) == true){
+//	 Projection.Project(tuple1, _in1,  Jtuple, perm_mat, nOutFlds); 
+Jtuple = tuple1;
+ return  Jtuple;
+}        
       }
     }
 
+  
+  
+  
+  
+  
+	public MapMidPair get_nextMidPair() throws JoinsException, IOException, InvalidTupleSizeException, InvalidTypeException,
+			PageNotReadException, PredEvalException, UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat {
+
+		MID mid = new MID();
+		Map map = new Map();
+		MapMidPair mpair = new MapMidPair();
+		while (true) {
+			try {
+				if ((tuple1 = scan.getNext(mid)) == null) {
+					return null;
+				}
+			} catch (InvalidInfoSizeException | IOException e) {
+
+				e.printStackTrace();
+			}
+
+			tuple1.setHdr(null);
+			if (PredEval.Eval(OutputFilter, tuple1, null, _in1, null) == true) {
+				//	 Projection.Project(tuple1, _in1,  Jtuple, perm_mat, nOutFlds); 
+				Jtuple = tuple1;
+				mpair.mid = mid;
+				mpair.map = Jtuple;
+				return mpair;
+			}
+		}
+	}
+
+  
   /**
    *implement the abstract method close() from super class Iterator
    *to finish cleaning up
@@ -148,11 +199,9 @@ public class FileScan extends  Iterator
     {
      
       if (!closeFlag) {
-	scan.closescan();
-	closeFlag = true;
+scan.closescan();
+closeFlag = true;
       } 
     }
   
 }
-
-

@@ -1,136 +1,327 @@
 package BigT;
 
-import btree.*;
+/** JAVA */
+/**
+ * Scan.java-  class Scan
+ *
+ */
+
+import java.io.*;
 import global.*;
-import heap.InvalidTupleSizeException;
-import heap.InvalidTypeException;
+import heap.*;
 import index.IndexException;
 import index.IndexScan;
-import index.InvalidSelectionException;
-import index.UnknownIndexTypeException;
-import iterator.*;
+import iterator.CondExpr;
+import iterator.FileScan;
+import iterator.FldSpec;
+import iterator.JoinsException;
+import iterator.LowMemException;
+import iterator.RelSpec;
+import iterator.Sort;
+import iterator.SortException;
+import iterator.UnknowAttrType;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static global.GlobalConst.MINIBASE_BUFFER_POOL_SIZE;
-
+/**
+ * 
+ * Stream class retrieves maps in a specified order
+ *
+ */
 public class Stream implements GlobalConst {
-    private bigt _bigt;
-    private Iterator iterator;
 
-    public Stream(bigt bigtable, int orderType, String rowFilter, String columnFilter, String valueFilter) throws InvalidRelation, FileScanException, IOException, TupleUtilsException, MapUtilsException, SortException, IndexException, InvalidTupleSizeException, UnknownIndexTypeException, InvalidTypeException, IteratorException, ConstructPageException, UnknownKeyTypeException, KeyNotMatchException, GetFileEntryException, PinPageException, InvalidSelectionException, UnpinPageException {
-        this._bigt = bigtable;
+	Sort sorter;
+	private bigt _bigT;
+	static int indexEpr_index = 0;
+	static int condExpr_index = 0;
+	private FileScan fileScan;
+	private IndexScan indexScan;
+	private static short RecLen = 22;
 
-        AttrType[] attributes = {
-                new AttrType(AttrType.attrString),
-                new AttrType(AttrType.attrString),
-                new AttrType(AttrType.attrInteger),
-                new AttrType(AttrType.attrString)
-        };
 
-        short[] attributeSizes = {Map.STRING_ATTR_SIZE, Map.STRING_ATTR_SIZE, Map.INT_ATTR_SIZE, Map.STRING_ATTR_SIZE}; // attribute byte sizes
+	/**
+	 * Constructor for stream class
+	 * 
+	 * @param bigtable      - BigTable used in the database
+	 * @param orderType - order type of results
+	 * @param rowFilter - filter for the row
+	 * @param colFilter - filter for the column
+	 * @param valFilter - filter for the value
+	 * @param numbuf    - number of buffers allocated
+	 * @throws Exception 
+	 * @throws HFBufMgrException 
+	 * @throws HFDiskMgrException 
+	 * @throws HFException 
+	 * @throws InvalidSlotNumberException 
+	 */
+	public Stream(bigt bigtable, int orderType, String rowFilter, String colFilter, String valFilter, int numbuf)
+			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
 
-        List<CondExpr> condExprs = new ArrayList<>(); // store all the condition expressions from the filters
-        List<CondExpr> indexExprs = new ArrayList<>(); // store all the index expressions from the filters
+		this._bigT = bigtable;
+		AttrType[] attribute_types = new AttrType[]{
+				new AttrType(AttrType.attrString),
+				new AttrType(AttrType.attrString),
+				new AttrType(AttrType.attrInteger),
+				new AttrType(AttrType.attrString)
+		};
 
-        parseFilter(condExprs, rowFilter, 1);
-        parseFilter(condExprs, columnFilter, 2);
-        parseFilter(condExprs, valueFilter, 4);
+		short[] attribute_sizes = new short[]{
+				22,
+				22,
+				4,
+				22
+		};
 
-        if(_bigt.getType() == IndexType.None ||
-                (_bigt.getType() == 2 && emptyFilter(rowFilter)) ||
-                (_bigt.getType() == 3 && emptyFilter(columnFilter)) ||
-                (_bigt.getType() == 4 && (emptyFilter(rowFilter) || emptyFilter(columnFilter) || rangeFilter(rowFilter) || rangeFilter(columnFilter))) ||
-                (_bigt.getType() == 4 && (rangeFilter(rowFilter) || emptyFilter(rowFilter) || emptyFilter(valueFilter) || rangeFilter(columnFilter)))
-        ) {
-            iterator = new FileScan(_bigt.name, attributes, attributeSizes, (short) 4, 4, (FldSpec[]) null, getCondExprArray(condExprs));
-            return;
-        }
+		TupleOrder[] order = new TupleOrder[]{
+				new TupleOrder(TupleOrder.Ascending),
+				new TupleOrder(TupleOrder.Descending)
+		};
 
-        if(_bigt.getType() == IndexType.ROW)
-            parseFilter(indexExprs, rowFilter, 1);
-        else if(_bigt.getType() == IndexType.COL)
-            parseFilter(indexExprs, columnFilter, 2);
-        else if(_bigt.getType() == IndexType.ROW_COL)
-            parseFilter(indexExprs, columnFilter + rowFilter, 5);
-        else if(_bigt.getType() == IndexType.ROW_VAL)
-            parseFilter(indexExprs, rowFilter + valueFilter, 6);
+		int len_so_far = 3;
+		if (rowFilter.contains(",")) {
+			len_so_far++;
 
-        iterator = new IndexScan(
-                new IndexType(IndexType.ROW), _bigt.name,
-                _bigt.name + "Index0",
-                attributes, attributeSizes, 4, 4, null,
-                getCondExprArray(indexExprs), getCondExprArray(condExprs), 1, false);
+		}
+		if (colFilter.contains(",")) {
+			len_so_far++;
 
-    }
+		}
+		if (valFilter.contains(",")) {
+			len_so_far++;
 
-    private void parseFilter(List<CondExpr> condExprs , String filter, int fldno) {
-        if(emptyFilter(filter))
-            condExprs.add(null);
+		}
+		CondExpr[] evalExpr = new CondExpr[len_so_far + 1];
+		CondExpr[] indExpr;
+		evalExpr[len_so_far] = null;
 
-        else if(rangeFilter(filter)) {
-            filter = filter.substring(1, filter.length() - 1);
-            List<String> operands = new ArrayList<>();
+		int type = _bigT.type;
 
-            for(String operand: filter.split(","))
-                operands.add(operand.trim());
+		switch (type) {
+		case 1: {
+			parseNormalFilter(rowFilter, 1, evalExpr);
+			parseNormalFilter(colFilter, 2, evalExpr);
+			parseNormalFilter(valFilter, 4, evalExpr);
+			fileScan = new FileScan(_bigT.name, attribute_types, attribute_sizes, (short) 4, 4, null, evalExpr);
+			sorter = new Sort(attribute_types, (short) 4, attribute_sizes, fileScan, orderType, order[0], RecLen, numbuf);
+			break;
+		}
 
-            // [x, y] is basically two operands value >= x and value <= y
+		case 2: {
+			if (rowFilter.contains("*")) {
+				parseNormalFilter(rowFilter, 1, evalExpr);
+				parseNormalFilter(colFilter, 2, evalExpr);
+				parseNormalFilter(valFilter, 4, evalExpr);
 
-            CondExpr greaterOperand = new CondExpr(
-                    new AttrOperator(AttrOperator.aopGE),
-                    new AttrType(AttrType.attrSymbol),
-                    new AttrType(AttrType.attrString),
-                    new FldSpec(new RelSpec(RelSpec.outer), fldno),
-                    operands.get(0));
+				fileScan = new FileScan(_bigT.name, attribute_types, attribute_sizes, (short) 4, 4, null, evalExpr);
+				sorter = new Sort(attribute_types, (short) 4, attribute_sizes, fileScan, orderType, order[0], RecLen, numbuf);
+			} else {
+				if (rowFilter.contains(","))
+					indExpr = new CondExpr[3];
+				else
+					indExpr = new CondExpr[2];
+				parseIndexFilter(rowFilter, 1, indExpr);
+				parseNormalFilter(colFilter, 2, evalExpr);
+				parseNormalFilter(valFilter, 4, evalExpr);
+				indexScan = new IndexScan(new IndexType(IndexType.ROW), _bigT.name, _bigT.name + "Index0", attribute_types,
+						attribute_sizes, 4, 4, null, indExpr, 1, false, evalExpr);
+				sorter = new Sort(attribute_types, (short) 4, attribute_sizes, indexScan, orderType, order[0], RecLen, numbuf);
+			}
 
-            CondExpr lesserOperand = new CondExpr(
-                    new AttrOperator(AttrOperator.aopLE),
-                    new AttrType(AttrType.attrSymbol),
-                    new AttrType(AttrType.attrString),
-                    new FldSpec(new RelSpec(RelSpec.outer), fldno),
-                    operands.get(1));
+			break;
+		}
 
-            condExprs.add(greaterOperand);
-            condExprs.add(lesserOperand);
+		case 3: {
 
-        } else {
-            // an equality expression with no range
-            CondExpr expr = new CondExpr(
-                    new AttrOperator(AttrOperator.aopEQ),
-                    new AttrType(AttrType.attrSymbol),
-                    new AttrType(AttrType.attrString),
-                    new FldSpec(new RelSpec(RelSpec.outer), fldno),
-                    filter);
-            condExprs.add(expr);
-        }
-    }
+			if (colFilter.contains("*")) {
+				parseNormalFilter(rowFilter, 1, evalExpr);
+				parseNormalFilter(colFilter, 2, evalExpr);
+				parseNormalFilter(valFilter, 4, evalExpr);
 
-    private boolean emptyFilter(String filter) {
-        return filter == null || filter.isEmpty() || filter.equals("*");
-    }
+				fileScan = new FileScan(_bigT.name, attribute_types, attribute_sizes, (short) 4, 4, null, evalExpr);
+				sorter = new Sort(attribute_types, (short) 4, attribute_sizes, fileScan, orderType, order[0], RecLen, numbuf);
+			} else {
+				if (colFilter.contains(","))
+					indExpr = new CondExpr[3];
+				else
+					indExpr = new CondExpr[2];
+				parseIndexFilter(colFilter, 2, indExpr);
+				
+				parseNormalFilter(rowFilter, 1, evalExpr);
+				parseNormalFilter(valFilter, 4, evalExpr);
+				indexScan = new IndexScan(new IndexType(IndexType.COL), _bigT.name, _bigT.name + "Index0", attribute_types,
+						attribute_sizes, 4, 4, null, indExpr, 1, false, evalExpr);
+				sorter = new Sort(attribute_types, (short) 4, attribute_sizes, indexScan, orderType, order[0], RecLen, numbuf);
+			}
+			break;
 
-    private boolean rangeFilter(String filter) {
-        return filter.charAt(0) == '[' && filter.charAt(filter.length() - 1) == ']';
-    }
+		}
 
-    private CondExpr[] getCondExprArray(List<CondExpr> condExprs) {
-        CondExpr[] condExprsArr = new CondExpr[condExprs.size()];
-        int i = 0;
+		case 4: {
+			if (colFilter.contains("*") || rowFilter.contains("*") || colFilter.contains(",")
+					|| rowFilter.contains(",")) {
 
-        for(i = 0; i < condExprs.size(); i++)
-            condExprsArr[i] = condExprs.get(i);
+				parseNormalFilter(rowFilter, 1, evalExpr);
+				parseNormalFilter(colFilter, 2, evalExpr);
+				parseNormalFilter(valFilter, 4, evalExpr);
 
-        return condExprsArr;
-    }
 
-    public Map getNext() throws Exception {
-        return iterator.get_next();
-    }
+				fileScan = new FileScan(_bigT.name, attribute_types, attribute_sizes, (short) 4, 4, null, evalExpr);
+				sorter = new Sort(attribute_types, (short) 4, attribute_sizes, fileScan, orderType, order[0], RecLen, numbuf);
+			} else {
+				indExpr = new CondExpr[2];
+				parseIndexFilter(colFilter + rowFilter, 5, indExpr);
+				parseNormalFilter(valFilter, 4, evalExpr);
+				indexScan = new IndexScan(new IndexType(IndexType.COLROW), _bigT.name, _bigT.name + "Index0", attribute_types,
+						attribute_sizes, 4, 4, null, indExpr, 1, false, evalExpr);
+				sorter = new Sort(attribute_types, (short) 4, attribute_sizes, indexScan, orderType, order[0], RecLen, numbuf);
+			}
 
-    public void closestream() throws Exception {
-        iterator.close();
-    }
+			break;
+		}
+
+		case 5: {
+			if (valFilter.contains("*") || rowFilter.contains("*") || valFilter.contains(",")
+					|| rowFilter.contains(",")) {
+
+				parseNormalFilter(rowFilter, 1, evalExpr);
+				parseNormalFilter(colFilter, 2, evalExpr);
+				parseNormalFilter(valFilter, 4, evalExpr);
+
+				fileScan = new FileScan(_bigT.name, attribute_types, attribute_sizes, (short) 4, 4, null, evalExpr);
+				sorter = new Sort(attribute_types, (short) 4, attribute_sizes, fileScan, orderType, order[0], RecLen, numbuf);
+			} else {
+				indExpr = new CondExpr[2];
+				parseIndexFilter(rowFilter + valFilter, 6, indExpr);
+				parseNormalFilter(colFilter, 2, evalExpr);
+				indexScan = new IndexScan(new IndexType(IndexType.ROWVAL), _bigT.name, _bigT.name + "Index0",
+						attribute_types, attribute_sizes, 4, 4, null, indExpr, 1, false, evalExpr);
+			
+				sorter = new Sort(attribute_types, (short) 4, attribute_sizes, indexScan, orderType, order[0], RecLen, numbuf);
+			}
+
+			break;
+		}
+
+		}
+
+		indexEpr_index = 0;
+		condExpr_index = 0;
+	}
+
+	/**
+	 * Filter function to generate an expression on index based fields
+	 * 
+	 * @param filter          - filter condition
+	 * @param fld           - field on which the filter is to be performed
+	 * @param indExpression - filtering expression
+	 */
+	private void parseIndexFilter(String filter, int fld, CondExpr[] indExpression) {
+		CondExpr indexExpression = new CondExpr();
+		if (filter.startsWith("[") && filter.endsWith("]")) {
+			filter = filter.substring(1, filter.length()-1);
+
+			String operand1 = filter.split(",")[0];
+			String operand2 = filter.split(",")[1];
+
+			indexExpression = new CondExpr();
+			indexExpression.op = new AttrOperator(AttrOperator.aopGE);
+			indexExpression.type1 = new AttrType(AttrType.attrSymbol);
+			indexExpression.type2 = new AttrType(AttrType.attrString);
+			indexExpression.operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer), fld);
+			indexExpression.operand2.string = operand1;
+			indexExpression.next = null;
+			indExpression[condExpr_index] = indexExpression;
+			condExpr_index++;
+			
+			indexExpression = new CondExpr();
+			indexExpression.op = new AttrOperator(AttrOperator.aopLE);
+			indexExpression.type1 = new AttrType(AttrType.attrSymbol);
+			indexExpression.type2 = new AttrType(AttrType.attrString);
+			indexExpression.operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer), fld);
+			indexExpression.operand2.string = operand2;
+			indexExpression.next = null;
+			indExpression[condExpr_index] = indexExpression;
+			condExpr_index++;
+
+		} else {
+			indexExpression = new CondExpr();
+			indexExpression.op = new AttrOperator(AttrOperator.aopEQ);
+			indexExpression.type1 = new AttrType(AttrType.attrSymbol);
+			indexExpression.type2 = new AttrType(AttrType.attrString);
+			indexExpression.operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer), fld);
+			indexExpression.operand2.string = filter;
+			indexExpression.next = null;
+			indExpression[condExpr_index] = indexExpression;
+			condExpr_index++;
+			
+		}
+	}
+
+	/**
+	 * Filter function to generate an expression on non index fields
+	 * 
+	 * @param filt           - filter condition
+	 * @param fld            - field on which the filter is to be performed
+	 * @param evalExpression - filtering expression
+	 */
+	private void parseNormalFilter(String filt, int fld, CondExpr[] evalExpression) {
+		CondExpr evaluationExpression = new CondExpr();
+		if (filt.equals("*") || filt.equals(null)) {
+			evalExpression[indexEpr_index] = null;
+			indexEpr_index++;
+
+		} else if (filt.startsWith("[") && filt.endsWith("]")) {
+			filt = filt.substring(1, filt.length() - 1);
+
+			String op1 = filt.split(",")[0];
+			String op2 = filt.split(",")[1];
+
+			evaluationExpression = new CondExpr();
+			evaluationExpression.op = new AttrOperator(AttrOperator.aopGE);
+			evaluationExpression.type1 = new AttrType(AttrType.attrSymbol);
+			evaluationExpression.type2 = new AttrType(AttrType.attrString);
+			evaluationExpression.operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer), fld);
+			evaluationExpression.operand2.string = op1;
+			evaluationExpression.next = null;
+			evalExpression[indexEpr_index] = evaluationExpression;
+			indexEpr_index++;
+			evaluationExpression = new CondExpr();
+			evaluationExpression.op = new AttrOperator(AttrOperator.aopLE);
+			evaluationExpression.type1 = new AttrType(AttrType.attrSymbol);
+			evaluationExpression.type2 = new AttrType(AttrType.attrString);
+			evaluationExpression.operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer), fld);
+			evaluationExpression.operand2.string = op2;
+			evaluationExpression.next = null;
+			evalExpression[indexEpr_index] = evaluationExpression;
+			indexEpr_index++;
+
+		} else {
+			evaluationExpression = new CondExpr();
+			evaluationExpression.op = new AttrOperator(AttrOperator.aopEQ);
+			evaluationExpression.type1 = new AttrType(AttrType.attrSymbol);
+			evaluationExpression.type2 = new AttrType(AttrType.attrString);
+			evaluationExpression.operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer), fld);
+			evaluationExpression.operand2.string = filt;
+			evaluationExpression.next = null;
+			evalExpression[indexEpr_index] = evaluationExpression;
+			indexEpr_index++;
+
+		}
+	}
+
+	/**
+	 * Retrieve the next record in a sequential scan
+	*/
+	public Map getNext() throws SortException, UnknowAttrType, LowMemException, JoinsException, Exception {
+		return sorter.get_next();
+	}
+
+	/**
+	 * Closes the Scan object
+	 * 
+	 * @throws IOException
+	 * @throws SortException
+	 * @throws IndexException
+	 */
+	public void closestream() throws SortException, IOException, IndexException {
+		sorter.close();
+	}
 }
