@@ -17,6 +17,7 @@ import btree.UnpinPageException;
 import global.AttrType;
 import global.Convert;
 import global.GlobalConst;
+import global.IndexType;
 import global.PageId;
 import global.SystemDefs;
 import heap.HFBufMgrException;
@@ -85,16 +86,16 @@ public class bigDB implements GlobalConst {
     public void destroyIndex()
             throws GetFileEntryException, ConstructPageException, AddFileEntryException, IOException, IteratorException,
             UnpinPageException, FreePageException, DeleteFileEntryException, PinPageException {
-        if (b.type == 2 || b.type == 3) {
+        if (b.type == IndexType.ROW || b.type == IndexType.COL) {
             b._bf0 = new BTreeFile(b.name + "Index0", AttrType.attrString, 22, 1);
         } else {
             b._bf0 = new BTreeFile(b.name + "Index0", AttrType.attrString, 44, 1);
             b._bf1 = new BTreeFile(b.name + "Index1", AttrType.attrInteger, 4, 1);
         }
         b._bftemp = new BTreeFile(b.name + "Temp", AttrType.attrString, 64, 1);
-        if (b.type != 1 && b._bf0 != null)
+        if (b.type != IndexType.None && b._bf0 != null)
             b._bf0.destroyFile();
-        if ((b.type == 4 || b.type == 5) && b._bf1 != null && b.type != 1)
+        if ((b.type == IndexType.COLROW || b.type == IndexType.ROWVAL) && b._bf1 != null && b.type != 1)
             b._bf1.destroyFile();
 
         if (b._bftemp != null)
