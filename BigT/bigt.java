@@ -1,17 +1,11 @@
 package BigT;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
-import java.util.Iterator;
 
-import BigT.Map;
 import global.*;
 import heap.*;
-import index.IndexException;
 import index.IndexScan;
-import index.InvalidSelectionException;
-import index.UnknownIndexTypeException;
 import iterator.*;
 import btree.*;
 import bufmgr.PageNotReadException;
@@ -25,7 +19,7 @@ public class bigt {
 
 	public String name;
 	public int type;
-	public Heapfile _hf;
+	public Heapfile heapfile;
 	public BTreeFile _bf0 = null;
 	public BTreeFile _bf1 = null;
 	public BTreeFile _bftemp = null;
@@ -60,7 +54,7 @@ public class bigt {
 
 		this.name = name;
 		this.type = type;
-		this._hf = new Heapfile(name);
+		this.heapfile = new Heapfile(name);
 
 		switch (type) {
 		case 1: {
@@ -123,7 +117,7 @@ public class bigt {
 			HFBufMgrException, HFDiskMgrException, IOException, IteratorException, UnpinPageException,
 			FreePageException, DeleteFileEntryException, ConstructPageException, PinPageException {
 
-		_hf.deleteFile();
+		heapfile.deleteFile();
 
 		switch (type) {
 		case 1: {
@@ -221,7 +215,7 @@ public class bigt {
 	 */
 	public int getMapCnt() throws InvalidSlotNumberException, InvalidInfoSizeException, HFDiskMgrException,
 			HFBufMgrException, IOException {
-		return _hf.getRecCnt();
+		return heapfile.getRecCnt();
 	}
 
 	/**
@@ -237,14 +231,15 @@ public class bigt {
 	 */
 	public int getRowCnt(int numbuf) throws UnknowAttrType, LowMemException, JoinsException, Exception {
 
-		Stream stream = this.openStream(1, "", "", "",900);
+		Stream stream = this.openStream(1, "", "", "",numbuf);
 		Map map = stream.getNext();
-
+		System.out.println(map.getRowLabel());
 		// stores distinct row labels
 		HashSet noDupSet = new HashSet();
 
 		while (map != null) {
 
+			System.out.println(map.getRowLabel());
 			noDupSet.add(map.getRowLabel());
 			map = stream.getNext();
 		}
@@ -265,7 +260,7 @@ public class bigt {
 	 * @throws Exception
 	 */
 	public int getColumnCnt(int numbuf) throws UnknowAttrType, LowMemException, JoinsException, Exception {
-		Stream stream = this.openStream(1, "", "", "",900);
+		Stream stream = this.openStream(1, "", "", "",numbuf);
 		Map map = stream.getNext();
 
 		// stores distinct column labels
@@ -310,7 +305,7 @@ public class bigt {
 			NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException,
 			LeafDeleteException, InsertException, IOException, FieldNumberOutOfBoundException, InvalidInfoSizeException,
 			FreePageException, DeleteFileEntryException, GetFileEntryException, AddFileEntryException {
-		Scan scan = new Scan(_hf);
+		Scan scan = new Scan(heapfile);
 		MID mid = new MID();
 		String key = null;
 		int key_timeStamp = 0;
@@ -394,11 +389,11 @@ public class bigt {
 	 */
 	public MID insertMap(byte[] mapPtr) throws InvalidSlotNumberException, InvalidTupleSizeException, HFException,
 			HFBufMgrException, HFDiskMgrException, Exception {
-		MID mid = _hf.insertRecord(mapPtr);
+		MID mid = heapfile.insertRecord(mapPtr);
 		
 //        // Checks for more than three maps with the same row and column label, and
 //        // deletes the map with the oldest timestamp
-        Map map = _hf.getRecord(mid);
+        Map map = heapfile.getRecord(mid);
         map.setMid(mid);
         String rowLabel = map.getRowLabel();
         String colLabel = map.getColumnLabel();
@@ -440,9 +435,9 @@ public class bigt {
 
 		for (ArrayList<String> key :rocolMID.keySet()) {
 
-			if(rocolMID.get(key).size()==3){
+			if(rocolMID.get(key).size()>=3){
 				MID mid_to_be_removed = rocolMID.get(key).get(0);
-				_hf.deleteRecord(mid_to_be_removed);
+				heapfile.deleteRecord(mid_to_be_removed);
 				rocolMID.get(key).remove(0);
 			}
 
@@ -463,7 +458,7 @@ public class bigt {
 	 * @throws IOException
 	 */
 	public void scanAllMaps() throws InvalidInfoSizeException, IOException {
-		Scan scan = _hf.openScan();
+		Scan scan = heapfile.openScan();
 		MID mid = new MID();
 		Map map = scan.getNext(mid);
 		System.out.println("Maps are ");
@@ -522,8 +517,7 @@ public class bigt {
 	 */
 	public Stream openStream(int orderType, String rowFilter, String colFilter, String valFilter, int numbuf)
 			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
-		Stream stream = new Stream(this, orderType, rowFilter, colFilter, valFilter, numbuf);
-		return stream;
+		return new Stream(this, orderType, rowFilter, colFilter, valFilter, numbuf);
 
 	}
 	

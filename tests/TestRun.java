@@ -176,9 +176,12 @@ public class TestRun {
 			
 			SystemDefs.JavabaseDB.b.populateBtree();
 
-			SystemDefs.JavabaseDB.b.removeDuplicates();
-
 			SystemDefs.JavabaseDB.b.insertIndex();
+			
+			SystemDefs.JavabaseDB.b.purgeOldestMap();
+			
+			System.out.println(" Row count: "+SystemDefs.JavabaseDB.b.getRowCnt(100));
+			System.out.println(" Col count: "+SystemDefs.JavabaseDB.b.getColumnCnt(100));
 
 		} catch(IOException ioe) {
 			ioe.printStackTrace();
