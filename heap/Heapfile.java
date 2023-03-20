@@ -94,7 +94,7 @@ public class Heapfile implements Filetype, GlobalConst {
 
 		pinPage(currentDirPageId, currentDirPage, false/* read disk */);
 
-		Info ainfo = new Info();
+		DataPageHelper helper = new DataPageHelper();
 
 		Map amap = new Map();
 
@@ -106,13 +106,13 @@ public class Heapfile implements Filetype, GlobalConst {
 					.firstRecord(); currentDataPageMid != null; currentDataPageMid = currentDirPage
 							.nextRecord(currentDataPageMid)) {
 				try {
-					ainfo = currentDirPage.getRecordInfo(currentDataPageMid);
+					helper = currentDirPage.getRecordInfo(currentDataPageMid);
 				} catch (InvalidSlotNumberException e)// check error! return false(done)
 				{
 					return false;
 				}
 
-				DataPageInfo dpinfo = new DataPageInfo(ainfo);
+				DataPageInfo dpinfo = new DataPageInfo(helper);
 				
 
 				// ASSERTIONS:
@@ -283,11 +283,11 @@ public class Heapfile implements Filetype, GlobalConst {
 			pinPage(currentDirPageId, currentDirPage, false);
 
 			MID mid = new MID();
-			Info ainfo;
+			DataPageHelper helper;
 			for (mid = currentDirPage.firstRecord(); mid != null; // mid==NULL means no more record
 					mid = currentDirPage.nextRecord(mid)) {
-				ainfo = currentDirPage.getRecordInfo(mid);
-				DataPageInfo dpinfo = new DataPageInfo(ainfo);
+				helper = currentDirPage.getRecordInfo(mid);
+				DataPageInfo dpinfo = new DataPageInfo(helper);
 
 				answer += dpinfo.recct;
 			}
@@ -343,16 +343,16 @@ public class Heapfile implements Filetype, GlobalConst {
 		pinPage(currentDirPageId, currentDirPage, false/* Rdisk */);
 
 		found = false;
-		Info ainfo;
+		DataPageHelper helper;
 		DataPageInfo dpinfo = new DataPageInfo();
 		while (found == false) { // Start While01
 									// look for suitable dpinfo-struct
 			for (currentDataPageMid = currentDirPage
 					.firstRecord(); currentDataPageMid != null; currentDataPageMid = currentDirPage
 							.nextRecord(currentDataPageMid)) {
-				ainfo = currentDirPage.getRecordInfo(currentDataPageMid);
+				helper = currentDirPage.getRecordInfo(currentDataPageMid);
 
-				dpinfo = new DataPageInfo(ainfo);
+				dpinfo = new DataPageInfo(helper);
 
 				// need check the record length == DataPageInfo'slength
 
@@ -402,9 +402,9 @@ public class Heapfile implements Filetype, GlobalConst {
 					// currentDataPage is pinned: insert its record
 					// calling a HFPage function
 
-					ainfo = dpinfo.convertToInfo();
+					helper = dpinfo.convertToInfo();
 
-					byte[] tmpData = ainfo.getInfoByteArray();
+					byte[] tmpData = helper.getByteArray();
 					currentDataPageMid = currentDirPage.insertRecord(tmpData); 
 
 					MID tmpmid = currentDirPage.firstRecord(); 
@@ -518,8 +518,8 @@ public class Heapfile implements Filetype, GlobalConst {
 		unpinPage(dpinfo.pageId, true /* = DIRTY */);
 
 		// DataPage is now released
-		ainfo = currentDirPage.returnRecordInfo(currentDataPageMid); // might not work as passing an RID
-		DataPageInfo dpinfo_ondirpage = new DataPageInfo(ainfo); //
+		helper = currentDirPage.returnRecordInfo(currentDataPageMid); // might not work as passing an RID
+		DataPageInfo dpinfo_ondirpage = new DataPageInfo(helper); //
 
 		dpinfo_ondirpage.availspace = dpinfo.availspace;
 		dpinfo_ondirpage.recct = dpinfo.recct;
@@ -566,10 +566,10 @@ public class Heapfile implements Filetype, GlobalConst {
 		// - currentDataPage, currentDataPageid valid and pinned
 
 		// get datapageinfo from the current directory page:
-		Info ainfo;
+		DataPageHelper helper;
 
-		ainfo = currentDirPage.returnRecordInfo(currentDataPageMid);
-		DataPageInfo pdpinfo = new DataPageInfo(ainfo);
+		helper = currentDirPage.returnRecordInfo(currentDataPageMid);
+		DataPageInfo pdpinfo = new DataPageInfo(helper);
 
 		// delete the record on the datapage
 		currentDataPage.deleteRecord(mid);
@@ -796,7 +796,7 @@ public class Heapfile implements Filetype, GlobalConst {
 		nextDirPageId.pid = 0;
 		Page pageinbuffer = new Page();
 		HFPage currentDirPage = new HFPage();
-		Info ainfo;
+		DataPageHelper helper;
 
 		pinPage(currentDirPageId, currentDirPage, false);
 		// currentDirPage.openHFpage(pageinbuffer);
@@ -805,8 +805,8 @@ public class Heapfile implements Filetype, GlobalConst {
 		while (currentDirPageId.pid != INVALID_PAGE) {
 			for (mid = currentDirPage.firstRecord(); // dont know if any of these works
 					mid != null; mid = currentDirPage.nextRecord(mid)) {
-				ainfo = currentDirPage.getRecordInfo(mid);
-				DataPageInfo dpinfo = new DataPageInfo(ainfo);
+				helper = currentDirPage.getRecordInfo(mid);
+				DataPageInfo dpinfo = new DataPageInfo(helper);
 				// int dpinfoLen = arecord.length;
 
 				freePage(dpinfo.pageId);

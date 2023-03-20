@@ -53,15 +53,15 @@ public class DataPageInfo implements GlobalConst{
     offset = 0;
   }
   
-	public DataPageInfo(Info _ainfo) throws InvalidInfoSizeException, IOException {
-		// need check _ainfo size == this.size ?otherwise, throw new exception
-		if (_ainfo.getLength() != 12) {
+	public DataPageInfo(DataPageHelper _ahelper) throws InvalidInfoSizeException, IOException {
+		// need check _ahelper size == this.size ?otherwise, throw new exception
+		if (_ahelper.getLength() != 12) {
 			throw new InvalidInfoSizeException(null, "HEAPFILE: TUPLE SIZE ERROR");
 		}
 
 		else {
-			data = _ainfo.returnInfoByteArray();
-			offset = _ainfo.getOffset();
+			data = _ahelper.returnByteArray();
+			offset = _ahelper.getOffset();
 
 			availspace = Convert.getIntValue(offset, data);
 			recct = Convert.getIntValue(offset + 4, data);
@@ -86,7 +86,7 @@ public class DataPageInfo implements GlobalConst{
      return data;
    }
       
-	public Info convertToInfo() throws IOException {
+	public DataPageHelper convertToInfo() throws IOException {
 
 		// 1) write availspace, recct, pageId into data []
 		Convert.setIntValue(availspace, offset, data);
@@ -94,10 +94,10 @@ public class DataPageInfo implements GlobalConst{
 		Convert.setIntValue(pageId.pid, offset + 8, data);
 
 		// 2) creat a Info object using this array
-		Info ainfo = new Info(data, offset, size);
+		DataPageHelper ahelper = new DataPageHelper(data, offset, size);
 
 		// 3) return info object
-		return ainfo;
+		return ahelper;
 
 	}
 
