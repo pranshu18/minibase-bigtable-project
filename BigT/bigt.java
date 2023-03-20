@@ -1,7 +1,9 @@
 package BigT;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
+import java.util.Iterator;
 
 import BigT.Map;
 import global.*;
@@ -27,6 +29,8 @@ public class bigt {
 	public BTreeFile _bf0 = null;
 	public BTreeFile _bf1 = null;
 	public BTreeFile _bftemp = null;
+
+	HashMap<ArrayList<String>, ArrayList<MID>> rocolMID = new HashMap<ArrayList<String>, ArrayList<MID>>();
 	FileScan fscan;
 	IndexScan iscan;
 	CondExpr[] expr;
@@ -232,34 +236,20 @@ public class bigt {
 	 * @throws Exception
 	 */
 	public int getRowCnt(int numbuf) throws UnknowAttrType, LowMemException, JoinsException, Exception {
-		Map map = new Map();
-		fscan = new FileScan(name, attrType, attrSize, (short) 4, 4, null, null);
-		Sort sort = new Sort(attrType, (short) 4, attrSize, fscan, 1, new TupleOrder(TupleOrder.Ascending), 22, numbuf);
-		int count = 0;
-		map = sort.get_next();
-		String prev = "";
-		String curr = "";
-		if (map != null) {
-			prev = map.getRowLabel();
-		}
+
+		Stream stream = this.openStream(1, "", "", "",900);
+		Map map = stream.getNext();
+
+		// stores distinct row labels
+		HashSet noDupSet = new HashSet();
+
 		while (map != null) {
-			curr = map.getRowLabel();
-			if (!curr.equals(prev)) {
-				count++;
 
-			}
-			prev = curr;
-
-			map = sort.get_next();
-
+			noDupSet.add(map.getRowLabel());
+			map = stream.getNext();
 		}
-		if (curr.equals(prev)) {
-			count++;
 
-		}
-		sort.close();
-		System.out.println("Row count is " + count);
-		return count;
+		return noDupSet.size();
 	}
 
 	/**
@@ -275,36 +265,19 @@ public class bigt {
 	 * @throws Exception
 	 */
 	public int getColumnCnt(int numbuf) throws UnknowAttrType, LowMemException, JoinsException, Exception {
-		Map map = new Map();
-		fscan = new FileScan(name, attrType, attrSize, (short) 4, 4, null, null);
-		Sort sort = new Sort(attrType, (short) 4, attrSize, fscan, 2, new TupleOrder(TupleOrder.Ascending), 22, numbuf);
-		int count = 0;
-		map = sort.get_next();
-		String prev = "";
-		String curr = "";
-		if (map != null) {
-			prev = map.getColumnLabel();
+		Stream stream = this.openStream(1, "", "", "",900);
+		Map map = stream.getNext();
 
-		}
+		// stores distinct column labels
+		HashSet noDupSet = new HashSet();
+
 		while (map != null) {
-			curr = map.getColumnLabel();
-			if (!curr.equals(prev)) {
-				count++;
 
-			}
-			prev = curr;
-
-			map = sort.get_next();
-
+			noDupSet.add(map.getColumnLabel());
+			map = stream.getNext();
 		}
-		if (curr.equals(prev)) {
-			count++;
 
-		}
-		sort.close();
-
-		System.out.println("Col count is " + count);
-		return count;
+		return noDupSet.size();
 	}
 
 	/**
@@ -422,56 +395,64 @@ public class bigt {
 	public MID insertMap(byte[] mapPtr) throws InvalidSlotNumberException, InvalidTupleSizeException, HFException,
 			HFBufMgrException, HFDiskMgrException, Exception {
 		MID mid = _hf.insertRecord(mapPtr);
+		
+//        // Checks for more than three maps with the same row and column label, and
+//        // deletes the map with the oldest timestamp
+        Map map = _hf.getRecord(mid);
+        map.setMid(mid);
+        String rowLabel = map.getRowLabel();
+        String colLabel = map.getColumnLabel();
+		ArrayList<String> key = new ArrayList<String>();
+		key.add(rowLabel);
+		key.add(colLabel);
+		//String key = rowLabel + "/-/" + colLabel;
+
+
+//
+		if(rocolMID.containsKey(key)){
+			ArrayList<MID> mid_arr = rocolMID.get(key);
+			mid_arr.add(mid);
+			rocolMID.remove(key);
+			rocolMID.put(key,mid_arr);
+		}
+		else if(!rocolMID.containsKey(key)){
+			ArrayList<MID> mid_arr2 = new ArrayList<MID>();
+			mid_arr2.add(mid);
+			rocolMID.put(key,mid_arr2);
+		}
+
+
 		return mid;
 	}
 
 	/**
 	 * Remove Duplicates to handle the versioning in the database
-	 * 
+	 *
 	 * @throws InvalidSlotNumberException
 	 * @throws HFException
 	 * @throws HFDiskMgrException
 	 * @throws HFBufMgrException
 	 * @throws Exception
 	 */
-	public void removeDuplicates()
+	public void purgeOldestMap()
 			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
-		TupleOrder[] order = new TupleOrder[2];
-		order[0] = new TupleOrder(TupleOrder.Ascending);
-		order[1] = new TupleOrder(TupleOrder.Descending);
-		iscan = new IndexScan(new IndexType(IndexType.Row_Index), name, name + "Temp", attrType, attrSize, 4, 4, null,
-				expr, 1, true);
 
-		MapMidPair mpair = iscan.get_nextMidPair();
-		String key = "";
-		String oldKey = "";
-		if (mpair != null) {
-			oldKey = mpair.indKey.split("%")[0];
-		}
-		List<MID> list = new ArrayList<MID>();
-		while (mpair != null) {
 
-			key = mpair.indKey.split("%")[0];
+		for (ArrayList<String> key :rocolMID.keySet()) {
 
-			if (key.equals(oldKey)) {
-				list.add(mpair.mid);
-			} else {
-				list.clear();
-				oldKey = key;
-				list.add(mpair.mid);
+			if(rocolMID.get(key).size()==3){
+				MID mid_to_be_removed = rocolMID.get(key).get(0);
+				_hf.deleteRecord(mid_to_be_removed);
+				rocolMID.get(key).remove(0);
 			}
 
-			if (list.size() == 4) {
-				MID delmid = list.get(0);
-
-				_hf.deleteRecord(delmid);
-				list.remove(0);
-			}
-
-			mpair = iscan.get_nextMidPair();
 		}
-		iscan.close();
-		_bftemp.destroyFile();
+//
+//		if(rocolMID.containsKey(key) && rocolMID.get(key).size()==3){
+//			MID mid_to_be_removed = rocolMID.get(key).get(0);
+//			_hf.deleteRecord(mid_to_be_removed);
+//			rocolMID.get(key).remove(0);
+//		}
 
 	}
 
