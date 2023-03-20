@@ -339,10 +339,10 @@ public class bigt {
 		int key_timeStamp = 0;
 		Map temp = null;
 
-		if(type==IndexType.None) {
+		if(type==1) {
 			return;
 		}
-		if (!(type == IndexType.COLROW || type == IndexType.ROWVAL)) {
+		if (!(type == 4 || type == 5)) {
 			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
 			
 		} else {
