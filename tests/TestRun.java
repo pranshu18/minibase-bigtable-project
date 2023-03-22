@@ -140,14 +140,10 @@ public class TestRun {
 		String bigTableName = values[3]+"_"+Integer.toString(type);
 		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
 		+ ".minibase-db";
-		if (sysDef == null) {
-			sysDef = new SystemDefs(dbpath, 10000, 1000, "Clock", type);
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, 1000, "Clock", type, false);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName, type);
-		}else if(!SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
-			SystemDefs.JavabaseDB.DBDestroy();
-			sysDef = new SystemDefs(dbpath, 10000, 1000, "Clock", type);
-			SystemDefs.JavabaseDB.b = new bigt(bigTableName, type);
-		}else {
+		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
 			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
@@ -188,6 +184,11 @@ public class TestRun {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		SystemDefs.JavabaseBM.unpinAllPages();
+		SystemDefs.JavabaseBM.flushAllPages();
+
+
 		System.out.println("Disk pages read = "+ PCounter.rcounter);
 		System.out.println("Disk pages written = "+ PCounter.wcounter);
 
@@ -211,10 +212,18 @@ public class TestRun {
 
 		int numBuffers = Integer.parseInt(values[7]);
 
+		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
+		+ ".minibase-db";
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, 1000, "Clock", type, true);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName, type);
+		} else {
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
+		}
+
 		PCounter.initialize();
-		SystemDefs.JavabaseBM.unpinAllPages();
-		SystemDefs.JavabaseBM.flushAllPages();
-		SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
 
 		Stream st = SystemDefs.JavabaseDB.b.openStream(orderType, rowFilter, columnFilter, valueFilter, numBuffers);
 		Map mp  = st.getNext();
@@ -224,6 +233,9 @@ public class TestRun {
 			mp = st.getNext();
 		}
 		st.closestream();
+
+		SystemDefs.JavabaseBM.unpinAllPages();
+		SystemDefs.JavabaseBM.flushAllPages();
 
 		System.out.println("Disk pages read = "+ PCounter.rcounter);
 		System.out.println("Disk pages written = "+ PCounter.wcounter);

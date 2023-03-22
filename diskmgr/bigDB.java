@@ -82,7 +82,6 @@ public class bigDB implements GlobalConst {
         this.indexType = type;
     }
 
-    //TODO modify file name, move to bigt
     public void destroyIndex()
             throws GetFileEntryException, ConstructPageException, AddFileEntryException, IOException, IteratorException,
             UnpinPageException, FreePageException, DeleteFileEntryException, PinPageException {

@@ -47,7 +47,7 @@ public class Stream implements GlobalConst {
 				(_bigt.type == IndexType.COLROW && (emptyFilter(rowFilter) || emptyFilter(columnFilter) || rangeFilter(rowFilter) || rangeFilter(columnFilter))) ||
 				(_bigt.type == IndexType.ROWVAL && (rangeFilter(rowFilter) || emptyFilter(rowFilter) || emptyFilter(valueFilter) || rangeFilter(columnFilter)))
 		) {
-			filescanObject = new FileScan(_bigt.name, attributes, attributeSizes, (short) 4, 4, null, getCondExprArray(condExprs));
+ 			filescanObject = new FileScan(_bigt.name, attributes, attributeSizes, (short) 4, 4, null, getCondExprArray(condExprs));
 			sorter = new Sort(attributes, (short) 4,
 					attributeSizes, filescanObject,
 					orderType, new TupleOrder(TupleOrder.Ascending),

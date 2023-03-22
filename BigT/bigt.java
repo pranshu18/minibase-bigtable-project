@@ -148,61 +148,6 @@ public class bigt {
 	}
 
 	/**
-	 * Initializing temporary index file to handle versioning
-	 * 
-	 * @throws KeyTooLongException
-	 * @throws KeyNotMatchException
-	 * @throws LeafInsertRecException
-	 * @throws IndexInsertRecException
-	 * @throws ConstructPageException
-	 * @throws UnpinPageException
-	 * @throws PinPageException
-	 * @throws NodeNotMatchException
-	 * @throws ConvertException
-	 * @throws DeleteRecException
-	 * @throws IndexSearchException
-	 * @throws IteratorException
-	 * @throws LeafDeleteException
-	 * @throws InsertException
-	 * @throws IOException
-	 * @throws FileScanException
-	 * @throws TupleUtilsException
-	 * @throws InvalidRelation
-	 * @throws InvalidTypeException
-	 * @throws JoinsException
-	 * @throws InvalidTupleSizeException
-	 * @throws PageNotReadException
-	 * @throws PredEvalException
-	 * @throws UnknowAttrType
-	 * @throws FieldNumberOutOfBoundException
-	 * @throws WrongPermat
-	 * @throws GetFileEntryException
-	 * @throws AddFileEntryException
-	 */
-
-	public void populateBtree() throws KeyTooLongException, KeyNotMatchException, LeafInsertRecException,
-	IndexInsertRecException, ConstructPageException, UnpinPageException, PinPageException,
-	NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException,
-	LeafDeleteException, InsertException, IOException, FileScanException, TupleUtilsException, InvalidRelation,
-	InvalidTypeException, JoinsException, InvalidTupleSizeException, PageNotReadException, PredEvalException,
-	UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat, GetFileEntryException, AddFileEntryException {
-
-		_bftemp = new BTreeFile(name + "Temp", AttrType.attrString, 64, 1);
-		fscan = new FileScan(name, attrType, attrSize, (short) 4, 4, null, null);
-		MapMidPair mpair = fscan.get_nextMidPair();
-		while (mpair != null) {
-			String  s = String.format("%06d", mpair.map.getTimeStamp());
-			String key = mpair.map.getRowLabel() + mpair.map.getColumnLabel()+"%"+s;
-			_bftemp.insert(new StringKey(key), mpair.mid);
-			//			_bftemp.insert(new StringKey(mpair.map.getRowLabel() + mpair.map.getColumnLabel()), mpair.mid);
-			mpair = fscan.get_nextMidPair();
-		}
-
-		fscan.close();
-
-	}
-
-	/**
 	 * Get the count of total number of maps
 	 * 
 	 * @return
@@ -455,55 +400,6 @@ public class bigt {
 		return mid;
 	}
 
-	/**
-	 * Remove Duplicates to handle the versioning in the database
-	 * 
-	 * @throws InvalidSlotNumberException
-	 * @throws HFException
-	 * @throws HFDiskMgrException
-	 * @throws HFBufMgrException
-	 * @throws Exception
-	 */
-	public void removeDuplicates()
-			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
-		TupleOrder[] order = new TupleOrder[2];
-		order[0] = new TupleOrder(TupleOrder.Ascending);
-		order[1] = new TupleOrder(TupleOrder.Descending);
-		iscan = new IndexScan(new IndexType(IndexType.ROW), name, name + "Temp", attrType, attrSize, 4, 4, null,
-				expr, null, 1, true);
-
-		MapMidPair mpair = iscan.getNextMIDPair();
-		String key = "";
-		String oldKey = "";
-		if (mpair != null) {
-			oldKey = mpair.indKey.split("%")[0];
-		}
-		List<MID> list = new ArrayList<MID>();
-		while (mpair != null) {
-
-			key = mpair.indKey.split("%")[0];
-
-			if (key.equals(oldKey)) {
-				list.add(mpair.mid);
-			} else {
-				list.clear();
-				oldKey = key;
-				list.add(mpair.mid);
-			}
-
-			if (list.size() == 4) {
-				MID delmid = list.get(0);
-
-				heapfile.deleteRecord(delmid);
-				list.remove(0);
-			}
-
-			mpair = iscan.getNextMIDPair();
-		}
-		iscan.close();
-		_bftemp.destroyFile();
-
-	}
 
 	/**
 	 * Fucntion to display all the maps in the database

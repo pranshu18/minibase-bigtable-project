@@ -19,8 +19,9 @@ public class SystemDefs {
   public SystemDefs (){};
   
   public SystemDefs(String dbname, int num_pgs, int bufpoolsize,
-		    String replacement_policy, int type )
+		    String replacement_policy, int type, boolean isNewDB )
     {
+	  MINIBASE_RESTART_FLAG = isNewDB;
       int logsize;
       
       String real_logname = new String(dbname);
