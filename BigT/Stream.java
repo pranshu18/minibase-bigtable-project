@@ -64,6 +64,9 @@ public class Stream implements GlobalConst {
 			parseFilter(indexExprs, columnFilter + rowFilter, 5);
 		else if(_bigt.type == IndexType.ROWVAL)
 			parseFilter(indexExprs, rowFilter + valueFilter, 6);
+		
+		if(indexExprs.size() == 1)
+			indexExprs.add(null);
 
 		indexscanObject = new IndexScan(
 				new IndexType(IndexType.ROW), _bigt.name,
