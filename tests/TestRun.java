@@ -126,29 +126,32 @@ public class TestRun {
 		return name;
 	}
 
-	public static void insert() throws HFDiskMgrException, HFException, HFBufMgrException, IOException, InvalidTypeException, ConstructPageException, AddFileEntryException, GetFileEntryException, IteratorException, PinPageException, UnpinPageException, FreePageException, DeleteFileEntryException, PageNotFoundException, HashOperationException, BufMgrException, PagePinnedException, PageUnpinnedException, FileScanException, TupleUtilsException, InvalidRelation {
+	public static void insert() throws HFDiskMgrException, HFException, HFBufMgrException, IOException, InvalidTypeException, ConstructPageException, AddFileEntryException, GetFileEntryException, IteratorException, PinPageException, UnpinPageException, FreePageException, DeleteFileEntryException, PageNotFoundException, HashOperationException, BufMgrException, PagePinnedException, PageUnpinnedException, FileScanException, TupleUtilsException, InvalidRelation, KeyNotMatchException, ScanIteratorException, ScanDeleteException {
 
-		System.out.println("Usage - batchinsert DATAFILENAME TYPE BIGTABLENAME");
+		System.out.println("Usage - batchinsert DATAFILENAME TYPE BIGTABLENAME NUMBUF");
 		PCounter.initialize();
 		String[] values = getLine().split(" ");
-		if(values.length !=4){
+		if(values.length !=5){
 			System.out.println("Invalid format!");
 			return;
 		}
 		String dataFileName = values[1];
 		int type = Integer.parseInt(values[2]);
-		String bigTableName = values[3]+"_"+Integer.toString(type);
+		String bigTableName = values[3];
+		int numBuffs = Integer.parseInt(values[4]);
+
 		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
 		+ ".minibase-db";
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
-			sysDef = new SystemDefs(dbpath, 10000, 1000, "Clock", type, false);
-			SystemDefs.JavabaseDB.b = new bigt(bigTableName, type);
+			sysDef = new SystemDefs(dbpath, 10000, numBuffs, "Clock", false);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
 			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
-			SystemDefs.JavabaseDB.destroyIndex();
 		}
+
+		SystemDefs.JavabaseDB.b.cleanUpAllIndices();
 
 		try {
 			File file = new File(dataFileName);
@@ -160,17 +163,20 @@ public class TestRun {
 				line = line.replaceAll("[^\\x00-\\x7F]", "");
 				tempArr = line.split(",");
 				Map map = new Map();
-				map.setHdr(null);
+				map.setHdr();
 				map.setRowLabel(tempArr[0]);
 				map.setColumnLabel(tempArr[1]);
 				map.setTimeStamp(Integer.parseInt(tempArr[2]));
 
 				map.setValue(tempArr[3]);
 
-				MID mid = SystemDefs.JavabaseDB.b.insertMap(map.getMapByteArray());
+				MID mid = SystemDefs.JavabaseDB.b.insertMap(map.getMapByteArray(), type);
 			}
 			br.close();
 			
+			SystemDefs.JavabaseDB.b.populateBtree();
+			SystemDefs.JavabaseDB.b.removeDuplicates();
+
 			SystemDefs.JavabaseDB.b.insertIndex();
 
 		} catch(IOException ioe) {
@@ -195,28 +201,27 @@ public class TestRun {
 	}
 
 	public static void query() throws Exception {
-		System.out.println("query BIGTABLENAME TYPE ORDERTYPE ROWFILTER COLUMNFILTER VALUEFILTER NUMBUF");
+		System.out.println("query BIGTABLENAME ORDERTYPE ROWFILTER COLUMNFILTER VALUEFILTER NUMBUF");
 
 		String[] values = getLine().split(" ");
-		if(values.length !=8){
+		if(values.length !=7){
 			System.out.println("Invalid format!");
 			return;
 		}
 
-		int type = Integer.parseInt(values[2]);
-		String bigTableName = values[1]+"_"+Integer.toString(type);
-		int orderType = Integer.parseInt(values[3]);
-		String rowFilter = values[4];
-		String columnFilter = values[5];
-		String valueFilter = values[6];
+		String bigTableName = values[1];
+		int orderType = Integer.parseInt(values[2]);
+		String rowFilter = values[3];
+		String columnFilter = values[4];
+		String valueFilter = values[5];
 
-		int numBuffers = Integer.parseInt(values[7]);
+		int numBuffers = Integer.parseInt(values[6]);
 
 		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
 		+ ".minibase-db";
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
-			sysDef = new SystemDefs(dbpath, 10000, 1000, "Clock", type, true);
-			SystemDefs.JavabaseDB.b = new bigt(bigTableName, type);
+			sysDef = new SystemDefs(dbpath, 10000, numBuffers + 100, "Clock", true);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();

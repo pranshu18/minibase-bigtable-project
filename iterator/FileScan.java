@@ -67,7 +67,7 @@ public class FileScan extends  Iterator
 		s_sizes = s1_sizes;
 
 		Jtuple =  new Map();
-		Jtuple.setHdr(null);
+		Jtuple.setHdr();
 		AttrType[] Jtypes = new AttrType[n_out_flds];
 		short[]    ts_size;
 		try {
@@ -83,7 +83,7 @@ public class FileScan extends  Iterator
 		tuple1 =  new Map();
 
 		try {
-			tuple1.setHdr(null);
+			tuple1.setHdr();
 		}catch (Exception e){
 			throw new FileScanException(e, "setHdr() failed");
 		}
@@ -148,7 +148,7 @@ public class FileScan extends  Iterator
 				e.printStackTrace();
 			}
 
-			tuple1.setHdr(null);
+			tuple1.setHdr();
 			if (PredEval.Eval(OutputFilter, tuple1, null, _in1, null) == true){
 				//	 Projection.Project(tuple1, _in1,  Jtuple, perm_mat, nOutFlds); 
 				Jtuple = tuple1;
@@ -178,7 +178,7 @@ public class FileScan extends  Iterator
 				e.printStackTrace();
 			}
 
-			tuple1.setHdr(null);
+			tuple1.setHdr();
 			if (PredEval.Eval(OutputFilter, tuple1, null, _in1, null) == true) {
 				//	 Projection.Project(tuple1, _in1,  Jtuple, perm_mat, nOutFlds); 
 				Jtuple = tuple1;

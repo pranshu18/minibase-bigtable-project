@@ -569,14 +569,14 @@ public class HFPage extends Page
 	  Map map = new Map();
 	  
 	  try {
-			map.setHdr(null);
+			map.setHdr();
 		} 
 	  
 	  catch (InvalidTypeException e) {
 			e.printStackTrace();
 		}
 	  
-	  map.mapInit(record, 0);
+	  map.mapInit(record, 0, 82);
 	  
 	  //map.print();
 	  

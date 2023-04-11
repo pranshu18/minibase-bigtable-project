@@ -54,7 +54,7 @@ public class PredEval
       
       
       Map value = new Map();
-      value.setHdr(null);
+      value.setHdr();
       
       
       

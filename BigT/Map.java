@@ -1,285 +1,376 @@
+/* File Map.java */
+
 package BigT;
 
-import global.AttrType;
-import global.Convert;
-import heap.InvalidTupleSizeException;
-import heap.InvalidTypeException;
-import global.MID;
-import java.io.IOException;
+import java.io.*;
+import global.*;
+import heap.*;
 
-import static global.GlobalConst.MINIBASE_PAGESIZE;
+public class Map implements GlobalConst {
 
-public class Map {
+	/**
+	 * Maximum size of any map
+	 */
+	public static final int max_size = MINIBASE_PAGESIZE;
 
-    private byte [] data;
+	/**
+	 * a byte array to hold data
+	 */
+	private byte[] data;
 
-    private short fldCnt = 4;
+	/**
+	 * start position of this map in data[]
+	 */
+	private int map_offset;
 
-    private short [] fldOffset;
+	/**
+	 * length of this map metadata(6 [fldCnt, fldOffset[4], pointer to end of Map]
+	 * *2) + 22(row length) + 22(col length) + 4(timstamp length) + 22(value length)
+	 */
+	private int map_length = 82;
 
-    public static final int STRING_ATTR_SIZE = 22;
-    public static final int INT_ATTR_SIZE = 4;
+	/**
+	 * private field Number of fields in this map
+	 */
+	private short fldCnt = 4;
 
-    private int data_offset;
+	/**
+	 * private field Array of offsets of the fields
+	 */
 
-    //Assigning a MID identifier to each map
-    private MID mid;
-    
-    private int length;
+	private short[] fldOffset;
 
-    public static final int max_size = MINIBASE_PAGESIZE;
+	/**
+	 * Class constructor Create a new map with length = max_size,map offset = 0.
+	 */
 
+	public Map() {
+		data = new byte[max_size];
+		map_offset = 0;
+		map_length = max_size;
+	}
 
-    public Map(){
-        data = new byte[max_size];
-        data_offset = 0;
-        length = max_size;
-    }
+	/**
+	 * Constructor
+	 * 
+	 * @param amap   a byte array which contains the map
+	 * @param offset the offset of the map in the byte array
+	 * @param length the length of the map
+	 */
 
-    public Map(byte [] amap, int offset)
-    {
-        data = amap;
-        data_offset = offset;
-        length = 82;
-    }
+	public Map(byte[] amap, int offset) {
+		data = amap;
+		map_offset = offset;
 
-    public Map(Map fromMap)
-    {
-        data = fromMap.getMapByteArray();
-        data_offset = 0;
-        fldOffset = fromMap.copyFldOffset();
-        length = fromMap.getLength();
-    }
+	}
+
+	/**
+	 * Constructor(used as map copy)
+	 * 
+	 * @param fromMap a byte array which contains the map
+	 * 
+	 */
+	public Map(Map fromMap) {
+		data = fromMap.getMapByteArray();
+		map_length = fromMap.getLength();
+		map_offset = 0;
+		fldCnt = fromMap.noOfFlds();
+		fldOffset = fromMap.copyFldOffset();
+	}
+
+	/**
+	 * Class constructor Create a new map with length = size,map offset = 0.
+	 * 
+	 * @param size - size of the map
+	 */
 
 	public Map(int size) {
 		// Create a new map
 		data = new byte[size];
-		data_offset = 0;
-		length = size;
+		map_offset = 0;
+		map_length = size;
 	}
 
-    public int getOffset() {
-        return data_offset;
-    }
+	/**
+	 * Copy a map to the current map position
+	 * 
+	 * @param fromMap the map being copied
+	 */
+	public void mapCopy(Map fromMap) {
+		byte[] temparray = fromMap.getMapByteArray();
+		System.arraycopy(temparray, 0, data, map_offset, map_length);
+	}
 
-    public String getRowLabel() throws IOException {
-        int fldNo = 1;
-        String val = Convert.getStrValue(fldOffset[fldNo -1], data,
-                fldOffset[fldNo] - fldOffset[fldNo -1]);
-        return val;
-    }
+	/**
+	 * This is used when you don't want to use the constructor
+	 * 
+	 * @param amap   a byte array which contains the map
+	 * @param offset the offset of the map in the byte array
+	 * @param length the length of the map
+	 */
 
-    public String getColumnLabel() throws IOException {
-        int fldNo = 2;
-        String val = Convert.getStrValue(fldOffset[fldNo -1], data,
-                fldOffset[fldNo] - fldOffset[fldNo -1]);
-        return val;
-    }
+	public void mapInit(byte[] amap, int offset, int length) {
+		data = amap;
+		map_offset = offset;
+		map_length = length;
 
-    public int getTimeStamp() throws IOException {
-        int fldNo = 3;
-        int val = Convert.getIntValue(fldOffset[fldNo -1], data);
-        return val;
-    }
+	}
 
-    public String getValue() throws IOException {
-        int fldNo = 4;
-        String val = Convert.getStrValue(fldOffset[fldNo -1], data,
-                fldOffset[fldNo] - fldOffset[fldNo -1]);
-        return val;
-    }
+	/**
+	 * Set a map with the given map length and offset
+	 * 
+	 * @param record a byte array contains the map
+	 * @param offset the offset of the map ( =0 by default)
+	 * @param length the length of the map
+	 */
+	public void mapSet(byte[] record, int offset, int length) {
+		System.arraycopy(record, offset, data, 0, length);
+		map_offset = 0;
+		map_length = length;
+	}
 
-    public Map setRowLabel(String rowLabel) throws IOException {
-        int fldNo = 1;
-        Convert.setStrValue (rowLabel, fldOffset[fldNo -1], data);
-        return this;
-    }
+	/**
+	 * get the length of a map, call this method if you did not call setHdr ()
+	 * before
+	 * 
+	 * @return length of this map in bytes
+	 */
+	public int getLength() {
+		return map_length;
+	}
 
-    public Map setColumnLabel(String columnLabel) throws IOException {
-        int fldNo = 2;
-        Convert.setStrValue (columnLabel, fldOffset[fldNo -1], data);
-        return this;
-    }
+	/**
+	 * get the length of a map, call this method if you did call setHdr () before
+	 * 
+	 * @return size of this map in bytes
+	 */
+	public short size() {
+		return ((short) (fldOffset[fldCnt] - map_offset));
+	}
 
-    public Map setTimeStamp(int timeStamp) throws IOException {
-        int fldNo = 3;
-        Convert.setIntValue (timeStamp, fldOffset[fldNo -1], data);
-        return this;
-    }
+	/**
+	 * get the offset of a map
+	 * 
+	 * @return offset of the map in byte array
+	 */
+	public int getOffset() {
+		return map_offset;
+	}
 
-    public Map setValue(String value) throws IOException {
-        int fldNo = 4;
-        Convert.setStrValue (value, fldOffset[fldNo -1], data);
-        return this;
-    }
+	/**
+	 * Copy the map byte array out
+	 * 
+	 * @return byte[], a byte array contains the map the length of byte[] = length
+	 *         of the map
+	 */
 
-    public byte[] getMapByteArray(){
-        byte [] array_copy = new byte [length];
-        System.arraycopy(data, data_offset, array_copy, 0, length);
-        return array_copy;
-    }
+	public byte[] getMapByteArray() {
+		byte[] mapcopy = new byte[map_length];
+		System.arraycopy(data, map_offset, mapcopy, 0, map_length);
+		return mapcopy;
+	}
 
-    public void print() throws IOException {
-        int i, val;
-        float fval;
-        String sval;
+	/**
+	 * return the data byte array
+	 * 
+	 * @return data byte array
+	 */
 
-        System.out.print("[");
-        AttrType type[] = new AttrType[]{new AttrType(AttrType.attrString), new AttrType(AttrType.attrString),
-                new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrString)};
+	public byte[] returnMapByteArray() {
+		return data;
+	}
 
-        for (i=0; i< fldCnt-1; i++)
-        {
-            switch(type[i].attrType) {
+	/**
+	 * Convert row field into string
+	 * 
+	 * @return the converted string if success
+	 * 
+	 * @exception IOException I/O errors
+	 */
 
-                case AttrType.attrInteger:
-                    val = Convert.getIntValue(fldOffset[i], data);
-                    System.out.print(val);
-                    break;
+	public String getRowLabel() throws IOException {
 
-                case AttrType.attrString:
-                    sval = Convert.getStrValue(fldOffset[i], data,fldOffset[i+1] - fldOffset[i]);
-                    System.out.print(sval);
-                    break;
-            }
-            System.out.print(", ");
-        }
+		String val = Convert.getStrValue(fldOffset[0], data, fldOffset[1] - fldOffset[0]);
+		return val;
+	}
 
-        switch(type[fldCnt-1].attrType) {
+	/**
+	 * Convert column field into string
+	 * 
+	 * @return the converted string if success
+	 * 
+	 * @exception IOException I/O errors
+	 */
 
-            case AttrType.attrInteger:
-                val = Convert.getIntValue(fldOffset[i], data);
-                System.out.print(val);
-                break;
+	public String getColumnLabel() throws IOException {
+		String val = Convert.getStrValue(fldOffset[1], data, fldOffset[2] - fldOffset[1]);
+		return val;
+	}
 
-            case AttrType.attrReal:
-                fval = Convert.getFloValue(fldOffset[i], data);
-                System.out.print(fval);
-                break;
+	/**
+	 * Convert time stamp field into integer
+	 * 
+	 * @return the converted integer if success
+	 * 
+	 * @exception IOException I/O errors
+	 */
 
-            case AttrType.attrString:
-                sval = Convert.getStrValue(fldOffset[i], data,fldOffset[i+1] - fldOffset[i]);
-                System.out.print(sval);
-                break;
+	public int getTimeStamp() throws IOException {
 
-            case AttrType.attrNull:
-            case AttrType.attrSymbol:
-                break;
-        }
-        System.out.println("]");
-    }
+		int val = Convert.getIntValue(fldOffset[2], data);
+		return val;
+	}
 
-    public short size(){
-        return ((short) (fldOffset[fldCnt] - data_offset));
-    }
+	/**
+	 * Convert value field into integer
+	 * 
+	 * @return the converted integer if success
+	 * 
+	 * @exception IOException I/O errors
+	 */
 
-    public void mapCopy(Map fromMap){
-        byte [] temparray = fromMap.getMapByteArray();
-        System.arraycopy(temparray, 0, data, data_offset, temparray.length);
-        length = fromMap.getLength();
-    }
+	public String getValue() throws IOException {
 
-    public void mapInit(byte[] amap, int offset){
-        data = amap;
-        data_offset = offset;
-        length = 82;
-    }
+		String val = Convert.getStrValue(fldOffset[3], data, fldOffset[4] - fldOffset[3]);
+		return val;
+	}
 
-    public void mapSet(byte[] frommap, int offset, int size){
-        System.arraycopy(frommap, offset, data, 0, size);
-        data_offset = 0;
-        length = size;
-    }
+	/**
+	 * Set row field to string value
+	 *
+	 * @param val the string value
+	 * @exception IOException I/O errors
+	 */
 
-    public void setHdr (short strSizes[])
-            throws IOException, InvalidTypeException, InvalidTupleSizeException
-    {
-    	if(strSizes==null)
-    		strSizes= new short[] {(short) 20, (short) 20, (short) 20};
-    	
-        short numFlds = 4;
+	public Map setRowLabel(String val) throws IOException {
 
-        AttrType types[] = new AttrType[]{new AttrType(AttrType.attrString), new AttrType(AttrType.attrString),
-                new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrString)};
+		Convert.setStrValue(val, fldOffset[0], data);
+		return this;
+	}
 
-        fldCnt = numFlds;
-        Convert.setShortValue(numFlds, data_offset, data);
-        fldOffset = new short[numFlds+1];
-        int pos = data_offset+2;
+	/**
+	 * Set column field to string value
+	 *
+	 * @param val the string value
+	 * @exception IOException I/O errors
+	 */
 
-        fldOffset[0] = (short) ((numFlds +2) * 2 + data_offset);
+	public Map setColumnLabel(String val) throws IOException {
 
-        Convert.setShortValue(fldOffset[0], pos, data);
-        pos +=2;
-        short strCount =0;
-        short incr;
-        int i;
+		Convert.setStrValue(val, fldOffset[1], data);
+		return this;
+	}
 
-        for (i=1; i<numFlds; i++)
-        {
-            switch(types[i-1].attrType) {
+	/**
+	 * Set time stamp field to integer value
+	 *
+	 * @param val the integer value
+	 * @exception IOException I/O errors
+	 */
 
-                case AttrType.attrInteger:
-                    incr = 4;
-                    break;
+	public Map setTimeStamp(int val) throws IOException {
 
-                case AttrType.attrString:
-                    incr = (short) (strSizes[strCount] +2);  //strlen in bytes = strlen +2
-                    strCount++;
-                    break;
+		Convert.setIntValue(val, fldOffset[2], data);
+		return this;
+	}
 
-                default:
-                    throw new InvalidTypeException (null, "TUPLE: TUPLE_TYPE_ERROR");
-            }
-            fldOffset[i]  = (short) (fldOffset[i-1] + incr);
-            Convert.setShortValue(fldOffset[i], pos, data);
-            pos +=2;
+	/**
+	 * Set value field to string value
+	 *
+	 * @param val the string value
+	 * @exception IOException I/O errors
+	 */
 
-        }
-        switch(types[numFlds -1].attrType) {
+	public Map setValue(String val) throws IOException {
 
-            case AttrType.attrInteger:
-                incr = 4;
-                break;
+		Convert.setStrValue(val, fldOffset[3], data);
+		return this;
+	}
 
-            case AttrType.attrString:
-                incr =(short) ( strSizes[strCount] +2);  //strlen in bytes = strlen +2
-                break;
+	/**
+	 * setHdr will set the header of this map.
+	 * 
+	 * @exception IOException             I/O errors
+	 * @exception InvalidTypeException    Invalid tupe type
+	 * @exception InvalidMapSizeException Map size too big
+	 *
+	 */
 
-            default:
-                throw new InvalidTypeException (null, "TUPLE: TUPLE_TYPE_ERROR");
-        }
+	public void setHdr() throws IOException, InvalidTypeException {
 
-        fldOffset[numFlds] = (short) (fldOffset[i-1] + incr);
-        Convert.setShortValue(fldOffset[numFlds], pos, data);
+		fldCnt = 4;
+		Convert.setShortValue((short) 4, map_offset, data);
+		fldOffset = new short[4 + 1];
+		int pos = map_offset + 2; // start position for fldOffset[]
 
-        length = fldOffset[numFlds] - data_offset;
+		fldOffset[0] = (short) ((4 + 2) * 2 + map_offset);
 
-        if(length > max_size)
-            throw new InvalidTupleSizeException (null, "TUPLE: TUPLE_TOOBIG_ERROR");
-    }
+		Convert.setShortValue(fldOffset[0], pos, data);
 
+		int maxLengthOfString = 20;
+		fldOffset[0] = (short) (12 + map_offset);
+		fldOffset[1] = (short) (fldOffset[0] + maxLengthOfString + 2);
+		fldOffset[2] = (short) (fldOffset[1] + maxLengthOfString + 2);
+		fldOffset[3] = (short) (fldOffset[2] + 4);
+		fldOffset[4] = (short) (fldOffset[3] + maxLengthOfString + 2);
 
-    public short[] copyFldOffset()
-    {
-        short[] newFldOffset = new short[fldCnt + 1];
-        for (int i=0; i<=fldCnt; i++) {
-            newFldOffset[i] = fldOffset[i];
-        }
+		try {
+			Convert.setShortValue(fldCnt, 0, data);
+			Convert.setShortValue(fldOffset[0], 2, data);
+			Convert.setShortValue(fldOffset[1], 4, data);
+			Convert.setShortValue(fldOffset[2], 6, data);
+			Convert.setShortValue(fldOffset[3], 8, data);
+			Convert.setShortValue(fldOffset[4], 10, data);
+		} catch (Exception e) {
+		}
 
-        return newFldOffset;
-    }
+		map_length = fldOffset[(short) 4] - map_offset;
+	}
 
-    public MID getMid() {
-        return mid;
-    }
+	/**
+	 * Returns number of fields in this map
+	 *
+	 * @return the number of fields in this map
+	 *
+	 */
 
-    public void setMid(MID mid) {
-        this.mid = mid;
-    }
-    
-    public int getLength() {
-    	return length;
-    }
+	public short noOfFlds() {
+		return fldCnt;
+	}
 
+	/**
+	 * Makes a copy of the fldOffset array
+	 *
+	 * @return a copy of the fldOffset array
+	 *
+	 */
+
+	public short[] copyFldOffset() {
+		short[] newFldOffset = new short[fldCnt + 1];
+		for (int i = 0; i <= fldCnt; i++) {
+			newFldOffset[i] = fldOffset[i];
+		}
+
+		return newFldOffset;
+	}
+
+	/**
+	 * Print out the map
+	 * 
+	 * @Exception IOException I/O exception
+	 */
+
+	public void print() throws IOException {
+
+		System.out.print("(");
+		String rowLabel = Convert.getStrValue(fldOffset[0], data, fldOffset[1] - fldOffset[0]);
+		System.out.print(rowLabel + " , ");
+		String colLabel = Convert.getStrValue(fldOffset[1], data, fldOffset[2] - fldOffset[1]);
+		System.out.print(colLabel + " , ");
+		int timeStamp = Convert.getIntValue(fldOffset[2], data);
+		System.out.print(timeStamp + " -> ");
+		String value = Convert.getStrValue(fldOffset[3], data, fldOffset[4] - fldOffset[3]);
+		System.out.print(value);
+		System.out.print(")");
+	}
 }

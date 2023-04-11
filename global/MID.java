@@ -56,4 +56,11 @@ public class MID {
                 && (this.slotNo == mid.slotNo);
     }
 
+	@Override
+	public String toString() {
+		return "MID [slotNo=" + slotNo + ", pageNo=" + pageNo + "]";
+	}
+    
+    
+
 }

@@ -20,8 +20,10 @@ import heap.*;
  */
 public class BTreeFile extends IndexFile 
   implements GlobalConst {
-  
-  private final static int MAGIC0=1989;
+	
+	private String name = "";
+
+private final static int MAGIC0=1989;
   
   private final static String lineSep=System.getProperty("line.separator");
   
@@ -209,7 +211,7 @@ public class BTreeFile extends IndexFile
 	   AddFileEntryException
     {
       
-      
+	  name = filename;
       headerPageId=get_file_entry(filename);
       if( headerPageId==null) //file not exist
 	{
@@ -1838,6 +1840,12 @@ public class BTreeFile extends IndexFile
       }
       
     }
+  
+  public String getName() {
+		return name;
+	}
+
+
   
 }
 
