@@ -359,18 +359,54 @@ public class Map implements GlobalConst {
 	 * 
 	 * @Exception IOException I/O exception
 	 */
+    public void print() throws IOException {
+        int i, val;
+        float fval;
+        String sval;
 
-	public void print() throws IOException {
+        System.out.print("[");
+        AttrType type[] = new AttrType[]{new AttrType(AttrType.attrString), new AttrType(AttrType.attrString),
+                new AttrType(AttrType.attrInteger), new AttrType(AttrType.attrString)};
 
-		System.out.print("(");
-		String rowLabel = Convert.getStrValue(fldOffset[0], data, fldOffset[1] - fldOffset[0]);
-		System.out.print(rowLabel + " , ");
-		String colLabel = Convert.getStrValue(fldOffset[1], data, fldOffset[2] - fldOffset[1]);
-		System.out.print(colLabel + " , ");
-		int timeStamp = Convert.getIntValue(fldOffset[2], data);
-		System.out.print(timeStamp + " -> ");
-		String value = Convert.getStrValue(fldOffset[3], data, fldOffset[4] - fldOffset[3]);
-		System.out.print(value);
-		System.out.print(")");
-	}
+        for (i=0; i< fldCnt-1; i++)
+        {
+            switch(type[i].attrType) {
+
+                case AttrType.attrInteger:
+                    val = Convert.getIntValue(fldOffset[i], data);
+                    System.out.print(val);
+                    break;
+
+                case AttrType.attrString:
+                    sval = Convert.getStrValue(fldOffset[i], data,fldOffset[i+1] - fldOffset[i]);
+                    System.out.print(sval);
+                    break;
+            }
+            System.out.print(", ");
+        }
+
+        switch(type[fldCnt-1].attrType) {
+
+            case AttrType.attrInteger:
+                val = Convert.getIntValue(fldOffset[i], data);
+                System.out.print(val);
+                break;
+
+            case AttrType.attrReal:
+                fval = Convert.getFloValue(fldOffset[i], data);
+                System.out.print(fval);
+                break;
+
+            case AttrType.attrString:
+                sval = Convert.getStrValue(fldOffset[i], data,fldOffset[i+1] - fldOffset[i]);
+                System.out.print(sval);
+                break;
+
+            case AttrType.attrNull:
+            case AttrType.attrSymbol:
+                break;
+        }
+        System.out.println("]");
+    }
+
 }

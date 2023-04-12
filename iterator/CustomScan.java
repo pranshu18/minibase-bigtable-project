@@ -41,42 +41,42 @@ public class CustomScan extends Iterator {
             iterators = new Iterator[5];
             iterators[0] = new FileScan(bigtable.heapfile[0].getFileName(), attributes, attributeSizes, (short) 4, 4, null, outFilter);
             
-            if(dontUseIndex2) {
+            if(dontUseIndex2 || bigtable.heapfile[1].getRecCnt()==0) {
                 iterators[1] = new FileScan(bigtable.heapfile[1].getFileName(), attributes, attributeSizes, (short) 4, 4, null, outFilter);
             } else {
             	iterators[1] = new IndexScan(
         				new IndexType(IndexType.ROW), bigtable.heapfile[1].getFileName(),
-        				bigtable.indexFiles[1].get(0).getName(),
+        				bigtable.indexFiles[1].get(0).getDbname(),
         				attributes, attributeSizes, 4, 4, null,
         				index_2_filter, outFilter, 1, false);
             }
             
-            if(dontUseIndex3) {
+            if(dontUseIndex3  || bigtable.heapfile[2].getRecCnt()==0) {
                 iterators[2] = new FileScan(bigtable.heapfile[2].getFileName(), attributes, attributeSizes, (short) 4, 4, null, outFilter);
             } else {
             	iterators[2] = new IndexScan(
         				new IndexType(IndexType.COL), bigtable.heapfile[2].getFileName(),
-        				bigtable.indexFiles[2].get(0).getName(),
+        				bigtable.indexFiles[2].get(0).getDbname(),
         				attributes, attributeSizes, 4, 4, null,
         				index_3_filter, outFilter, 1, false);
             }
             
-            if(dontUseIndex4) {
+            if(dontUseIndex4  || bigtable.heapfile[3].getRecCnt()==0) {
                 iterators[3] = new FileScan(bigtable.heapfile[3].getFileName(), attributes, attributeSizes, (short) 4, 4, null, outFilter);
             } else {
             	iterators[3] = new IndexScan(
         				new IndexType(IndexType.COLROW), bigtable.heapfile[3].getFileName(),
-        				bigtable.indexFiles[3].get(0).getName(),
+        				bigtable.indexFiles[3].get(0).getDbname(),
         				attributes, attributeSizes, 4, 4, null,
         				index_4_filter, outFilter, 1, false);
             }
 
-            if(dontUseIndex5) {
+            if(dontUseIndex5 ||  bigtable.heapfile[4].getRecCnt()==0) {
                 iterators[4] = new FileScan(bigtable.heapfile[4].getFileName(), attributes, attributeSizes, (short) 4, 4, null, outFilter);
             } else {
             	iterators[4] = new IndexScan(
         				new IndexType(IndexType.ROWVAL), bigtable.heapfile[4].getFileName(),
-        				bigtable.indexFiles[4].get(0).getName(),
+        				bigtable.indexFiles[4].get(0).getDbname(),
         				attributes, attributeSizes, 4, 4, null,
         				index_5_filter, outFilter, 1, false);
             }

@@ -19,9 +19,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import bufmgr.BufMgr;
-import heap.InvalidSlotNumberException;
-import heap.InvalidTupleSizeException;
-import heap.SpaceNotAvailableException;
 
 
 public class TestRun {
@@ -126,7 +123,7 @@ public class TestRun {
 		return name;
 	}
 
-	public static void insert() throws HFDiskMgrException, HFException, HFBufMgrException, IOException, InvalidTypeException, ConstructPageException, AddFileEntryException, GetFileEntryException, IteratorException, PinPageException, UnpinPageException, FreePageException, DeleteFileEntryException, PageNotFoundException, HashOperationException, BufMgrException, PagePinnedException, PageUnpinnedException, FileScanException, TupleUtilsException, InvalidRelation, KeyNotMatchException, ScanIteratorException, ScanDeleteException {
+	public static void insert() throws HFDiskMgrException, HFException, HFBufMgrException, IOException, InvalidTypeException, ConstructPageException, AddFileEntryException, GetFileEntryException, IteratorException, PinPageException, UnpinPageException, FreePageException, DeleteFileEntryException, PageNotFoundException, HashOperationException, BufMgrException, PagePinnedException, PageUnpinnedException, FileScanException, TupleUtilsException, InvalidRelation, KeyNotMatchException, ScanIteratorException, ScanDeleteException, InvalidInfoSizeException {
 
 		System.out.println("Usage - batchinsert DATAFILENAME TYPE BIGTABLENAME NUMBUF");
 		PCounter.initialize();
@@ -142,16 +139,25 @@ public class TestRun {
 
 		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
 		+ ".minibase-db";
+		
+		boolean newFile=false;
+		File f = new File(dbpath);
+		if(f.exists()) { 
+			newFile = true;
+		}
+		
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
-			sysDef = new SystemDefs(dbpath, 10000, numBuffs, "Clock", false);
+			sysDef = new SystemDefs(dbpath, 10000, numBuffs, "Clock", newFile);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
+//			SystemDefs.JavabaseBM.flushAllPagesForcibly();
 			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
 		}
 
 		SystemDefs.JavabaseDB.b.cleanUpAllIndices();
+
 
 		try {
 			File file = new File(dataFileName);
@@ -174,10 +180,16 @@ public class TestRun {
 			}
 			br.close();
 			
+
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+
 			SystemDefs.JavabaseDB.b.populateBtree();
 			SystemDefs.JavabaseDB.b.removeDuplicates();
 
+
 			SystemDefs.JavabaseDB.b.insertIndex();
+
 
 		} catch(IOException ioe) {
 			ioe.printStackTrace();
@@ -194,7 +206,7 @@ public class TestRun {
 		SystemDefs.JavabaseBM.unpinAllPages();
 		SystemDefs.JavabaseBM.flushAllPages();
 
-
+//		SystemDefs.JavabaseBM.flushAllPagesForcibly();
 		System.out.println("Disk pages read = "+ PCounter.rcounter);
 		System.out.println("Disk pages written = "+ PCounter.wcounter);
 
@@ -225,10 +237,14 @@ public class TestRun {
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
-			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
+//			SystemDefs.JavabaseBM.flushAllPagesForcibly();
+			SystemDefs.JavabaseBM = new BufMgr(numBuffers + 100, "Clock");
 		}
 
 		PCounter.initialize();
+
+		System.out.println(SystemDefs.JavabaseDB.b.indexFiles[1].get(0).cnt);
+		System.out.println((new BTreeFile(SystemDefs.JavabaseDB.b.indexFiles[1].get(0).getDbname())).cnt);
 
 		Stream st = SystemDefs.JavabaseDB.b.openStream(orderType, rowFilter, columnFilter, valueFilter, numBuffers);
 		Map mp  = st.getNext();
@@ -241,6 +257,8 @@ public class TestRun {
 
 		SystemDefs.JavabaseBM.unpinAllPages();
 		SystemDefs.JavabaseBM.flushAllPages();
+
+//		SystemDefs.JavabaseBM.flushAllPagesForcibly();
 
 		System.out.println("Disk pages read = "+ PCounter.rcounter);
 		System.out.println("Disk pages written = "+ PCounter.wcounter);

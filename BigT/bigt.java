@@ -76,13 +76,11 @@ public class bigt {
 			case IndexType.COLROW: {
 				filename = name + "Index4";
 				this.indexFiles[i].add(new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1));
-				this.indexFiles[i].add(new BTreeFile(filename+"_Time", AttrType.attrInteger, 4, 1));
 				break;
 			}
 			case IndexType.ROWVAL: {
 				filename = name + "Index5";
 				this.indexFiles[i].add(new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1));
-				this.indexFiles[i].add(new BTreeFile(filename+"_Time", AttrType.attrInteger, 4, 1));
 				break;
 			}
 			}
@@ -264,7 +262,6 @@ public class bigt {
 			Map temp = null;
 
 			temp = scan.getNext(mid);
-			ArrayList<MID> removeList = new ArrayList<MID>();
 			while (temp != null) {
 				switch (type) {
 
@@ -282,17 +279,13 @@ public class bigt {
 
 				case IndexType.COLROW: {
 					key = temp.getColumnLabel() + temp.getRowLabel();
-					key_timeStamp = temp.getTimeStamp();
 					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
-					this.indexFiles[i].get(1).insert(new IntegerKey(key_timeStamp), mid);
 					break;
 				}
 
 				case IndexType.ROWVAL: {
 					key = temp.getRowLabel() + temp.getValue();
-					key_timeStamp = temp.getTimeStamp();
 					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
-					this.indexFiles[i].get(1).insert(new IntegerKey(key_timeStamp), mid);
 					break;
 				}
 
