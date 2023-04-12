@@ -20,6 +20,7 @@ public class bigt {
 	public Heapfile[] heapfile = new Heapfile[5];
 	public ArrayList<BTreeFile>[] indexFiles = new ArrayList[5];
 	public BTreeFile _bftemp = null;
+
 	public String tableName;
 	FileScan fscan;
 	IndexScan iscan;
@@ -50,7 +51,6 @@ public class bigt {
 	TupleUtilsException, InvalidRelation, InvalidTypeException {
 
 		this.tableName = name;
-
 		for(int i=0; i<IndexType.indexList.length; i++) {
 			int type = IndexType.indexList[i];
 			this.indexFiles[i] = new ArrayList<BTreeFile>();
@@ -253,46 +253,77 @@ public class bigt {
 	public void insertIndex() throws InvalidSlotNumberException, HFException, HFBufMgrException, HFDiskMgrException, Exception {
 
 		for(int i=0; i<IndexType.indexList.length; i++) {
-			Scan scan = new Scan(heapfile[i]);
+			int type = IndexType.indexList[i];
+			String filename="";
+			switch (type) {
+			case IndexType.ROW: {
+				filename = tableName + "Index2";
+				this.indexFiles[i].set(0, new BTreeFile(filename+"_Row", AttrType.attrString, 22, 1));
+				break;
+			}
+
+			case IndexType.COL: {
+				filename = tableName + "Index3";
+				this.indexFiles[i].add(0, new BTreeFile(filename+"_Col", AttrType.attrString, 22, 1));
+				break;
+			}
+
+			case IndexType.COLROW: {
+				filename = tableName + "Index4";
+				this.indexFiles[i].add(0, new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1));
+				break;
+			}
+			case IndexType.ROWVAL: {
+				filename = tableName + "Index5";
+				this.indexFiles[i].add(0, new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1));
+				break;
+			}
+			}
+		}
+
+
+		for(int i=0; i<IndexType.indexList.length; i++) {
+
 			int type = IndexType.indexList[i];
 
-			MID mid = new MID();
+			fscan = new FileScan(heapfile[i].getFileName(), attrType, attrSize, (short) 4, 4, null, null);
+			MapMidPair mpair = fscan.get_nextMidPair();
 			String key = null;
-			int key_timeStamp = 0;
-			Map temp = null;
 
-			temp = scan.getNext(mid);
-			while (temp != null) {
+			while (mpair != null) {
 				switch (type) {
 
 				case IndexType.ROW: {
-					key = temp.getRowLabel();
-					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
+					key = mpair.map.getRowLabel();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
 					break;
 				}
 
 				case IndexType.COL: {
-					key = temp.getColumnLabel();
-					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
+					key = mpair.map.getColumnLabel();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
 					break;
 				}
 
 				case IndexType.COLROW: {
-					key = temp.getColumnLabel() + temp.getRowLabel();
-					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
+					key = mpair.map.getColumnLabel() + mpair.map.getRowLabel();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
 					break;
 				}
 
 				case IndexType.ROWVAL: {
-					key = temp.getRowLabel() + temp.getValue();
-					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
+					key = mpair.map.getRowLabel() + mpair.map.getValue();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
 					break;
 				}
 
 				}
-				temp = scan.getNext(mid);
+
+				mpair = fscan.get_nextMidPair();
 			}
-			scan.closescan();
+
+			fscan.close();
+
 
 		}
 

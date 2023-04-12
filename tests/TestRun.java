@@ -7,9 +7,12 @@ import BigT.bigt;
 import btree.*;
 import bufmgr.*;
 import diskmgr.PCounter;
+import global.AttrType;
+import global.IndexType;
 import global.MID;
 import global.SystemDefs;
 import heap.*;
+import index.IndexScan;
 import iterator.*;
 
 import java.io.BufferedReader;
@@ -29,62 +32,6 @@ public class TestRun {
 	static String remove_dbcmd;
 
 	static SystemDefs sysDef;
-
-	//runs code from TestDriver as it is to setup db files
-	public static void preprocess(){
-		dbpath = "/tmp/batchInsert"+System.getProperty("user.name")+".minibase-db";
-		logpath = "/tmp/batchInsert" +System.getProperty("user.name")+".minibase-log";
-
-		// Kill anything that might be hanging around
-		String newdbpath;
-		String newlogpath;
-		String remove_cmd = "/bin/rm -rf ";
-
-		newdbpath = dbpath;
-		newlogpath = logpath;
-
-		remove_logcmd = remove_cmd + logpath;
-		remove_dbcmd = remove_cmd + dbpath;
-
-		// Commands here is very machine dependent.  We assume
-		// user are on UNIX system here
-		try {
-			Runtime.getRuntime().exec(remove_logcmd);
-			Runtime.getRuntime().exec(remove_dbcmd);
-		}
-		catch (IOException e) {
-			System.err.println (""+e);
-		}
-
-		remove_logcmd = remove_cmd + newlogpath;
-		remove_dbcmd = remove_cmd + newdbpath;
-
-		//This step seems redundant for me.  But it's in the original
-		//C++ code.  So I am keeping it as of now, just in case I
-		//I missed something
-		try {
-			Runtime.getRuntime().exec(remove_logcmd);
-			Runtime.getRuntime().exec(remove_dbcmd);
-		}
-		catch (IOException e) {
-			System.err.println (""+e);
-		}
-	}
-
-	//runs code from TestDriver for cleanup
-	public static void cleanup(){
-		//Clean up again
-		try {
-			Runtime.getRuntime().exec(remove_logcmd);
-			Runtime.getRuntime().exec(remove_dbcmd);
-		}
-		catch (IOException e) {
-			System.err.println (""+e);
-		}
-
-		System.out.println (".\n\n");
-
-	}
 
 	public static void displayOptions(){
 		System.out.println("OPTIONS-");
@@ -152,7 +99,6 @@ public class TestRun {
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
-//			SystemDefs.JavabaseBM.flushAllPagesForcibly();
 			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
 		}
 
@@ -190,6 +136,7 @@ public class TestRun {
 
 			SystemDefs.JavabaseDB.b.insertIndex();
 
+			
 
 		} catch(IOException ioe) {
 			ioe.printStackTrace();
@@ -206,7 +153,6 @@ public class TestRun {
 		SystemDefs.JavabaseBM.unpinAllPages();
 		SystemDefs.JavabaseBM.flushAllPages();
 
-//		SystemDefs.JavabaseBM.flushAllPagesForcibly();
 		System.out.println("Disk pages read = "+ PCounter.rcounter);
 		System.out.println("Disk pages written = "+ PCounter.wcounter);
 
@@ -237,14 +183,10 @@ public class TestRun {
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
-//			SystemDefs.JavabaseBM.flushAllPagesForcibly();
 			SystemDefs.JavabaseBM = new BufMgr(numBuffers + 100, "Clock");
 		}
 
 		PCounter.initialize();
-
-		System.out.println(SystemDefs.JavabaseDB.b.indexFiles[1].get(0).cnt);
-		System.out.println((new BTreeFile(SystemDefs.JavabaseDB.b.indexFiles[1].get(0).getDbname())).cnt);
 
 		Stream st = SystemDefs.JavabaseDB.b.openStream(orderType, rowFilter, columnFilter, valueFilter, numBuffers);
 		Map mp  = st.getNext();
@@ -257,8 +199,6 @@ public class TestRun {
 
 		SystemDefs.JavabaseBM.unpinAllPages();
 		SystemDefs.JavabaseBM.flushAllPages();
-
-//		SystemDefs.JavabaseBM.flushAllPagesForcibly();
 
 		System.out.println("Disk pages read = "+ PCounter.rcounter);
 		System.out.println("Disk pages written = "+ PCounter.wcounter);

@@ -379,7 +379,6 @@ private final static int MAGIC0=1989;
 	   
     {
       KeyDataEntry  newRootEntry;
-      cnt++;
       if (BT.getKeyLength(key) > headerPage.get_maxKeySize())
 	throw new KeyTooLongException(null,"");
       
