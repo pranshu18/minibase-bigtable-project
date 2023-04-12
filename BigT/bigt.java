@@ -17,12 +17,11 @@ import bufmgr.PageNotReadException;
  */
 public class bigt {
 
-	public String name;
-	public int type;
-	public Heapfile heapfile;
-	public BTreeFile _bf0 = null;
-	public BTreeFile _bf1 = null;
+	public Heapfile[] heapfile = new Heapfile[5];
+	public ArrayList<BTreeFile>[] indexFiles = new ArrayList[5];
 	public BTreeFile _bftemp = null;
+
+	public String tableName;
 	FileScan fscan;
 	IndexScan iscan;
 	CondExpr[] expr;
@@ -30,7 +29,7 @@ public class bigt {
 	short[] attrSize;
 	String key;
 	public HashMap<ArrayList<String>, ArrayList<MID>> rocolMID = new HashMap<ArrayList<String>, ArrayList<MID>>();
-	
+
 	/**
 	 * 
 	 * @param name - name of the bigT
@@ -47,39 +46,45 @@ public class bigt {
 	 * @throws InvalidRelation
 	 * @throws InvalidTypeException
 	 */
-	public bigt(String name, int type) throws HFException, HFBufMgrException, HFDiskMgrException, IOException,
+	public bigt(String name) throws HFException, HFBufMgrException, HFDiskMgrException, IOException,
 	GetFileEntryException, ConstructPageException, AddFileEntryException, FileScanException,
 	TupleUtilsException, InvalidRelation, InvalidTypeException {
 
-		this.name = name;
-		this.type = type;
-		this.heapfile = new Heapfile(name);
+		this.tableName = name;
+		for(int i=0; i<IndexType.indexList.length; i++) {
+			int type = IndexType.indexList[i];
+			this.indexFiles[i] = new ArrayList<BTreeFile>();
+			String filename="";
+			switch (type) {
+			case IndexType.None: {
+				filename = name;
+				break;
+			}
 
-		switch (type) {
-		case IndexType.None: {
-			break;
-		}
+			case IndexType.ROW: {
+				filename = name + "Index2";
+				this.indexFiles[i].add(new BTreeFile(filename+"_Row", AttrType.attrString, 22, 1));
+				break;
+			}
 
-		case IndexType.ROW: {
-			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
-			break;
-		}
+			case IndexType.COL: {
+				filename = name + "Index3";
+				this.indexFiles[i].add(new BTreeFile(filename+"_Col", AttrType.attrString, 22, 1));
+				break;
+			}
 
-		case IndexType.COL: {
-			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
-			break;
-		}
-
-		case IndexType.COLROW: {
-			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
-			this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
-			break;
-		}
-		case IndexType.ROWVAL: {
-			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
-			this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
-			break;
-		}
+			case IndexType.COLROW: {
+				filename = name + "Index4";
+				this.indexFiles[i].add(new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1));
+				break;
+			}
+			case IndexType.ROWVAL: {
+				filename = name + "Index5";
+				this.indexFiles[i].add(new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1));
+				break;
+			}
+			}
+			this.heapfile[i] = new Heapfile(filename);
 		}
 
 		attrType = new AttrType[4];
@@ -94,6 +99,7 @@ public class bigt {
 		attrSize[3] = 22;
 
 	}
+
 
 	/**
 	 * 
@@ -111,39 +117,39 @@ public class bigt {
 	 * @throws DeleteFileEntryException
 	 * @throws ConstructPageException
 	 * @throws PinPageException
+	 * @throws InvalidTupleSizeException 
 	 */
 	void deleteBigT() throws InvalidSlotNumberException, FileAlreadyDeletedException, InvalidInfoSizeException,
 	HFBufMgrException, HFDiskMgrException, IOException, IteratorException, UnpinPageException,
-	FreePageException, DeleteFileEntryException, ConstructPageException, PinPageException {
+	FreePageException, DeleteFileEntryException, ConstructPageException, PinPageException, InvalidTupleSizeException {
 
-		heapfile.deleteFile();
+		for(int i=0; i<IndexType.indexList.length; i++) {
+			heapfile[i].deleteFile();
 
-		switch (type) {
-		case IndexType.None: {
-			break;
-		}
-
-		case IndexType.ROW: {
-			_bf0.destroyFile();
-			break;
+			for(int j=0;j<this.indexFiles[i].size();j++) {
+				this.indexFiles[i].get(j).destroyFile();
+			}
 
 		}
 
-		case IndexType.COL: {
-			_bf0.destroyFile();
-			break;
+	}
 
-		}
-		case IndexType.COLROW: {
-			_bf0.destroyFile();
-			_bf1.destroyFile();
-			break;
-		}
-		case IndexType.ROWVAL: {
-			_bf0.destroyFile();
-			_bf1.destroyFile();
-			break;
-		}
+	public void cleanUpAllIndices() throws PinPageException, KeyNotMatchException, IteratorException, ConstructPageException, UnpinPageException, ScanIteratorException, ScanDeleteException, IOException {
+
+		for(int i=0; i<IndexType.indexList.length; i++) {
+			for(int j=0;j<this.indexFiles[i].size();j++) {				
+				BTFileScan scan = this.indexFiles[i].get(j).new_scan(null, null);
+				boolean isScanComplete = false;
+				while(!isScanComplete) {
+					KeyDataEntry entry = scan.get_next();
+					if(entry == null) {
+						isScanComplete = true;
+						break;
+					}
+					scan.delete_current();
+				}
+
+			}
 		}
 	}
 
@@ -156,10 +162,16 @@ public class bigt {
 	 * @throws HFDiskMgrException
 	 * @throws HFBufMgrException
 	 * @throws IOException
+	 * @throws InvalidTupleSizeException 
 	 */
 	public int getMapCnt() throws InvalidSlotNumberException, InvalidInfoSizeException, HFDiskMgrException,
-	HFBufMgrException, IOException {
-		return heapfile.getRecCnt();
+	HFBufMgrException, IOException, InvalidTupleSizeException {
+		int total = 0;
+
+		for(int i=0; i<IndexType.indexList.length; i++) {
+			total += heapfile[i].getRecCnt();
+		}
+		return total;
 	}
 
 	/**
@@ -184,11 +196,11 @@ public class bigt {
 
 		while (map != null) {
 
-		//System.out.println(map.getRowLabel());
+			//System.out.println(map.getRowLabel());
 
-		noDupSet.add(map.getRowLabel());
+			noDupSet.add(map.getRowLabel());
 
-		map = stream.getNext();
+			map = stream.getNext();
 
 		}
 
@@ -219,9 +231,9 @@ public class bigt {
 
 		while (map != null) {
 
-		noDupSet.add(map.getColumnLabel());
+			noDupSet.add(map.getColumnLabel());
 
-		map = stream.getNext();
+			map = stream.getNext();
 
 		}
 
@@ -232,88 +244,91 @@ public class bigt {
 
 	/**
 	 * Generate the index files for the maps corresponding to the desired type
-	 * 
-	 * @throws KeyTooLongException
-	 * @throws KeyNotMatchException
-	 * @throws LeafInsertRecException
-	 * @throws IndexInsertRecException
-	 * @throws ConstructPageException
-	 * @throws UnpinPageException
-	 * @throws PinPageException
-	 * @throws NodeNotMatchException
-	 * @throws ConvertException
-	 * @throws DeleteRecException
-	 * @throws IndexSearchException
-	 * @throws IteratorException
-	 * @throws LeafDeleteException
-	 * @throws InsertException
-	 * @throws IOException
-	 * @throws FieldNumberOutOfBoundException
-	 * @throws InvalidInfoSizeException
-	 * @throws FreePageException
-	 * @throws DeleteFileEntryException
-	 * @throws GetFileEntryException
-	 * @throws AddFileEntryException
+	 * @throws Exception 
+	 * @throws HFDiskMgrException 
+	 * @throws HFBufMgrException 
+	 * @throws HFException 
+	 * @throws InvalidSlotNumberException 
 	 */
-	public void insertIndex() throws KeyTooLongException, KeyNotMatchException, LeafInsertRecException,
-	IndexInsertRecException, ConstructPageException, UnpinPageException, PinPageException,
-	NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException,
-	LeafDeleteException, InsertException, IOException, FieldNumberOutOfBoundException, InvalidInfoSizeException,
-	FreePageException, DeleteFileEntryException, GetFileEntryException, AddFileEntryException {
-		Scan scan = new Scan(heapfile);
-		MID mid = new MID();
-		String key = null;
-		int key_timeStamp = 0;
-		Map temp = null;
+	public void insertIndex() throws InvalidSlotNumberException, HFException, HFBufMgrException, HFDiskMgrException, Exception {
 
-		if(type==IndexType.None) {
-			return;
-		}
-		if (!(type == IndexType.COLROW || type == IndexType.ROWVAL)) {
-			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 22, 1);
-
-		} else {
-			this._bf0 = new BTreeFile(name + "Index0", AttrType.attrString, 44, 1);
-			this._bf1 = new BTreeFile(name + "Index1", AttrType.attrInteger, 4, 1);
-		}
-
-		temp = scan.getNext(mid);
-		while (temp != null) {
+		for(int i=0; i<IndexType.indexList.length; i++) {
+			int type = IndexType.indexList[i];
+			String filename="";
 			switch (type) {
-
 			case IndexType.ROW: {
-				key = temp.getRowLabel();
-				_bf0.insert(new StringKey(key), mid);
+				filename = tableName + "Index2";
+				this.indexFiles[i].set(0, new BTreeFile(filename+"_Row", AttrType.attrString, 22, 1));
 				break;
 			}
 
 			case IndexType.COL: {
-				key = temp.getColumnLabel();
-				_bf0.insert(new StringKey(key), mid);
+				filename = tableName + "Index3";
+				this.indexFiles[i].add(0, new BTreeFile(filename+"_Col", AttrType.attrString, 22, 1));
 				break;
 			}
 
 			case IndexType.COLROW: {
-				key = temp.getColumnLabel() + temp.getRowLabel();
-				key_timeStamp = temp.getTimeStamp();
-				_bf0.insert(new StringKey(key), mid);
-				_bf1.insert(new IntegerKey(key_timeStamp), mid);
+				filename = tableName + "Index4";
+				this.indexFiles[i].add(0, new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1));
 				break;
 			}
-
 			case IndexType.ROWVAL: {
-				key = temp.getRowLabel() + temp.getValue();
-				key_timeStamp = temp.getTimeStamp();
-				_bf0.insert(new StringKey(key), mid);
-				_bf1.insert(new IntegerKey(key_timeStamp), mid);
+				filename = tableName + "Index5";
+				this.indexFiles[i].add(0, new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1));
 				break;
 			}
-
 			}
-			temp = scan.getNext(mid);
 		}
-		scan.closescan();
+
+
+		for(int i=0; i<IndexType.indexList.length; i++) {
+
+			int type = IndexType.indexList[i];
+
+			fscan = new FileScan(heapfile[i].getFileName(), attrType, attrSize, (short) 4, 4, null, null);
+			MapMidPair mpair = fscan.get_nextMidPair();
+			String key = null;
+
+			while (mpair != null) {
+				switch (type) {
+
+				case IndexType.ROW: {
+					key = mpair.map.getRowLabel();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
+					break;
+				}
+
+				case IndexType.COL: {
+					key = mpair.map.getColumnLabel();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
+					break;
+				}
+
+				case IndexType.COLROW: {
+					key = mpair.map.getColumnLabel() + mpair.map.getRowLabel();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
+					break;
+				}
+
+				case IndexType.ROWVAL: {
+					key = mpair.map.getRowLabel() + mpair.map.getValue();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
+					break;
+				}
+
+				}
+
+				mpair = fscan.get_nextMidPair();
+			}
+
+			fscan.close();
+
+
+		}
+
 	}
+
 
 	/**
 	 * Initialize a map in the database
@@ -326,7 +341,7 @@ public class bigt {
 	 */
 	public Map constructMap(byte[] mapPtr) throws InvalidTypeException, IOException, InvalidTupleSizeException {
 		Map map = new Map(mapPtr, 0);
-		map.setHdr(null);
+		map.setHdr();
 		return map;
 	}
 
@@ -342,113 +357,170 @@ public class bigt {
 	 * @throws HFDiskMgrException
 	 * @throws Exception
 	 */
-	public MID insertMap(byte[] mapPtr) throws InvalidSlotNumberException, InvalidTupleSizeException, HFException,
+
+	public MID insertMap(byte[] mapPtr, int storageType) throws InvalidSlotNumberException, InvalidTupleSizeException, HFException,
 	HFBufMgrException, HFDiskMgrException, Exception {
 
-		MID mid = heapfile.insertRecord(mapPtr);
+		MID mid = heapfile[storageType-1].insertRecord(mapPtr);
 
 		//      // Checks for more than three maps with the same row and column label, and
 
 		//      // deletes the oldest map
 
-		Map map = heapfile.getRecord(mid);
-
-		map.setMid(mid);
-
-		String rowLabel = map.getRowLabel();
-
-		String colLabel = map.getColumnLabel();
-
-		ArrayList<String> key = new ArrayList<String>();
-
-		key.add(rowLabel);
-
-		key.add(colLabel);
-
-		if(rocolMID.containsKey(key)){
-
-			ArrayList<MID> mid_arr = rocolMID.get(key);
-
-			mid_arr.add(mid);
-
-			rocolMID.remove(key);
-
-			rocolMID.put(key,mid_arr);
-
-		}
-
-		else if(!rocolMID.containsKey(key)){
-
-			ArrayList<MID> mid_arr2 = new ArrayList<MID>();
-
-			mid_arr2.add(mid);
-
-			rocolMID.put(key,mid_arr2);
-
-		}
-
-		if(rocolMID.get(key).size()>3){
-
-			MID mid_to_be_removed = rocolMID.get(key).get(0);
-
-			heapfile.deleteRecord(mid_to_be_removed);
-
-			rocolMID.get(key).remove(0);
-
-		}
-
+		//		Map map = heapfile[storageType-1].getRecord(mid);
+		//
+		//		map.setMid(mid);
+		//
+		//		String rowLabel = map.getRowLabel();
+		//
+		//		String colLabel = map.getColumnLabel();
+		//
+		//		ArrayList<String> key = new ArrayList<String>();
+		//
+		//		key.add(rowLabel);
+		//
+		//		key.add(colLabel);
+		//
+		//		if(rocolMID.containsKey(key)){
+		//
+		//			ArrayList<MID> mid_arr = rocolMID.get(key);
+		//
+		//			mid_arr.add(mid);
+		//
+		//			rocolMID.remove(key);
+		//
+		//			rocolMID.put(key,mid_arr);
+		//
+		//		}
+		//
+		//		else if(!rocolMID.containsKey(key)){
+		//
+		//			ArrayList<MID> mid_arr2 = new ArrayList<MID>();
+		//
+		//			mid_arr2.add(mid);
+		//
+		//			rocolMID.put(key,mid_arr2);
+		//
+		//		}
+		//
+		//		if(rocolMID.get(key).size()>3){
+		//
+		//			MID mid_to_be_removed = rocolMID.get(key).get(0);
+		//
+		//			heapfile[storageType-1].deleteRecord(mid_to_be_removed);
+		//
+		//			rocolMID.get(key).remove(0);
+		//
+		//		}
+		//
 		return mid;
 	}
 
+
+	public void populateBtree() throws KeyTooLongException, KeyNotMatchException, LeafInsertRecException,
+	IndexInsertRecException, ConstructPageException, UnpinPageException, PinPageException,
+	NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException,
+	LeafDeleteException, InsertException, IOException, FileScanException, TupleUtilsException, InvalidRelation,
+	InvalidTypeException, JoinsException, InvalidTupleSizeException, PageNotReadException, PredEvalException,
+	UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat, GetFileEntryException, AddFileEntryException {
+
+		_bftemp = new BTreeFile(tableName + "Temp", AttrType.attrString, 64, 1);
+
+		for(int i=0; i<IndexType.indexList.length; i++) {
+			fscan = new FileScan(heapfile[i].getFileName(), attrType, attrSize, (short) 4, 4, null, null);
+			MapMidPair mpair = fscan.get_nextMidPair();
+			while (mpair != null) {
+				String  s = String.format("%06d", mpair.map.getTimeStamp());
+				String key = mpair.map.getRowLabel() + mpair.map.getColumnLabel()+"%"+s;
+				_bftemp.insert(new StringKey(key), mpair.mid);
+				mpair = fscan.get_nextMidPair();
+			}
+
+			fscan.close();
+		}
+
+	}
+
+
+	/**
+	 * Remove Duplicates to handle the versioning in the database
+	 * 
+	 * @throws InvalidSlotNumberException
+	 * @throws HFException
+	 * @throws HFDiskMgrException
+	 * @throws HFBufMgrException
+	 * @throws Exception
+	 */
+	public void removeDuplicates()
+			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
+		TupleOrder[] order = new TupleOrder[2];
+		order[0] = new TupleOrder(TupleOrder.Ascending);
+		order[1] = new TupleOrder(TupleOrder.Descending);
+		iscan = new IndexScan(new IndexType(IndexType.ROW), tableName, tableName + "Temp", attrType, attrSize, 4, 4, null,
+				expr, null, 1, true);
+
+		MapMidPair mpair = iscan.getNextMIDPair();
+		String key = "";
+		String oldKey = "";
+		if (mpair != null) {
+			oldKey = mpair.indKey.split("%")[0];
+		}
+		List<MID> list = new ArrayList<MID>();
+		while (mpair != null) {
+
+			key = mpair.indKey.split("%")[0];
+
+			if (key.equals(oldKey)) {
+				list.add(mpair.mid);
+			} else {
+				list.clear();
+				oldKey = key;
+				list.add(mpair.mid);
+			}
+
+			if (list.size() == 4) {
+				MID delmid = list.get(0);
+
+				for(int i=0; i<IndexType.indexList.length; i++) {
+					if(heapfile[i].getRecord(delmid)!=null) {
+						heapfile[i].deleteRecord(delmid);
+						break;
+					}
+				}
+				list.remove(0);
+			}
+
+			mpair = iscan.getNextMIDPair();
+		}
+		iscan.close();
+		_bftemp.destroyFile();
+
+	}
 
 	/**
 	 * Fucntion to display all the maps in the database
 	 * 
 	 * @throws InvalidInfoSizeException
 	 * @throws IOException
+	 * @throws InvalidTupleSizeException 
 	 */
-	public void scanAllMaps() throws InvalidInfoSizeException, IOException {
-		Scan scan = heapfile.openScan();
-		MID mid = new MID();
-		Map map = scan.getNext(mid);
-		System.out.println("Maps are ");
-		while (map != null) {
-			map.print();
-			System.out.println();
-			map = scan.getNext(mid);
+	public void scanAllMaps() throws InvalidInfoSizeException, IOException, InvalidTupleSizeException {
+		for(int i=0; i<IndexType.indexList.length; i++) {
+			Scan scan = heapfile[i].openScan();
+			MID mid = new MID();
+			Map map = scan.getNext(mid);
+			System.out.println("Maps are ");
+			while (map != null) {
+				map.print();
+				System.out.println();
+				map = scan.getNext(mid);
+			}
+
 		}
 	}
 
-	/**
-	 * Utility for purpose of testing
-	 * 
-	 * @throws InvalidSlotNumberException
-	 * @throws InvalidTupleSizeException
-	 * @throws HFException
-	 * @throws HFBufMgrException
-	 * @throws HFDiskMgrException
-	 * @throws Exception
-	 */
-	public void generateMapsAndIndex() throws InvalidSlotNumberException, InvalidTupleSizeException, HFException,
-	HFBufMgrException, HFDiskMgrException, Exception {
-		String row[] = new String[] { "aa", "kkdab", "kk", "zz", "ee", "cc", "kk", "ff", "tt", "uu", "kkdaa", "kkdba",
-				"cc", "kkdaa", "aa", "kk", "kk" };
-		String col[] = new String[] { "e", "daaab", "a", "b", "d", "p", "a", "a", "e", "u", "daaa", "p", "s", "f", "b",
-				"a", "b" };
-		String val[] = new String[] { "america", "zzzzz", "ksks", "india", "china", "japan", "pakistan", "korea", "ggs",
-				"australia", "kl", "zimbambwe", "bfgjh", "antarctica", "LKL", "pou", "Italy" };
 
-		for (int i = 0; i < row.length; i++) {
-			Map newmap = new Map();
-			newmap.setHdr(null);
-			newmap.setRowLabel(row[i]);
-			newmap.setColumnLabel(col[i]);
-			newmap.setTimeStamp(i);
-			newmap.setValue(val[i]);
-			insertMap(newmap.getMapByteArray());
 
-		}
-	}
 
 	/**
 	 * Opens the stream of maps
@@ -472,8 +544,5 @@ public class bigt {
 
 	}
 
-	public String getName() {
-		return this.name;
-	}
 
 }

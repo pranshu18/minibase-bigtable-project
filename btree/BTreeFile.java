@@ -20,13 +20,14 @@ import heap.*;
  */
 public class BTreeFile extends IndexFile 
   implements GlobalConst {
-  
-  private final static int MAGIC0=1989;
+	
+private final static int MAGIC0=1989;
   
   private final static String lineSep=System.getProperty("line.separator");
   
   private static FileOutputStream fos;
   private static DataOutputStream trace;
+  public int cnt =0;
   
   
   /** It causes a structured trace to be written to a
@@ -61,7 +62,11 @@ public class BTreeFile extends IndexFile
   private  PageId  headerPageId;
   private String  dbname;  
   
-  /**
+  public String getDbname() {
+	return dbname;
+}
+
+/**
    * Access method to data member.
    * @return  Return a BTreeHeaderPage object that is the header page
    *          of this btree file.
@@ -208,7 +213,6 @@ public class BTreeFile extends IndexFile
 	   IOException, 
 	   AddFileEntryException
     {
-      
       
       headerPageId=get_file_entry(filename);
       if( headerPageId==null) //file not exist
@@ -375,7 +379,6 @@ public class BTreeFile extends IndexFile
 	   
     {
       KeyDataEntry  newRootEntry;
-      
       if (BT.getKeyLength(key) > headerPage.get_maxKeySize())
 	throw new KeyTooLongException(null,"");
       
@@ -985,6 +988,7 @@ public class BTreeFile extends IndexFile
 	    IndexSearchException, 
 	    IOException
     {
+	  cnt--;
       if (headerPage.get_deleteFashion() ==DeleteFashion.FULL_DELETE) 
         return FullDelete(key, mid);
       else if (headerPage.get_deleteFashion() == DeleteFashion.NAIVE_DELETE)
@@ -1838,6 +1842,7 @@ public class BTreeFile extends IndexFile
       }
       
     }
+  
   
 }
 

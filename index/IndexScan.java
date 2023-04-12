@@ -81,7 +81,7 @@ public class IndexScan extends Iterator {
 		_noOutFlds = noOutFlds;
 		map1 = new Map();
 		try {
-			map1.setHdr(null);
+			map1.setHdr();
 		}
 		catch (Exception e) {
 			throw new IndexException(e, "IndexScan.java: Heapfile error");
@@ -144,7 +144,7 @@ public class IndexScan extends Iterator {
 				s_sizes[0] = _s_sizes[count-1];
 
 				try {
-					new_map.setHdr(null);
+					new_map.setHdr();
 				}
 				catch (Exception e) {
 					throw new IndexException(e, "IndexScan.java: Heapfile error");
@@ -169,7 +169,7 @@ public class IndexScan extends Iterator {
 			}
 
 			try {
-				map1.setHdr(null);
+				map1.setHdr();
 			}
 			catch (Exception e) {
 				throw new IndexException(e, "IndexScan.java: Heapfile error");
@@ -241,7 +241,7 @@ public class IndexScan extends Iterator {
 
 			_mid = ((LeafData) next_entry.data).getData();
 			map1 = f.getRecord(_mid);
-			map1.setHdr(null);
+			map1.setHdr();
 
 			boolean eval;
 			eval = PredEval.Eval(_all_filters, map1, null, _types, null);

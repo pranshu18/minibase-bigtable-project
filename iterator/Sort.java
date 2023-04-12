@@ -90,7 +90,7 @@ public class Sort  extends Iterator implements GlobalConst
       Map temp_tuple = new Map(tuple_size);
 
       try {
-	temp_tuple.setHdr(null);
+	temp_tuple.setHdr();
       }
       catch (Exception e) {
 	throw new SortException(e, "Map.setHdr() failed");
@@ -144,7 +144,7 @@ public class Sort  extends Iterator implements GlobalConst
     pnodeSplayPQ pother_Q = Q2; 
     Map lastElem = new Map(tuple_size);  // need tuple.java
     try {
-      lastElem.setHdr(null);
+      lastElem.setHdr();
     }
     catch (Exception e) {
       throw new SortException(e, "Sort.java: setHdr() failed");
@@ -423,7 +423,7 @@ public class Sort  extends Iterator implements GlobalConst
       new_map = new Map(tuple_size); // need tuple.java??
 
       try {
-	new_map.setHdr(null);
+	new_map.setHdr();
       }
       catch (Exception e) {
 	throw new SortException(e, "Sort.java: setHdr() failed");
@@ -554,7 +554,7 @@ public class Sort  extends Iterator implements GlobalConst
     
     Map m = new Map(); // need Map.java
     try {
-      m.setHdr(null);
+      m.setHdr();
     }
     catch (Exception e) {
       throw new SortException(e, "Sort.java: t.setHdr() failed");
@@ -618,7 +618,7 @@ public class Sort  extends Iterator implements GlobalConst
 
     outBuf = new Map(tuple_size);   // need Map.java
     try {
-      outBuf.setHdr(null);
+      outBuf.setHdr();
     }
     catch (Exception e) {
       throw new SortException(e, "Sort.java: op_buf.setHdr() failed");
