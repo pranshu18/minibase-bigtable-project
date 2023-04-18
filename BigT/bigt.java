@@ -281,7 +281,7 @@ public class bigt {
 			}
 		}
 
-<<<<<<< HEAD
+
 
 		for(int i=0; i<IndexType.indexList.length; i++) {
 
@@ -328,97 +328,6 @@ public class bigt {
 
 		}
 
-	}
-	
-
-
-	
-	
-	public void purge()
-			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
-		TupleOrder[] order = new TupleOrder[2];
-		order[0] = new TupleOrder(TupleOrder.Ascending);
-		order[1] = new TupleOrder(TupleOrder.Descending);
-		iscan = new IndexScan(new IndexType(IndexType.Row_Index), name, name + "Temp", attrType, attrSize, 4, 4, null,
-				expr, 1, true);
-
-		MapMidPair mpair = iscan.get_nextMidPair();
-		String key = "";
-		String oldKey = "";
-		if (mpair != null) {
-			oldKey = mpair.indKey.split("%")[0];
-		}
-		List<MID> list = new ArrayList<MID>();
-		while (mpair != null) {
-
-			key = mpair.indKey.split("%")[0];
-
-			if (key.equals(oldKey)) {
-				list.add(mpair.mid);
-			} else {
-				list.clear();
-				oldKey = key;
-				list.add(mpair.mid);
-			}
-
-			if (list.size() == 4) {
-				MID delmid = list.get(0);
-
-				_hf.deleteRecord(delmid);
-				list.remove(0);
-			}
-
-			mpair = iscan.get_nextMidPair();
-		}
-		iscan.close();
-		_bftemp.destroyFile();
-=======
-
-		for(int i=0; i<IndexType.indexList.length; i++) {
-
-			int type = IndexType.indexList[i];
-
-			fscan = new FileScan(heapfile[i].getFileName(), attrType, attrSize, (short) 4, 4, null, null);
-			MapMidPair mpair = fscan.get_nextMidPair();
-			String key = null;
-
-			while (mpair != null) {
-				switch (type) {
-
-				case IndexType.ROW: {
-					key = mpair.map.getRowLabel();
-					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
-					break;
-				}
-
-				case IndexType.COL: {
-					key = mpair.map.getColumnLabel();
-					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
-					break;
-				}
-
-				case IndexType.COLROW: {
-					key = mpair.map.getColumnLabel() + mpair.map.getRowLabel();
-					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
-					break;
-				}
-
-				case IndexType.ROWVAL: {
-					key = mpair.map.getRowLabel() + mpair.map.getValue();
-					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
-					break;
-				}
-
-				}
-
-				mpair = fscan.get_nextMidPair();
-			}
-
-			fscan.close();
-
-
-		}
->>>>>>> 220f3d4000aa635d74bdb2c61462b03e5b90cb18
 
 	}
 	
@@ -591,14 +500,10 @@ public class bigt {
 		iscan.close();
 		_bftemp.destroyFile();
 
-<<<<<<< HEAD
 
 	}
 
-=======
-	}
 
->>>>>>> 220f3d4000aa635d74bdb2c61462b03e5b90cb18
 	/**
 	 * Fucntion to display all the maps in the database
 	 * 

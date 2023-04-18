@@ -248,7 +248,7 @@ public class TestRun {
 			SystemDefs.JavabaseBM = new BufMgr(numbuf + 100, "Clock");
 		}
 
-		System.out.println("Here");
+		
 		
 
 		Map map = new Map();
@@ -275,7 +275,7 @@ public class TestRun {
 
 		//SystemDefs.JavabaseDB.b.insertIndex();
 
-		
+		System.out.println("Successfully inserted map \n");
 
 		}
 
