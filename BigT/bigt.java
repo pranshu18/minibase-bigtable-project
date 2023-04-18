@@ -281,6 +281,7 @@ public class bigt {
 			}
 		}
 
+<<<<<<< HEAD
 
 		for(int i=0; i<IndexType.indexList.length; i++) {
 
@@ -371,9 +372,57 @@ public class bigt {
 		}
 		iscan.close();
 		_bftemp.destroyFile();
+=======
+
+		for(int i=0; i<IndexType.indexList.length; i++) {
+
+			int type = IndexType.indexList[i];
+
+			fscan = new FileScan(heapfile[i].getFileName(), attrType, attrSize, (short) 4, 4, null, null);
+			MapMidPair mpair = fscan.get_nextMidPair();
+			String key = null;
+
+			while (mpair != null) {
+				switch (type) {
+
+				case IndexType.ROW: {
+					key = mpair.map.getRowLabel();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
+					break;
+				}
+
+				case IndexType.COL: {
+					key = mpair.map.getColumnLabel();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
+					break;
+				}
+
+				case IndexType.COLROW: {
+					key = mpair.map.getColumnLabel() + mpair.map.getRowLabel();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
+					break;
+				}
+
+				case IndexType.ROWVAL: {
+					key = mpair.map.getRowLabel() + mpair.map.getValue();
+					this.indexFiles[i].get(0).insert(new StringKey(key), mpair.mid);
+					break;
+				}
+
+				}
+
+				mpair = fscan.get_nextMidPair();
+			}
+
+			fscan.close();
+
+
+		}
+>>>>>>> 220f3d4000aa635d74bdb2c61462b03e5b90cb18
 
 	}
 	
+
 
 
 	/**
@@ -542,9 +591,14 @@ public class bigt {
 		iscan.close();
 		_bftemp.destroyFile();
 
+<<<<<<< HEAD
 
 	}
 
+=======
+	}
+
+>>>>>>> 220f3d4000aa635d74bdb2c61462b03e5b90cb18
 	/**
 	 * Fucntion to display all the maps in the database
 	 * 
