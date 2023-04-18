@@ -314,6 +314,72 @@ public class bigt {
 		}
 		scan.closescan();
 	}
+	
+	public void populateBtree() throws KeyTooLongException, KeyNotMatchException, LeafInsertRecException,
+	IndexInsertRecException, ConstructPageException, UnpinPageException, PinPageException,
+	NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException,
+	LeafDeleteException, InsertException, IOException, FileScanException, TupleUtilsException, InvalidRelation,
+	InvalidTypeException, JoinsException, InvalidTupleSizeException, PageNotReadException, PredEvalException,
+	UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat, GetFileEntryException, AddFileEntryException {
+
+_bftemp = new BTreeFile(name + "Temp", AttrType.attrString, 64, 1);
+fscan = new FileScan(name, attrType, attrSize, (short) 4, 4, null, null);
+MapMidPair mpair = fscan.get_nextMidPair();
+while (mpair != null) {
+	String  s = String.format("%06d", mpair.map.getTimeStamp());
+	String key = mpair.map.getRowLabel() + mpair.map.getColumnLabel()+"%"+s;
+	_bftemp.insert(new StringKey(key), mpair.mid);
+//	_bftemp.insert(new StringKey(mpair.map.getRowLabel() + mpair.map.getColumnLabel()), mpair.mid);
+	mpair = fscan.get_nextMidPair();
+}
+
+fscan.close();
+
+}
+	
+	
+	
+	public void purge()
+			throws InvalidSlotNumberException, HFException, HFDiskMgrException, HFBufMgrException, Exception {
+		TupleOrder[] order = new TupleOrder[2];
+		order[0] = new TupleOrder(TupleOrder.Ascending);
+		order[1] = new TupleOrder(TupleOrder.Descending);
+		iscan = new IndexScan(new IndexType(IndexType.Row_Index), name, name + "Temp", attrType, attrSize, 4, 4, null,
+				expr, 1, true);
+
+		MapMidPair mpair = iscan.get_nextMidPair();
+		String key = "";
+		String oldKey = "";
+		if (mpair != null) {
+			oldKey = mpair.indKey.split("%")[0];
+		}
+		List<MID> list = new ArrayList<MID>();
+		while (mpair != null) {
+
+			key = mpair.indKey.split("%")[0];
+
+			if (key.equals(oldKey)) {
+				list.add(mpair.mid);
+			} else {
+				list.clear();
+				oldKey = key;
+				list.add(mpair.mid);
+			}
+
+			if (list.size() == 4) {
+				MID delmid = list.get(0);
+
+				_hf.deleteRecord(delmid);
+				list.remove(0);
+			}
+
+			mpair = iscan.get_nextMidPair();
+		}
+		iscan.close();
+		_bftemp.destroyFile();
+
+	}
+	
 
 	/**
 	 * Initialize a map in the database
@@ -351,51 +417,51 @@ public class bigt {
 
 		//      // deletes the oldest map
 
-		Map map = heapfile.getRecord(mid);
-
-		map.setMid(mid);
-
-		String rowLabel = map.getRowLabel();
-
-		String colLabel = map.getColumnLabel();
-
-		ArrayList<String> key = new ArrayList<String>();
-
-		key.add(rowLabel);
-
-		key.add(colLabel);
-
-		if(rocolMID.containsKey(key)){
-
-			ArrayList<MID> mid_arr = rocolMID.get(key);
-
-			mid_arr.add(mid);
-
-			rocolMID.remove(key);
-
-			rocolMID.put(key,mid_arr);
-
-		}
-
-		else if(!rocolMID.containsKey(key)){
-
-			ArrayList<MID> mid_arr2 = new ArrayList<MID>();
-
-			mid_arr2.add(mid);
-
-			rocolMID.put(key,mid_arr2);
-
-		}
-
-		if(rocolMID.get(key).size()>3){
-
-			MID mid_to_be_removed = rocolMID.get(key).get(0);
-
-			heapfile.deleteRecord(mid_to_be_removed);
-
-			rocolMID.get(key).remove(0);
-
-		}
+//		Map map = heapfile.getRecord(mid);
+//
+//		map.setMid(mid);
+//
+//		String rowLabel = map.getRowLabel();
+//
+//		String colLabel = map.getColumnLabel();
+//
+//		ArrayList<String> key = new ArrayList<String>();
+//
+//		key.add(rowLabel);
+//
+//		key.add(colLabel);
+//
+//		if(rocolMID.containsKey(key)){
+//
+//			ArrayList<MID> mid_arr = rocolMID.get(key);
+//
+//			mid_arr.add(mid);
+//
+//			rocolMID.remove(key);
+//
+//			rocolMID.put(key,mid_arr);
+//
+//		}
+//
+//		else if(!rocolMID.containsKey(key)){
+//
+//			ArrayList<MID> mid_arr2 = new ArrayList<MID>();
+//
+//			mid_arr2.add(mid);
+//
+//			rocolMID.put(key,mid_arr2);
+//
+//		}
+//
+//		if(rocolMID.get(key).size()>3){
+//
+//			MID mid_to_be_removed = rocolMID.get(key).get(0);
+//
+//			heapfile.deleteRecord(mid_to_be_removed);
+//
+//			rocolMID.get(key).remove(0);
+//
+//		}
 
 		return mid;
 	}

@@ -93,7 +93,8 @@ public class TestRun {
 		System.out.println("OPTIONS-");
 		System.out.println("1. Batch Insert");
 		System.out.println("2. Run query");
-		System.out.println("3. Exit");
+		System.out.println("3. Insert Map");
+		System.out.println("4. Exit");
 	}
 
 	public static int getChoice () {
@@ -171,6 +172,10 @@ public class TestRun {
 			}
 			br.close();
 			
+			SystemDefs.JavabaseDB.b.populateBtree();
+
+			//SystemDefs.JavabaseDB.b.purge();
+
 			SystemDefs.JavabaseDB.b.insertIndex();
 
 		} catch(IOException ioe) {
@@ -241,12 +246,85 @@ public class TestRun {
 		System.out.println("Disk pages written = "+ PCounter.wcounter);
 
 	}
+	
+	public static void mapinsert() throws Exception{
+
+		System.out.println("Usage - mapinsert RL CL VAL TS TYPE BIGTABLENAME NUMBUF");
+
+
+
+		String[] values = getLine().split(" ");
+
+		if(values.length !=8){
+
+		System.out.println("Invalid format!");
+
+		return;
+
+		}
+
+		String rowLabel = values[1];
+
+		String colLabel = values[2];
+
+		String mapVal = values[3];
+
+		int timestamp = Integer.parseInt(values[4]);
+
+		int type = Integer.parseInt(values[5]);
+
+		String bigTableName = values[6]+"_"+Integer.toString(type);
+
+		int numbuf = Integer.parseInt(values[7]);
+		
+		
+		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
+		+ ".minibase-db";
+		
+		//Verify if numbuf or 1000
+		
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, numbuf, "Clock", type, true);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName, type);
+		} else {
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+			
+			//Verify if numbuf or 1000
+			
+			
+			SystemDefs.JavabaseBM = new BufMgr(numbuf, "Clock");
+		}
+
+		Map map = new Map();
+		map.setHdr(null);
+		map.setRowLabel(rowLabel);
+		map.setColumnLabel(colLabel);
+		map.setTimeStamp(timestamp);
+
+		map.setValue(mapVal);
+		
+		MID mid = SystemDefs.JavabaseDB.b.insertMap(map.getMapByteArray());
+			
+		
+		
+		//Verify if these are actually required
+		
+		SystemDefs.JavabaseDB.b.populateBtree();
+
+		//SystemDefs.JavabaseDB.b.purge();
+
+		SystemDefs.JavabaseDB.b.insertIndex();
+
+		
+
+		}
 
 	public static void main(String[] args) {
 
 		try {
 			int choice = 1;
-			while(choice!=3){
+			while(choice!=4){
 				displayOptions();
 				choice = getChoice();
 
@@ -258,6 +336,9 @@ public class TestRun {
 					query();
 					break;
 				case 3:
+					mapinsert();
+					break;
+				case 4:
 					break;
 				default:
 					System.out.println("Invalid choice!");
