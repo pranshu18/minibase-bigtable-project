@@ -7,17 +7,18 @@ package global;
 
 public class IndexType {
 
-  public static final int None = 0;
-  public static final int ROW = 1;
-  public static final int COL = 2;
-  public static final int COLROW = 3;
-  public static final int ROWVAL = 4;
-  public static final int Time_Index  = 6;
+  public static final int None = 1;
+  public static final int ROW = 2;
+  public static final int COL = 3;
+  public static final int COLROW = 4;
+  public static final int ROWVAL = 5;
 
 
 
   public int indexType;
 
+  public static int[] indexList = {None, ROW, COL, COLROW, ROWVAL};
+  
   /** 
    * IndexType Constructor
    * <br>

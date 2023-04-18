@@ -352,7 +352,7 @@ public class MapUtils {
 				res_str_sizes[count++] = sizesT2[proj_list[i].offset - 1];
 		}
 		try {
-			Jmap.setHdr(null);
+			Jmap.setHdr();
 		} catch (Exception e) {
 			throw new MapUtilsException(e, "setHdr() failed");
 		}
@@ -415,7 +415,7 @@ public class MapUtils {
 		 */
 
 		try {
-			Jmap.setHdr(null);
+			Jmap.setHdr();
 		} catch (Exception e) {
 			throw new MapUtilsException(e, "setHdr() failed");
 		}

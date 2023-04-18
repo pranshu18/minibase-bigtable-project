@@ -19,7 +19,7 @@ public class SystemDefs {
   public SystemDefs (){};
   
   public SystemDefs(String dbname, int num_pgs, int bufpoolsize,
-		    String replacement_policy, int type, boolean isNewDB )
+		    String replacement_policy, boolean isNewDB )
     {
 	  MINIBASE_RESTART_FLAG = isNewDB;
       int logsize;
@@ -39,13 +39,13 @@ public class SystemDefs {
       }
       
       init(real_dbname,real_logname, num_pgs, logsize,
-	   bufpoolsize, replacement_policy, type);
+	   bufpoolsize, replacement_policy);
     }
   
   
   public void init( String dbname, String logname,
 		    int num_pgs, int maxlogsize,
-		    int bufpoolsize, String replacement_policy, int type )
+		    int bufpoolsize, String replacement_policy)
     {
       
       boolean status = true;
@@ -57,7 +57,7 @@ public class SystemDefs {
       
       try {
 	JavabaseBM = new BufMgr(bufpoolsize, replacement_policy);
-	JavabaseDB = new bigDB(type);//waiting for BigDB to be implemented
+	JavabaseDB = new bigDB();//waiting for BigDB to be implemented
 /*
 	JavabaseCatalog = new Catalog(); 
 */

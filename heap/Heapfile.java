@@ -46,6 +46,10 @@ public class Heapfile implements Filetype, GlobalConst {
 	private boolean _file_deleted;
 	private String _fileName;
 	private static int tempfilecount = 0;
+	
+	public String getFileName() {
+		return this._fileName;
+	}
 
 	/*
 	 * get a new datapage from the buffer manager and initialize dpinfo

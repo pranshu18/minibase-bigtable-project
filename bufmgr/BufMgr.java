@@ -383,8 +383,10 @@ public class BufMgr implements GlobalConst {
 
 	 public void unpinAllPages() {
 	      for (int i = 0; i < numBuffers; i++){
-	          while (frmeTable[i].pin_count() != 0)
-	              frmeTable[i].unpin();
+              if(frmeTable[i].pageNo.pid != INVALID_PAGE){
+                  frmeTable[i].pin_cnt = 0;
+                  frmeTable[i].dirty = true;
+              }
 	      }
 	 }
 
@@ -420,7 +422,7 @@ public class BufMgr implements GlobalConst {
 				replacer = new LRU(this);
 				System.out.println("Replacer: LRU\n");
 			} else if (replacerArg.compareTo("MRU") == 0) {
-				replacer = new LRU(this);
+				replacer = new MRU(this);
 				System.out.println("Replacer: MRU\n");
 			} else {
 				replacer = new Clock(this);
@@ -693,6 +695,54 @@ public class BufMgr implements GlobalConst {
 
 	}
 
+    public void freePageForcibly(PageId globalPageId)
+            throws InvalidBufferException,
+            ReplacerException,
+            HashOperationException,
+            InvalidFrameNumberException,
+            PageNotReadException,
+            BufferPoolExceededException,
+            PagePinnedException,
+            PageUnpinnedException,
+            HashEntryNotFoundException,
+            BufMgrException,
+            DiskMgrException,
+            IOException {
+        int frameNo;
+        frameNo = hashTable.lookup(globalPageId);
+
+        //if globalPageId is not in pool, frameNo < 0
+        //then call deallocate
+        if (frameNo < 0) {
+            deallocate_page(globalPageId);
+
+            return;
+        }
+        if (frameNo >= (int) numBuffers) {
+            throw new InvalidBufferException(null, "BUFMGR, BAD_BUFFER");
+
+        }
+
+        try {
+            replacer.freeForcibly(frameNo);
+        } catch (Exception e1) {
+            throw new ReplacerException(e1, "BUFMGR, REPLACER_ERROR");
+        }
+
+        try {
+            hashTable.remove(frmeTable[frameNo].pageNo);
+        } catch (Exception e2) {
+            throw new HashOperationException(e2, "BUFMGR, HASH_TABLE_ERROR");
+        }
+
+        frmeTable[frameNo].pageNo.pid = INVALID_PAGE; // frame is empty
+        frmeTable[frameNo].dirty = false;
+
+
+        deallocate_page(globalPageId);
+
+    }
+
 	/**
 	 * Added to flush a particular page of the buffer pool to disk
 	 * 
@@ -729,6 +779,80 @@ public class BufMgr implements GlobalConst {
 	    {
 	      PageId pageId = new PageId(INVALID_PAGE);
 	      privFlushPages(pageId ,1); 
+	    }
+
+	    private void privFlushPagesForcibly(PageId pageid, int all_pages)
+	            throws HashOperationException,
+	            PageUnpinnedException,
+	            PagePinnedException,
+	            PageNotFoundException,
+	            BufMgrException,
+	            IOException {
+	        int i;
+	        int unpinned = 0;
+
+	        for (i = 0; i < numBuffers; i++)   // write all valid dirty pages to disk
+	            if ((all_pages != 0) || (frmeTable[i].pageNo.pid == pageid.pid)) {
+
+	                if(frmeTable[i].pageNo.pid != INVALID_PAGE){
+	                    frmeTable[i].pin_cnt = 0;
+	                    frmeTable[i].dirty = true;
+	                }
+
+	                if (frmeTable[i].dirty != false) {
+
+	                    if (frmeTable[i].pageNo.pid == INVALID_PAGE)
+
+	                        throw new PageNotFoundException(null, "BUFMGR: INVALID_PAGE_NO");
+	                    pageid.pid = frmeTable[i].pageNo.pid;
+
+
+	                    Page apage = new Page(bufPool[i]);
+
+	                    write_page(pageid, apage);
+
+	                    try {
+	                        hashTable.remove(pageid);
+	                    } catch (Exception e2) {
+	                        throw new HashOperationException(e2, "BUFMGR: HASH_TBL_ERROR.");
+	                    }
+
+	                    frmeTable[i].pageNo.pid = INVALID_PAGE; // frame is empty
+	                    frmeTable[i].dirty = false;
+	                }
+
+	                if (all_pages == 0) {
+
+	                    if (unpinned != 0)
+	                        throw new PagePinnedException(null, "BUFMGR: PAGE_PINNED.");
+	                }
+	            }
+
+	        if (all_pages != 0) {
+	            if (unpinned != 0)
+	                throw new PagePinnedException(null, "BUFMGR: PAGE_PINNED.");
+	        }
+	    }
+
+	    /**
+	     * Flushes all pages of the buffer pool to disk
+	     *
+	     * @throws HashOperationException if there is a hashtable error.
+	     * @throws PageUnpinnedException  if there is a page that is already unpinned.
+	     * @throws PagePinnedException    if a page is left pinned.
+	     * @throws PageNotFoundException  if a page is not found.
+	     * @throws BufMgrException        other error occured in bufmgr layer
+	     * @throws IOException            if there is other kinds of I/O error.
+	     */
+	    public void flushAllPagesForcibly()
+	            throws HashOperationException,
+	            PageUnpinnedException,
+	            PagePinnedException,
+	            PageNotFoundException,
+	            BufMgrException,
+	            IOException {
+	        PageId pageId = new PageId(INVALID_PAGE);
+	        privFlushPagesForcibly(pageId, 1);
 	    }
 
 	/**

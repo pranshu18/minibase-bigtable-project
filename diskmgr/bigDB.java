@@ -31,7 +31,6 @@ import iterator.TupleUtilsException;
 public class bigDB implements GlobalConst {
 
     private static final int bits_per_page = MAX_SPACE * 8;
-    private int indexType;
     public bigt b = null;
 
     /**
@@ -76,30 +75,6 @@ public class bigDB implements GlobalConst {
     public bigDB() {
     }
 
-    public bigDB(int type) throws HFException, HFBufMgrException, HFDiskMgrException, GetFileEntryException,
-            ConstructPageException, AddFileEntryException, IOException, FileScanException, TupleUtilsException,
-            InvalidRelation, InvalidTypeException {
-        this.indexType = type;
-    }
-
-    public void destroyIndex()
-            throws GetFileEntryException, ConstructPageException, AddFileEntryException, IOException, IteratorException,
-            UnpinPageException, FreePageException, DeleteFileEntryException, PinPageException {
-        if (b.type == IndexType.ROW || b.type == IndexType.COL) {
-            b._bf0 = new BTreeFile(b.name + "Index0", AttrType.attrString, 22, 1);
-        } else {
-            b._bf0 = new BTreeFile(b.name + "Index0", AttrType.attrString, 44, 1);
-            b._bf1 = new BTreeFile(b.name + "Index1", AttrType.attrInteger, 4, 1);
-        }
-        b._bftemp = new BTreeFile(b.name + "Temp", AttrType.attrString, 64, 1);
-        if (b.type != IndexType.None && b._bf0 != null)
-            b._bf0.destroyFile();
-        if ((b.type == IndexType.COLROW || b.type == IndexType.ROWVAL) && b._bf1 != null && b.type != 1)
-            b._bf1.destroyFile();
-
-        if (b._bftemp != null)
-            b._bftemp.destroyFile();
-    }
 
     /**
      * DB Constructors.
