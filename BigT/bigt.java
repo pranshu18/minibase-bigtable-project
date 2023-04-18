@@ -282,6 +282,7 @@ public class bigt {
 		}
 
 
+
 		for(int i=0; i<IndexType.indexList.length; i++) {
 
 			int type = IndexType.indexList[i];
@@ -327,7 +328,10 @@ public class bigt {
 
 		}
 
+
 	}
+	
+
 
 
 	/**
@@ -366,6 +370,7 @@ public class bigt {
 		//      // Checks for more than three maps with the same row and column label, and
 
 		//      // deletes the oldest map
+
 
 		//		Map map = heapfile[storageType-1].getRecord(mid);
 		//
@@ -495,7 +500,9 @@ public class bigt {
 		iscan.close();
 		_bftemp.destroyFile();
 
+
 	}
+
 
 	/**
 	 * Fucntion to display all the maps in the database
