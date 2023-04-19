@@ -179,6 +179,7 @@ public class TestRun {
 
 		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
 		+ ".minibase-db";
+		
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffers + 100, "Clock", true);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
@@ -240,8 +241,25 @@ public class TestRun {
 
 		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
 		+ ".minibase-db";
+		
+		boolean newFile=false;
+		File f = new File(dbpath);
+		if(f.exists()) { 
+			newFile = true;
+		}
+		
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
-			sysDef = new SystemDefs(dbpath, 10000, numbuf + 100, "Clock", true);
+			sysDef = new SystemDefs(dbpath, 10000, numbuf, "Clock", newFile);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
+		} else {
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
+		}
+
+	
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, numbuf + 100, "Clock", newFile );
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
@@ -302,6 +320,7 @@ public class TestRun {
 					mapinsert();
 					break;
 				case 4:
+					break;
 				default:
 					System.out.println("Invalid choice!");
 					break;
