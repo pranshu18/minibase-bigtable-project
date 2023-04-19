@@ -39,7 +39,9 @@ public class TestRun {
 		System.out.println("1. Batch Insert");
 		System.out.println("2. Run query");
 		System.out.println("3. Insert Map");
-		System.out.println("4. Exit");
+		System.out.println("4. Get Counts");
+		System.out.println("5. Exit");
+
 	}
 
 	public static int getChoice () {
@@ -241,6 +243,7 @@ public class TestRun {
 
 		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
 		+ ".minibase-db";
+
 		
 		boolean newFile=false;
 		File f = new File(dbpath);
@@ -260,6 +263,7 @@ public class TestRun {
 	
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
 			sysDef = new SystemDefs(dbpath, 10000, numbuf + 100, "Clock", newFile );
+
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
@@ -297,15 +301,63 @@ public class TestRun {
 
 		SystemDefs.JavabaseDB.b.insertIndexSingular(values,mid);
 		
+
+		SystemDefs.JavabaseBM.unpinAllPages();
+		SystemDefs.JavabaseBM.flushAllPages();
+		
 		System.out.println("Successfully inserted map \n");
 
 		}
+
+	public static void getCounts() throws HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, IOException, HFException, HFBufMgrException, HFDiskMgrException, GetFileEntryException, ConstructPageException, AddFileEntryException, FileScanException, TupleUtilsException, InvalidRelation, InvalidTypeException, InvalidTupleSizeException, JoinsException, PageNotReadException, PredEvalException, UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat {
+		System.out.println("getCounts BIGTABLENAME NUMBUF");
+		PCounter.initialize();
+
+		String[] values = getLine().split(" ");
+		if(values.length !=3){
+			System.out.println("Invalid format!");
+			return;
+		}
+
+		String bigTableName = values[1];
+
+		int numBuffers = Integer.parseInt(values[2]);
+
+		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
+		+ ".minibase-db";
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, numBuffers, "Clock", true);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
+		} else {
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+			SystemDefs.JavabaseBM = new BufMgr(numBuffers, "Clock");
+		}
+
+		SystemDefs.JavabaseDB.b.setCountValues();
+		
+		SystemDefs.JavabaseBM.unpinAllPages();
+		SystemDefs.JavabaseBM.flushAllPages();
+
+		System.out.println("Count values are: ");
+		System.out.println("Map Count = "+SystemDefs.JavabaseDB.b.mapCnt);
+		System.out.println("Distinct Row Count = "+SystemDefs.JavabaseDB.b.distinctRowCnt);
+		System.out.println("Distinct Col Count = "+SystemDefs.JavabaseDB.b.distinctColCnt);
+		
+		System.out.println("\n");
+
+		System.out.println("Disk pages read = "+ PCounter.rcounter);
+		System.out.println("Disk pages written = "+ PCounter.wcounter);
+
+	}
+
 
 	public static void main(String[] args) {
 
 		try {
 			int choice = 1;
-			while(choice!=4){
+			while(choice!=5){
+
 				displayOptions();
 				choice = getChoice();
 
@@ -320,6 +372,9 @@ public class TestRun {
 					mapinsert();
 					break;
 				case 4:
+					getCounts();
+					break;
+				case 5:
 					break;
 				default:
 					System.out.println("Invalid choice!");

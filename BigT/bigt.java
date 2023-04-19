@@ -28,6 +28,10 @@ public class bigt {
 	AttrType[] attrType;
 	short[] attrSize;
 	String key;
+	public int distinctRowCnt = 0;
+	public int distinctColCnt = 0;
+	public int mapCnt = 0;
+
 	public HashMap<ArrayList<String>, ArrayList<MID>> rocolMID = new HashMap<ArrayList<String>, ArrayList<MID>>();
 
 	/**
@@ -335,12 +339,13 @@ public class bigt {
 	public void insertIndexSingular(String[] values, MID mid) throws InvalidSlotNumberException, HFException, HFBufMgrException, HFDiskMgrException, Exception {
 
 
-		
+
 		String rowLabel = values[1];
 
 		String colLabel = values[2];
 
 		String mapVal = values[3];
+
 
 		//int type = Integer.parseInt(values[5]);
 
@@ -375,12 +380,15 @@ public class bigt {
 			}
 		}
 		
+
 		
 		for(int i=0; i<IndexType.indexList.length; i++) {
 
 			
 			String key = null;
+
 			int type = IndexType.indexList[i];
+
 				switch (type) {
 
 				case IndexType.ROW: {
@@ -624,6 +632,41 @@ public class bigt {
 		Stream stream = new Stream(this, orderType, rowFilter, colFilter, valFilter, numbuf);
 		return stream;
 
+	}
+
+	
+	public void setCountValues() throws FileScanException, TupleUtilsException, InvalidRelation, InvalidTypeException, InvalidTupleSizeException, IOException, JoinsException, PageNotReadException, PredEvalException, UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat {		
+		if(mapCnt>0)
+			return;
+		
+		HashSet<String> uniqueRowNames = new HashSet<>();
+		HashSet<String> uniqueColNames = new HashSet<>();
+
+		
+		for(int i=0; i<IndexType.indexList.length; i++) {
+
+			FileScan fs = new FileScan(heapfile[i].getFileName(), attrType, attrSize, (short) 4, 4, null, null);
+			MapMidPair mpair = fs.get_nextMidPair();
+
+			while (mpair != null) {
+				mapCnt++;
+				String row = mpair.map.getRowLabel();
+				String col = mpair.map.getColumnLabel();
+				
+				if(!uniqueRowNames.contains(row)) {
+					uniqueRowNames.add(row);
+					distinctRowCnt++;
+				}
+				if(!uniqueColNames.contains(col)) {
+					uniqueColNames.add(col);
+					distinctColCnt++;
+				}
+				
+				mpair = fs.get_nextMidPair();
+			}
+			
+			fs.close();
+		}
 	}
 
 
