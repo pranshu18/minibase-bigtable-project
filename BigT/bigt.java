@@ -339,25 +339,55 @@ public class bigt {
 	public void insertIndexSingular(String[] values, MID mid) throws InvalidSlotNumberException, HFException, HFBufMgrException, HFDiskMgrException, Exception {
 
 
+
 		String rowLabel = values[1];
 
 		String colLabel = values[2];
 
 		String mapVal = values[3];
 
-		int timestamp = Integer.parseInt(values[4]);
 
-		int type = Integer.parseInt(values[5]);
+		//int type = Integer.parseInt(values[5]);
 
-		String bigTableName = values[6];
+		String tableName = values[6];
+		
+		for(int i=0; i<IndexType.indexList.length; i++) {
+			int type = IndexType.indexList[i];
+			String filename="";
+			switch (type) {
+			case IndexType.ROW: {
+				filename = tableName + "Index2";
+				this.indexFiles[i].set(0, new BTreeFile(filename+"_Row", AttrType.attrString, 22, 1));
+				break;
+			}
 
-		int numbuf = Integer.parseInt(values[7]);
+			case IndexType.COL: {
+				filename = tableName + "Index3";
+				this.indexFiles[i].add(0, new BTreeFile(filename+"_Col", AttrType.attrString, 22, 1));
+				break;
+			}
+
+			case IndexType.COLROW: {
+				filename = tableName + "Index4";
+				this.indexFiles[i].add(0, new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1));
+				break;
+			}
+			case IndexType.ROWVAL: {
+				filename = tableName + "Index5";
+				this.indexFiles[i].add(0, new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1));
+				break;
+			}
+			}
+		}
+		
 
 		
 		for(int i=0; i<IndexType.indexList.length; i++) {
 
 			
 			String key = null;
+
+			int type = IndexType.indexList[i];
 
 				switch (type) {
 

@@ -41,6 +41,7 @@ public class TestRun {
 		System.out.println("3. Insert Map");
 		System.out.println("4. Get Counts");
 		System.out.println("5. Exit");
+
 	}
 
 	public static int getChoice () {
@@ -180,6 +181,7 @@ public class TestRun {
 
 		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
 		+ ".minibase-db";
+		
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffers + 100, "Clock", true);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
@@ -241,8 +243,27 @@ public class TestRun {
 
 		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
 		+ ".minibase-db";
+
+		
+		boolean newFile=false;
+		File f = new File(dbpath);
+		if(f.exists()) { 
+			newFile = true;
+		}
+		
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
-			sysDef = new SystemDefs(dbpath, 10000, numbuf + 100, "Clock", true);
+			sysDef = new SystemDefs(dbpath, 10000, numbuf, "Clock", newFile);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
+		} else {
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
+		}
+
+	
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, numbuf + 100, "Clock", newFile );
+
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
@@ -280,6 +301,7 @@ public class TestRun {
 
 		SystemDefs.JavabaseDB.b.insertIndexSingular(values,mid);
 		
+
 		SystemDefs.JavabaseBM.unpinAllPages();
 		SystemDefs.JavabaseBM.flushAllPages();
 		
@@ -329,11 +351,13 @@ public class TestRun {
 
 	}
 
+
 	public static void main(String[] args) {
 
 		try {
 			int choice = 1;
 			while(choice!=5){
+
 				displayOptions();
 				choice = getChoice();
 
