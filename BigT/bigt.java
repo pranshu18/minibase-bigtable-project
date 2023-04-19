@@ -330,6 +330,62 @@ public class bigt {
 	}
 
 
+	
+	
+	public void insertIndexSingular(String[] values, MID mid) throws InvalidSlotNumberException, HFException, HFBufMgrException, HFDiskMgrException, Exception {
+
+
+		String rowLabel = values[1];
+
+		String colLabel = values[2];
+
+		String mapVal = values[3];
+
+		int timestamp = Integer.parseInt(values[4]);
+
+		int type = Integer.parseInt(values[5]);
+
+		String bigTableName = values[6];
+
+		int numbuf = Integer.parseInt(values[7]);
+
+		
+		for(int i=0; i<IndexType.indexList.length; i++) {
+
+			
+			String key = null;
+
+				switch (type) {
+
+				case IndexType.ROW: {
+					key = rowLabel;
+					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
+				}
+
+				case IndexType.COL: {
+					key = colLabel;
+					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
+				}
+
+				case IndexType.COLROW: {
+					key = colLabel + rowLabel;
+					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
+				}
+
+				case IndexType.ROWVAL: {
+					key = rowLabel + mapVal;
+					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
+				}
+
+				}
+
+	
+
+		}
+
+	}
+	
+	
 	/**
 	 * Initialize a map in the database
 	 * 
