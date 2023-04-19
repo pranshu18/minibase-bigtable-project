@@ -10,6 +10,7 @@ import diskmgr.PCounter;
 import global.AttrType;
 import global.IndexType;
 import global.MID;
+import global.MapMidPair;
 import global.SystemDefs;
 import heap.*;
 import index.IndexScan;
@@ -37,7 +38,8 @@ public class TestRun {
 		System.out.println("OPTIONS-");
 		System.out.println("1. Batch Insert");
 		System.out.println("2. Run query");
-		System.out.println("3. Exit");
+		System.out.println("3. Insert Map");
+		System.out.println("4. Exit");
 	}
 
 	public static int getChoice () {
@@ -204,12 +206,88 @@ public class TestRun {
 		System.out.println("Disk pages written = "+ PCounter.wcounter);
 
 	}
+	
+	public static void mapinsert() throws Exception{
+
+		System.out.println("Usage - mapinsert RL CL VAL TS TYPE BIGTABLENAME NUMBUF");
+
+
+
+		String[] values = getLine().split(" ");
+
+		if(values.length !=8){
+
+		System.out.println("Invalid format!");
+
+		return;
+
+		}
+
+		String rowLabel = values[1];
+
+		String colLabel = values[2];
+
+		String mapVal = values[3];
+
+		int timestamp = Integer.parseInt(values[4]);
+
+		int type = Integer.parseInt(values[5]);
+
+		String bigTableName = values[6];
+
+		int numbuf = Integer.parseInt(values[7]);
+
+
+		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
+		+ ".minibase-db";
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, numbuf + 100, "Clock", true);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
+		} else {
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+			SystemDefs.JavabaseBM = new BufMgr(numbuf + 100, "Clock");
+		}
+
+
+
+
+		Map map = new Map();
+		map.setHdr();
+		map.setRowLabel(rowLabel);
+		map.setColumnLabel(colLabel);
+		map.setTimeStamp(timestamp);
+
+		map.setValue(mapVal);
+
+
+
+
+
+		MID mid = SystemDefs.JavabaseDB.b.insertMap(map.getMapByteArray(),type);
+
+
+
+		//Verify if these are actually required
+		
+
+		SystemDefs.JavabaseDB.b.populateBtree();
+
+		SystemDefs.JavabaseDB.b.removeDuplicates();
+
+		//SystemDefs.JavabaseDB.b.insertIndex();
+
+		SystemDefs.JavabaseDB.b.insertIndexSingular(values,mid);
+		
+		System.out.println("Successfully inserted map \n");
+
+		}
 
 	public static void main(String[] args) {
 
 		try {
 			int choice = 1;
-			while(choice!=3){
+			while(choice!=4){
 				displayOptions();
 				choice = getChoice();
 
@@ -221,7 +299,9 @@ public class TestRun {
 					query();
 					break;
 				case 3:
+					mapinsert();
 					break;
+				case 4:
 				default:
 					System.out.println("Invalid choice!");
 					break;
