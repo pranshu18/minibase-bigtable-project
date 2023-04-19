@@ -268,18 +268,18 @@ public class bigt {
 
 			case IndexType.COL: {
 				filename = tableName + "Index3";
-				this.indexFiles[i].add(0, new BTreeFile(filename+"_Col", AttrType.attrString, 22, 1));
+				this.indexFiles[i].set(0, new BTreeFile(filename+"_Col", AttrType.attrString, 22, 1));
 				break;
 			}
 
 			case IndexType.COLROW: {
 				filename = tableName + "Index4";
-				this.indexFiles[i].add(0, new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1));
+				this.indexFiles[i].set(0, new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1));
 				break;
 			}
 			case IndexType.ROWVAL: {
 				filename = tableName + "Index5";
-				this.indexFiles[i].add(0, new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1));
+				this.indexFiles[i].set(0, new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1));
 				break;
 			}
 			}
@@ -334,8 +334,8 @@ public class bigt {
 	}
 
 
-	
-	
+
+
 	public void insertIndexSingular(String[] values, MID mid) throws InvalidSlotNumberException, HFException, HFBufMgrException, HFDiskMgrException, Exception {
 
 
@@ -347,14 +347,13 @@ public class bigt {
 		String mapVal = values[3];
 
 
-		//int type = Integer.parseInt(values[5]);
+		int type = Integer.parseInt(values[5]);
 
 		String tableName = values[6];
-		
+
 		for(int i=0; i<IndexType.indexList.length; i++) {
-			int type = IndexType.indexList[i];
 			String filename="";
-			switch (type) {
+			switch (IndexType.indexList[i]) {
 			case IndexType.ROW: {
 				filename = tableName + "Index2";
 				this.indexFiles[i].set(0, new BTreeFile(filename+"_Row", AttrType.attrString, 22, 1));
@@ -363,63 +362,52 @@ public class bigt {
 
 			case IndexType.COL: {
 				filename = tableName + "Index3";
-				this.indexFiles[i].add(0, new BTreeFile(filename+"_Col", AttrType.attrString, 22, 1));
+				this.indexFiles[i].set(0, new BTreeFile(filename+"_Col", AttrType.attrString, 22, 1));
 				break;
 			}
 
 			case IndexType.COLROW: {
 				filename = tableName + "Index4";
-				this.indexFiles[i].add(0, new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1));
+				this.indexFiles[i].set(0, new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1));
 				break;
 			}
 			case IndexType.ROWVAL: {
 				filename = tableName + "Index5";
-				this.indexFiles[i].add(0, new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1));
+				this.indexFiles[i].set(0, new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1));
 				break;
 			}
 			}
 		}
-		
 
-		
-		for(int i=0; i<IndexType.indexList.length; i++) {
+		String key = null;
 
-			
-			String key = null;
+		switch (type) {
 
-			int type = IndexType.indexList[i];
+		case IndexType.ROW: {
+			key = rowLabel;
+			this.indexFiles[type-1].get(0).insert(new StringKey(key), mid);
+		}
 
-				switch (type) {
+		case IndexType.COL: {
+			key = colLabel;
+			this.indexFiles[type-1].get(0).insert(new StringKey(key), mid);
+		}
 
-				case IndexType.ROW: {
-					key = rowLabel;
-					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
-				}
+		case IndexType.COLROW: {
+			key = colLabel + rowLabel;
+			this.indexFiles[type-1].get(0).insert(new StringKey(key), mid);
+		}
 
-				case IndexType.COL: {
-					key = colLabel;
-					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
-				}
-
-				case IndexType.COLROW: {
-					key = colLabel + rowLabel;
-					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
-				}
-
-				case IndexType.ROWVAL: {
-					key = rowLabel + mapVal;
-					this.indexFiles[i].get(0).insert(new StringKey(key), mid);
-				}
-
-				}
-
-	
+		case IndexType.ROWVAL: {
+			key = rowLabel + mapVal;
+			this.indexFiles[type-1].get(0).insert(new StringKey(key), mid);
+		}
 
 		}
 
 	}
-	
-	
+
+
 	/**
 	 * Initialize a map in the database
 	 * 
@@ -634,15 +622,15 @@ public class bigt {
 
 	}
 
-	
+
 	public void setCountValues() throws FileScanException, TupleUtilsException, InvalidRelation, InvalidTypeException, InvalidTupleSizeException, IOException, JoinsException, PageNotReadException, PredEvalException, UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat {		
 		if(mapCnt>0)
 			return;
-		
+
 		HashSet<String> uniqueRowNames = new HashSet<>();
 		HashSet<String> uniqueColNames = new HashSet<>();
 
-		
+
 		for(int i=0; i<IndexType.indexList.length; i++) {
 
 			FileScan fs = new FileScan(heapfile[i].getFileName(), attrType, attrSize, (short) 4, 4, null, null);
@@ -652,7 +640,7 @@ public class bigt {
 				mapCnt++;
 				String row = mpair.map.getRowLabel();
 				String col = mpair.map.getColumnLabel();
-				
+
 				if(!uniqueRowNames.contains(row)) {
 					uniqueRowNames.add(row);
 					distinctRowCnt++;
@@ -661,10 +649,10 @@ public class bigt {
 					uniqueColNames.add(col);
 					distinctColCnt++;
 				}
-				
+
 				mpair = fs.get_nextMidPair();
 			}
-			
+
 			fs.close();
 		}
 	}

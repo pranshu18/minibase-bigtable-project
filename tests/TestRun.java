@@ -260,19 +260,6 @@ public class TestRun {
 			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
 		}
 
-	
-		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
-			sysDef = new SystemDefs(dbpath, 10000, numbuf + 100, "Clock", newFile );
-
-			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
-		} else {
-			SystemDefs.JavabaseBM.unpinAllPages();
-			SystemDefs.JavabaseBM.flushAllPages();
-			SystemDefs.JavabaseBM = new BufMgr(numbuf + 100, "Clock");
-		}
-
-
-
 
 		Map map = new Map();
 		map.setHdr();
