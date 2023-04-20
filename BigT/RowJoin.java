@@ -28,114 +28,57 @@ public class RowJoin {
         this.numBuf = mem;
         this.outputTable = new bigt(outputTableName);
 
-        AttrType[] attributes = {
-                new AttrType(AttrType.attrString),
-                new AttrType(AttrType.attrString),
-                new AttrType(AttrType.attrInteger),
-                new AttrType(AttrType.attrString)
-        };
-
         Stream rightStream = rightTable.openStream(1, "*", "*", "*", this.numBuf);
+
+        bigt _bigt1 = removeDuplicates(leftStream, "temp1");
+        bigt _bigt2 = removeDuplicates(rightStream, "temp2");
+
         Map left, right;
-        Map prev_left = new Map(leftStream.getNext()), prev_right = new Map(rightStream.getNext());
-
-        String left_row_label = "", left_col_label = "";
-        String right_row_label = "", right_col_label = "";
-
-        if(prev_left != null) {
-            left_row_label = prev_left.getRowLabel();
-            left_col_label = prev_left.getColumnLabel();
-        }
-
-        if(prev_right != null) {
-            right_row_label = prev_right.getRowLabel();
-            right_col_label = prev_right.getColumnLabel();
-        }
+        leftStream = _bigt1.openStream(1, "*", "*", "*", this.numBuf);
+        rightStream = _bigt2.openStream(1, "*", "*", "*", this.numBuf);
 
         while((left = leftStream.getNext()) != null) {
-            if(left.getRowLabel().equals(prev_left.getRowLabel()) && left.getColumnLabel().equals(prev_left.getColumnLabel())) {
-                prev_left = new Map(left);
-                continue;
-            }
-
             while((right = rightStream.getNext()) != null) {
-                if(right.getRowLabel().equals(prev_right.getRowLabel()) && right.getColumnLabel().equals(prev_right.getColumnLabel())) {
-                    prev_right = new Map(right);
-                    continue;
-                }
+                if(left.getValue().equals(right.getValue())) {
+                    Map temp1 = new Map(left);
+                    Map temp2 = new Map(right);
+                    
+                    temp1.setRowLabel(left.getRowLabel() + ":" + right.getRowLabel());
+                    temp2.setRowLabel(left.getRowLabel() + ":" + right.getRowLabel());
 
-                if(prev_left.getValue().equals(prev_right.getValue())) {
-                    Map temp1 = new Map(prev_left);
-                    Map temp2 = new Map(prev_right);
-
-                    temp1.setRowLabel(prev_left.getRowLabel() + ":" + prev_right.getRowLabel());
-                    temp2.setRowLabel(prev_left.getRowLabel() + ":" + prev_right.getRowLabel());
-
-                    temp1.setColumnLabel(prev_left.getColumnLabel());
-
-                    if(prev_left.getColumnLabel().equals(prev_right.getColumnLabel())) {
-                        temp1.setColumnLabel(prev_left.getColumnLabel() + "_left");
-                        temp2.setColumnLabel(prev_right.getColumnLabel() + "_right");
+                    if(left.getColumnLabel().equals(right.getColumnLabel())) {
+                        temp1.setColumnLabel(left.getColumnLabel() + "_left");
+                        temp2.setColumnLabel(right.getColumnLabel() + "_right");
                     }
                     outputTable.insertMap(temp1.getMapByteArray(), 1);
                     outputTable.insertMap(temp2.getMapByteArray(), 1);
                 }
-
-                prev_right = new Map(right);
             }
-            prev_left = new Map(left);
+            rightStream = _bigt2.openStream(1, "*", "*", "*", this.numBuf);
         }
 
-        if(prev_left != null) {
-            while((right = rightStream.getNext()) != null) {
-                if(right.getRowLabel().equals(prev_right.getRowLabel()) && right.getColumnLabel().equals(prev_right.getColumnLabel())) {
-                    prev_right = new Map(right);
-                    continue;
-                }
-
-                if(prev_left.getValue().equals(prev_right.getValue())) {
-                    Map temp1 = new Map(prev_left);
-                    Map temp2 = new Map(prev_right);
-
-                    temp1.setRowLabel(prev_left.getRowLabel() + ":" + prev_right.getRowLabel());
-                    temp2.setRowLabel(prev_left.getRowLabel() + ":" + prev_right.getRowLabel());
-
-                    temp1.setColumnLabel(prev_left.getColumnLabel());
-
-                    if(prev_left.getColumnLabel().equals(prev_right.getColumnLabel())) {
-                        temp1.setColumnLabel(prev_left.getColumnLabel() + "_left");
-                        temp2.setColumnLabel(prev_right.getColumnLabel() + "_right");
-                    }
-                    outputTable.insertMap(temp1.getMapByteArray(), 1);
-                    outputTable.insertMap(temp2.getMapByteArray(), 1);
-                }
-
-                prev_right = new Map(right);
-            }
-        }
-
-        if(prev_left != null && prev_right != null) {
-            if(prev_left.getValue().equals(prev_right.getValue())) {
-                Map temp1 = new Map(prev_left);
-                Map temp2 = new Map(prev_right);
-
-                temp1.setRowLabel(prev_left.getRowLabel() + ":" + prev_right.getRowLabel());
-                temp2.setRowLabel(prev_left.getRowLabel() + ":" + prev_right.getRowLabel());
-
-                temp1.setColumnLabel(prev_left.getColumnLabel());
-
-                if(prev_left.getColumnLabel().equals(prev_right.getColumnLabel())) {
-                    temp1.setColumnLabel(prev_left.getColumnLabel() + "_left");
-                    temp2.setColumnLabel(prev_right.getColumnLabel() + "_right");
-                }
-
-                outputTable.insertMap(temp1.getMapByteArray(), 1);
-                outputTable.insertMap(temp2.getMapByteArray(), 1);
-            }
-        }
         leftStream.closestream();
         rightStream.closestream();
         this.outputStream = outputTable.openStream(1, "*", columnFilter, "*",this.numBuf/2);
+    }
+
+    private bigt removeDuplicates(Stream stream, String name) throws Exception {
+        bigt bigt = new bigt(name);
+        Map prev = new Map(stream.getNext());
+        Map temp = null;
+
+        while((temp = stream.getNext()) != null) {
+            if(temp.getRowLabel().equals(prev.getRowLabel()) && temp.getColumnLabel().equals(prev.getColumnLabel())) {
+                prev = new Map(temp);
+                continue;
+            }
+            bigt.insertMap(prev.getMapByteArray(), 1);
+            prev = new Map(temp);
+        }
+
+        bigt.insertMap(prev.getMapByteArray(), 1);
+        stream.closestream();
+        return bigt;
     }
 
     public Stream getResult() {

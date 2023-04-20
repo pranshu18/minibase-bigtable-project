@@ -460,26 +460,16 @@ public class TestRun {
 
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffers * 10 + 100, "Clock", false);
-			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
 			SystemDefs.JavabaseBM = new BufMgr(numBuffers * 10 + 100, "Clock");
 		}
-
+		bigt firstTable = new bigt(bigTableName);
 		bigt secondTable = new bigt(secondTableName);
 		Stream outputStream;
 		RowJoin rowJoin;
-		Stream leftStream = null;
-
-		try {
-			leftStream = SystemDefs.JavabaseDB.b.openStream(1, "*", "*", "*", numBuffers);
-		}  catch (Exception e) {
-			if(leftStream != null)
-				leftStream.closestream();
-			e.printStackTrace();
-			return;
-		}
+		Stream leftStream = firstTable.openStream(1, "*", "*", "*", numBuffers);
 
 		try {
 			rowJoin = new RowJoin(numBuffers, leftStream, secondTable, columnFilter, outputTableName);
