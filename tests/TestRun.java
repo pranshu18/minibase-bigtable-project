@@ -25,7 +25,7 @@ import java.io.InputStreamReader;
 
 public class TestRun {
 
-	static String dbpath;
+	static String dbpath = "/tmp/" + System.getProperty("user.name") + ".minibase-db";
 	static String logpath;
 	static String remove_logcmd;
 	static String remove_dbcmd;
@@ -87,9 +87,6 @@ public class TestRun {
 		String bigTableName = values[3];
 		int numBuffs = Integer.parseInt(values[4]);
 
-		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
-		+ ".minibase-db";
-		
 		boolean newFile=false;
 		File f = new File(dbpath);
 		if(f.exists()) { 
@@ -178,9 +175,6 @@ public class TestRun {
 
 		int numBuffers = Integer.parseInt(values[6]);
 
-		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
-		+ ".minibase-db";
-		
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffers + 100, "Clock", true);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
@@ -238,10 +232,6 @@ public class TestRun {
 		String bigTableName = values[6];
 
 		int numbuf = Integer.parseInt(values[7]);
-
-
-		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
-		+ ".minibase-db";
 
 		
 		boolean newFile=false;
@@ -312,8 +302,6 @@ public class TestRun {
 
 		int numBuffers = Integer.parseInt(values[2]);
 
-		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
-		+ ".minibase-db";
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffers, "Clock", true);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
@@ -357,8 +345,6 @@ public class TestRun {
 		int newIndexType = Integer.parseInt(values[3]);
 		int numBuffers = 1000;
 
-		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
-		+ ".minibase-db";
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffers, "Clock", true);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
