@@ -93,7 +93,7 @@ public class TestRun {
 			newFile = true;
 		}
 		
-		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath) || SystemDefs.JavabaseDB.b==null ||  !SystemDefs.JavabaseDB.b.tableName.equals(bigTableName)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffs, "Clock", newFile);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
@@ -175,7 +175,7 @@ public class TestRun {
 
 		int numBuffers = Integer.parseInt(values[6]);
 
-		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath) || SystemDefs.JavabaseDB.b==null ||  !SystemDefs.JavabaseDB.b.tableName.equals(bigTableName)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffers + 100, "Clock", true);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
@@ -240,7 +240,7 @@ public class TestRun {
 			newFile = true;
 		}
 		
-		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath) || SystemDefs.JavabaseDB.b==null ||  !SystemDefs.JavabaseDB.b.tableName.equals(bigTableName)) {
 			sysDef = new SystemDefs(dbpath, 10000, numbuf, "Clock", newFile);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
@@ -302,7 +302,7 @@ public class TestRun {
 
 		int numBuffers = Integer.parseInt(values[2]);
 
-		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath) || SystemDefs.JavabaseDB.b==null ||  !SystemDefs.JavabaseDB.b.tableName.equals(bigTableName)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffers, "Clock", true);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
@@ -345,7 +345,7 @@ public class TestRun {
 		int newIndexType = Integer.parseInt(values[3]);
 		int numBuffers = 1000;
 
-		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath) || SystemDefs.JavabaseDB.b==null ||  !SystemDefs.JavabaseDB.b.tableName.equals(bigTableName)) {
 			sysDef = new SystemDefs(dbpath, 10000, numBuffers, "Clock", true);
 			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
 		} else {
