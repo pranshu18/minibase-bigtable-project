@@ -658,4 +658,48 @@ public class bigt {
 	}
 
 
+	public void insertIntoIndexFile(BTreeFile indexFile, int originalStorageType, int newType) throws FileScanException, TupleUtilsException, InvalidRelation, InvalidTypeException, InvalidTupleSizeException, IOException, KeyTooLongException, KeyNotMatchException, LeafInsertRecException, IndexInsertRecException, ConstructPageException, UnpinPageException, PinPageException, NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException, LeafDeleteException, InsertException, JoinsException, PageNotReadException, PredEvalException, UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat {
+		
+		fscan = new FileScan(heapfile[originalStorageType - 1].getFileName(), attrType, attrSize, (short) 4, 4, null, null);
+		MapMidPair mpair = fscan.get_nextMidPair();
+		String key = null;
+
+		while (mpair != null) {
+			switch (newType) {
+
+			case IndexType.ROW: {
+				key = mpair.map.getRowLabel();
+				indexFile.insert(new StringKey(key), mpair.mid);
+				break;
+			}
+
+			case IndexType.COL: {
+				key = mpair.map.getColumnLabel();
+				indexFile.insert(new StringKey(key), mpair.mid);
+				break;
+			}
+
+			case IndexType.COLROW: {
+				key = mpair.map.getColumnLabel() + mpair.map.getRowLabel();
+				indexFile.insert(new StringKey(key), mpair.mid);
+				break;
+			}
+
+			case IndexType.ROWVAL: {
+				key = mpair.map.getRowLabel() + mpair.map.getValue();
+				indexFile.insert(new StringKey(key), mpair.mid);
+				break;
+			}
+
+			}
+
+			mpair = fscan.get_nextMidPair();
+		}
+
+		fscan.close();
+
+		
+	}
+
+
 }

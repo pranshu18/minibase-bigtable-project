@@ -22,8 +22,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import bufmgr.BufMgr;
-
 
 public class TestRun {
 
@@ -40,7 +38,8 @@ public class TestRun {
 		System.out.println("2. Run query");
 		System.out.println("3. Insert Map");
 		System.out.println("4. Get Counts");
-		System.out.println("5. Exit");
+		System.out.println("5. Create Index");
+		System.out.println("6. Exit");
 
 	}
 
@@ -103,7 +102,7 @@ public class TestRun {
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
-			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
+			SystemDefs.JavabaseBM = new BufMgr(numBuffs, "Clock");
 		}
 
 		SystemDefs.JavabaseDB.b.cleanUpAllIndices();
@@ -214,7 +213,7 @@ public class TestRun {
 
 		System.out.println("Usage - mapinsert RL CL VAL TS TYPE BIGTABLENAME NUMBUF");
 
-
+		PCounter.initialize();
 
 		String[] values = getLine().split(" ");
 
@@ -257,7 +256,7 @@ public class TestRun {
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
-			SystemDefs.JavabaseBM = new BufMgr(1000, "Clock");
+			SystemDefs.JavabaseBM = new BufMgr(numbuf, "Clock");
 		}
 
 
@@ -293,6 +292,9 @@ public class TestRun {
 		SystemDefs.JavabaseBM.flushAllPages();
 		
 		System.out.println("Successfully inserted map \n");
+		
+		System.out.println("Disk pages read = "+ PCounter.rcounter);
+		System.out.println("Disk pages written = "+ PCounter.wcounter);
 
 		}
 
@@ -339,11 +341,123 @@ public class TestRun {
 	}
 
 
+	public static void createIndex() throws HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, IOException, HFException, HFBufMgrException, HFDiskMgrException, GetFileEntryException, ConstructPageException, AddFileEntryException, FileScanException, TupleUtilsException, InvalidRelation, InvalidTypeException, InvalidTupleSizeException, KeyTooLongException, KeyNotMatchException, LeafInsertRecException, IndexInsertRecException, UnpinPageException, PinPageException, NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException, IteratorException, LeafDeleteException, InsertException, JoinsException, PageNotReadException, PredEvalException, UnknowAttrType, FieldNumberOutOfBoundException, WrongPermat {
+
+		System.out.println("createindex BTNAME ORIGINAL_STORAGE_TYPE NEW_INDEX_TYPE");
+		PCounter.initialize();
+
+		String[] values = getLine().split(" ");
+		if(values.length !=4){
+			System.out.println("Invalid format!");
+			return;
+		}
+
+		String bigTableName = values[1];
+		int originalStorageType = Integer.parseInt(values[2]);
+		int newIndexType = Integer.parseInt(values[3]);
+		int numBuffers = 1000;
+
+		dbpath = "/tmp/" + bigTableName+ System.getProperty("user.name")
+		+ ".minibase-db";
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, numBuffers, "Clock", true);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
+		} else {
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+			SystemDefs.JavabaseBM = new BufMgr(numBuffers, "Clock");
+		}
+
+		String filename = "";
+
+		switch (originalStorageType) {
+		case IndexType.None: {
+			filename = bigTableName;
+			break;
+		}
+
+		case IndexType.ROW: {
+			filename = bigTableName + "Index2";
+			break;
+		}
+
+		case IndexType.COL: {
+			filename = bigTableName + "Index3";
+			break;
+		}
+
+		case IndexType.COLROW: {
+			filename = bigTableName + "Index4";
+			break;
+		}
+		case IndexType.ROWVAL: {
+			filename = bigTableName + "Index5";
+			break;
+		}
+		}
+
+		boolean exists = true;
+		BTreeFile indexFile = null;
+		
+		//check if index already exists, exit if yes.
+		switch (newIndexType) {
+		case IndexType.ROW: {
+			indexFile = new BTreeFile(filename+"_Row", AttrType.attrString, 22, 1);
+			if(indexFile.newFile) {
+				exists = false;
+				SystemDefs.JavabaseDB.b.indexFiles[originalStorageType-1].add(indexFile);
+			}
+			break;
+		}
+
+		case IndexType.COL: {
+			indexFile = new BTreeFile(filename+"_Col", AttrType.attrString, 22, 1);
+			if(indexFile.newFile) {
+				exists = false;
+				SystemDefs.JavabaseDB.b.indexFiles[originalStorageType-1].add(indexFile);
+			}
+			break;
+		}
+
+		case IndexType.COLROW: {
+			indexFile = new BTreeFile(filename+"_ColRow", AttrType.attrString, 44, 1);
+			if(indexFile.newFile) {
+				exists = false;
+				SystemDefs.JavabaseDB.b.indexFiles[originalStorageType-1].add(indexFile);
+			}
+			break;
+		}
+		case IndexType.ROWVAL: {
+			indexFile = new BTreeFile(filename+"_RowVal", AttrType.attrString, 44, 1);
+			if(indexFile.newFile) {
+				exists = false;
+				SystemDefs.JavabaseDB.b.indexFiles[originalStorageType-1].add(indexFile);
+			}
+			break;
+		}
+		}
+		
+		if(!exists) {
+			//insert all records into the corresponding index file
+			SystemDefs.JavabaseDB.b.insertIntoIndexFile(indexFile, originalStorageType, newIndexType);
+			System.out.println("Successfully created new index file! \n");
+		}else {
+			System.out.println("Index file already exists \n");
+		}
+		
+		SystemDefs.JavabaseBM.unpinAllPages();
+		SystemDefs.JavabaseBM.flushAllPages();
+
+		System.out.println("Disk pages read = "+ PCounter.rcounter);
+		System.out.println("Disk pages written = "+ PCounter.wcounter);
+		
+	}
+
 	public static void main(String[] args) {
 
 		try {
 			int choice = 1;
-			while(choice!=5){
+			while(choice!=6){
 
 				displayOptions();
 				choice = getChoice();
@@ -362,6 +476,9 @@ public class TestRun {
 					getCounts();
 					break;
 				case 5:
+					createIndex();
+					break;
+				case 6:
 					break;
 				default:
 					System.out.println("Invalid choice!");

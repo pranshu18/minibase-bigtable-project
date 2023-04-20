@@ -28,6 +28,7 @@ private final static int MAGIC0=1989;
   private static FileOutputStream fos;
   private static DataOutputStream trace;
   public int cnt =0;
+  public boolean newFile = false;
   
   
   /** It causes a structured trace to be written to a
@@ -192,7 +193,6 @@ private final static int MAGIC0=1989;
        */
     }    
   
-  
   /**
    *  if index file exists, open it; else create it.
    *@param filename file name. Input parameter.
@@ -217,6 +217,7 @@ private final static int MAGIC0=1989;
       headerPageId=get_file_entry(filename);
       if( headerPageId==null) //file not exist
 	{
+      newFile = true;
 	  headerPage= new  BTreeHeaderPage(); 
 	  headerPageId= headerPage.getPageId();
 	  add_file_entry(filename, headerPageId);
