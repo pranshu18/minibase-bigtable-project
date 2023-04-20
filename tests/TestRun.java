@@ -2,6 +2,7 @@
 package tests;
 
 import BigT.Map;
+import BigT.RowJoin;
 import BigT.Stream;
 import BigT.bigt;
 import btree.*;
@@ -39,7 +40,8 @@ public class TestRun {
 		System.out.println("3. Insert Map");
 		System.out.println("4. Get Counts");
 		System.out.println("5. Create Index");
-		System.out.println("6. Exit");
+		System.out.println("6. Row join");
+		System.out.println("7. Exit");
 
 	}
 
@@ -439,11 +441,77 @@ public class TestRun {
 		
 	}
 
+	public static void rowJoin() throws Exception {
+		System.out.println("rowjoin BTNAME1 BTNAME2 OUTBTNAME COLUMNFILTER JOINTYPE NUMBUF");
+		PCounter.initialize();
+
+		String[] values = getLine().split(" ");
+		if(values.length !=7){
+			System.out.println("Invalid format!");
+			return;
+		}
+
+		String bigTableName = values[1];
+		String secondTableName = values[2];
+		String outputTableName = values[3];
+		String columnFilter = values[4];
+		String joinType = values[5];
+		int numBuffers = Integer.parseInt(values[6]);
+
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, numBuffers * 10 + 100, "Clock", false);
+			SystemDefs.JavabaseDB.b = new bigt(bigTableName);
+		} else {
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+			SystemDefs.JavabaseBM = new BufMgr(numBuffers * 10 + 100, "Clock");
+		}
+
+		bigt secondTable = new bigt(secondTableName);
+		Stream outputStream;
+		RowJoin rowJoin;
+		Stream leftStream = null;
+
+		try {
+			leftStream = SystemDefs.JavabaseDB.b.openStream(1, "*", "*", "*", numBuffers);
+		}  catch (Exception e) {
+			if(leftStream != null)
+				leftStream.closestream();
+			e.printStackTrace();
+			return;
+		}
+
+		try {
+			rowJoin = new RowJoin(numBuffers, leftStream, secondTable, columnFilter, outputTableName);
+
+		} catch (Exception e){
+			e.printStackTrace();
+			return;
+
+		}
+		outputStream = rowJoin.getResult();
+		Map temp;
+
+		while ((temp = outputStream.getNext()) != null) {
+			temp.print();
+			System.out.println();
+		}
+
+		outputStream.closestream();
+
+		SystemDefs.JavabaseBM.unpinAllPages();
+		SystemDefs.JavabaseBM.flushAllPages();
+
+		System.out.println("Disk pages read = "+ PCounter.rcounter);
+		System.out.println("Disk pages written = "+ PCounter.wcounter);
+
+	}
+
 	public static void main(String[] args) {
 
 		try {
 			int choice = 1;
-			while(choice!=6){
+			while(choice!=7){
 
 				displayOptions();
 				choice = getChoice();
@@ -465,6 +533,9 @@ public class TestRun {
 					createIndex();
 					break;
 				case 6:
+					rowJoin();
+					break;
+				case 7:
 					break;
 				default:
 					System.out.println("Invalid choice!");
