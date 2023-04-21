@@ -212,6 +212,25 @@ public class MapUtils {
 				e.printStackTrace();
 			}
 
+		case 6:
+			try {
+				int row_compare = map1.getRowLabel().compareTo(map2.getRowLabel());
+				if (row_compare != 0) {
+					return row_compare;
+				}
+
+				int column_compare = map1.getColumnLabel().compareTo(map2.getColumnLabel());
+				if (column_compare != 0) {
+					return column_compare;
+				}
+
+				return 0;
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+
 		default:
 
 			throw new UnknowAttrType(null, "Undefined attr type");
