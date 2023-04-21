@@ -556,7 +556,7 @@ public class TestRun {
 
 		try {
 			int choice = 1;
-			while(choice!=7){
+			while(choice!=8){
 
 				displayOptions();
 				choice = getChoice();
