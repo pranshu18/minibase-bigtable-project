@@ -41,7 +41,8 @@ public class TestRun {
 		System.out.println("4. Get Counts");
 		System.out.println("5. Create Index");
 		System.out.println("6. Row join");
-		System.out.println("7. Exit");
+		System.out.println("7. Row sort");
+		System.out.println("8. Exit");
 
 	}
 
@@ -497,6 +498,60 @@ public class TestRun {
 
 	}
 
+	public static void invokeRowSort() throws Exception {
+		System.out.println("rowSort INBTNAME OUTBTNAME COLUMNNAME NUMBUF");
+		String[] values = getLine().split(" ");
+		if(values.length !=5){
+			System.out.println("Invalid format!");
+			return;
+		}
+		String inputBT = values[1];
+		String outputBT = values[2];
+		String columnName = values[3];
+		int numBuffers = Integer.parseInt(values[4]);
+
+		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
+			sysDef = new SystemDefs(dbpath, 10000, numBuffers * 10 + 100, "Clock", false);
+		} else {
+			SystemDefs.JavabaseBM.unpinAllPages();
+			SystemDefs.JavabaseBM.flushAllPages();
+			SystemDefs.JavabaseBM = new BufMgr(numBuffers * 10 + 100, "Clock");
+		}
+
+		bigt inputBT1 = new bigt(inputBT);
+		Stream allSorted = inputBT1.openStream(6, "*", "*", "*", numBuffers/2);
+		Stream filtered = inputBT1.openStream(3, "*", columnName, "*", numBuffers/2);
+
+		Map mp1  = allSorted.getNext();
+		Map mp2  = filtered.getNext();
+
+		
+		bigt resultTable = new bigt(outputBT);
+		while(mp1 != null){
+			if(mp2 != null && mp1.getRowLabel().compareTo(mp2.getRowLabel()) == 0 && mp1.getColumnLabel().compareTo(mp2.getColumnLabel()) == 0){
+				while(mp2 != null && mp1.getRowLabel().compareTo(mp2.getRowLabel()) == 0 && mp1.getColumnLabel().compareTo(mp2.getColumnLabel()) == 0){
+					resultTable.insertMap(mp2.getMapByteArray(), 1);
+					mp2.print();
+					System.out.println();
+					mp1 = allSorted.getNext();
+					mp2 = filtered.getNext();
+				}
+			} else {
+				resultTable.insertMap(mp1.getMapByteArray(), 1);
+				mp1.print();
+				System.out.println();
+				mp1 = allSorted.getNext();
+			}
+		}
+
+		allSorted.closestream();
+		filtered.closestream();
+
+		SystemDefs.JavabaseBM.unpinAllPages();
+		SystemDefs.JavabaseBM.flushAllPages();
+
+	}
+
 	public static void main(String[] args) {
 
 		try {
@@ -526,6 +581,9 @@ public class TestRun {
 					rowJoin();
 					break;
 				case 7:
+					invokeRowSort();
+					break;
+				case 8:
 					break;
 				default:
 					System.out.println("Invalid choice!");
