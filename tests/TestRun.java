@@ -473,7 +473,7 @@ public class TestRun {
 		Stream leftStream = firstTable.openStream(1, "*", "*", "*", numBuffers);
 
 		try {
-			rowJoin = new RowJoin(numBuffers, leftStream, secondTable, columnFilter, outputTableName);
+			rowJoin = new RowJoin(numBuffers, leftStream, secondTable, columnFilter, outputTableName, joinType);
 
 		} catch (Exception e){
 			e.printStackTrace();
@@ -500,6 +500,8 @@ public class TestRun {
 
 	public static void invokeRowSort() throws Exception {
 		System.out.println("rowSort INBTNAME OUTBTNAME COLUMNNAME NUMBUF");
+		PCounter.initialize();
+
 		String[] values = getLine().split(" ");
 		if(values.length !=5){
 			System.out.println("Invalid format!");
@@ -549,6 +551,10 @@ public class TestRun {
 
 		SystemDefs.JavabaseBM.unpinAllPages();
 		SystemDefs.JavabaseBM.flushAllPages();
+		
+		System.out.println("Disk pages read = "+ PCounter.rcounter);
+		System.out.println("Disk pages written = "+ PCounter.wcounter);
+
 
 	}
 

@@ -610,7 +610,7 @@ public class Sort  extends Iterator implements GlobalConst
     AttrType temp ;
     if(sortType == 5) {
     	temp = new AttrType(AttrType.attrInteger);
-    }else if(sortType == 6){
+    }else if(sortType == 6  || sortType == 7){
         temp = new AttrType(AttrType.attrString);
     }
     else {
@@ -653,7 +653,7 @@ public class Sort  extends Iterator implements GlobalConst
       AttrType sortFld ;
       if(_sort_fld == 5) {
       	sortFld = new AttrType(AttrType.attrInteger);
-      }else if(_sort_fld == 6){
+      }else if(_sort_fld == 6 || _sort_fld == 7){
     	sortFld = new AttrType(AttrType.attrString); 
       }
       else {

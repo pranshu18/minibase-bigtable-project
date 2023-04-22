@@ -230,7 +230,25 @@ public class MapUtils {
 				e.printStackTrace();
 			}
 
-
+		case 7:
+			
+			try {
+				long val1 = 0;
+				if(!map1.getValue().trim().isEmpty())
+					val1 = Long.parseLong(map1.getValue());
+				long val2 = 0;
+				if(!map2.getValue().trim().isEmpty())
+					val2 = Long.parseLong(map2.getValue());
+				
+				if (val1 == val2)
+					return 0;
+				if (val1 < val2)
+					return -1;
+				if (val1 > val2)
+					return 1;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		default:
 
 			throw new UnknowAttrType(null, "Undefined attr type");
