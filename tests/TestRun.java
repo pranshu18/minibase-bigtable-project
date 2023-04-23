@@ -460,14 +460,15 @@ public class TestRun {
 		int numBuffers = Integer.parseInt(values[6]);
 
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
-			sysDef = new SystemDefs(dbpath, 10000, numBuffers * 10 + 100, "Clock", false);
+			sysDef = new SystemDefs(dbpath, 10000, numBuffers * 10 + 100, "Clock", true);
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
-			SystemDefs.JavabaseBM = new BufMgr(numBuffers * 10 + 100, "Clock");
+			SystemDefs.JavabaseBM = new BufMgr(numBuffers * 10 + 100 , "Clock");
 		}
 		bigt firstTable = new bigt(bigTableName);
 		bigt secondTable = new bigt(secondTableName);
+		
 		Stream outputStream;
 		RowJoin rowJoin;
 
@@ -512,7 +513,7 @@ public class TestRun {
 		int numBuffers = Integer.parseInt(values[4]);
 
 		if (sysDef == null || !SystemDefs.JavabaseDB.db_name().equals(dbpath)) {
-			sysDef = new SystemDefs(dbpath, 10000, numBuffers * 10 + 100, "Clock", false);
+			sysDef = new SystemDefs(dbpath, 10000, numBuffers * 10 + 100, "Clock", true);
 		} else {
 			SystemDefs.JavabaseBM.unpinAllPages();
 			SystemDefs.JavabaseBM.flushAllPages();
@@ -547,6 +548,9 @@ public class TestRun {
 
 		allSorted.closestream();
 		filtered.closestream();
+
+		resultTable.populateBtree();
+		resultTable.removeDuplicates();
 
 		SystemDefs.JavabaseBM.unpinAllPages();
 		SystemDefs.JavabaseBM.flushAllPages();

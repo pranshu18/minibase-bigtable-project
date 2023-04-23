@@ -39,6 +39,11 @@ public class RowJoin {
             while((left = leftStream.getNext()) != null) {
                 while((right = rightStream.getNext()) != null) {
                     if(left.getValue().equals(right.getValue())) {
+//                    	System.out.println("Left =");
+//                    	left.print();
+//                    	System.out.println("Right =");
+//                    	right.print();
+                    	
                         Map temp1 = new Map(left);
                         Map temp2 = new Map(right);
                         
@@ -101,6 +106,11 @@ public class RowJoin {
                         Map temp1 = new Map(m1);
                         Map temp2 = new Map(m2);
                         
+//                    	System.out.println("Left =");
+//                    	m1.print();
+//                    	System.out.println("Right =");
+//                    	m2.print();
+
                         temp1.setRowLabel(m1.getRowLabel() + ":" + m2.getRowLabel());
                         temp2.setRowLabel(m1.getRowLabel() + ":" + m2.getRowLabel());
 
