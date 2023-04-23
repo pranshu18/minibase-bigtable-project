@@ -470,10 +470,9 @@ public class TestRun {
 		bigt secondTable = new bigt(secondTableName);
 		Stream outputStream;
 		RowJoin rowJoin;
-		Stream leftStream = firstTable.openStream(1, "*", "*", "*", numBuffers);
 
 		try {
-			rowJoin = new RowJoin(numBuffers, leftStream, secondTable, columnFilter, outputTableName, joinType);
+			rowJoin = new RowJoin(numBuffers, firstTable, secondTable, columnFilter, outputTableName, joinType);
 
 		} catch (Exception e){
 			e.printStackTrace();

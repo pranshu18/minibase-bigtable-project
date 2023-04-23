@@ -22,24 +22,20 @@ public class RowJoin {
     private ArrayList<Map> duplicates;
 
 
-    public RowJoin(int mem, Stream leftStream, bigt rightTable, String col, String outputTableName, String joinType) throws Exception{
+    public RowJoin(int mem, bigt leftTable, bigt rightTable, String col, String outputTableName, String joinType) throws Exception{
         this.columnFilter = col;
         this.bigt2 = rightTable;
         this.numBuf = mem;
         this.outputTable = new bigt(outputTableName);
 
+		Stream leftStream = leftTable.openStream(1, "*", "*", "*", this.numBuf);
         Stream rightStream = rightTable.openStream(1, "*", "*", "*", this.numBuf);
-
-        bigt _bigt1 = removeDuplicates(leftStream, "temp1");
-        bigt _bigt2 = removeDuplicates(rightStream, "temp2");
+        
 
         Map left, right;
         
         if(joinType.equals("1")) {
         	
-            leftStream = _bigt1.openStream(1, "*", "*", "*", this.numBuf);
-            rightStream = _bigt2.openStream(1, "*", "*", "*", this.numBuf);
-
             while((left = leftStream.getNext()) != null) {
                 while((right = rightStream.getNext()) != null) {
                     if(left.getValue().equals(right.getValue())) {
@@ -57,13 +53,14 @@ public class RowJoin {
                         outputTable.insertMap(temp2.getMapByteArray(), 1);
                     }
                 }
-                rightStream = _bigt2.openStream(1, "*", "*", "*", this.numBuf);
+                rightStream.closestream();
+                rightStream = rightTable.openStream(1, "*", "*", "*", this.numBuf);
             }
 
         }else if(joinType.equals("2")) {
         	
-            leftStream = _bigt1.openStream(7, "*", "*", "*", this.numBuf);
-            rightStream = _bigt2.openStream(7, "*", "*", "*", this.numBuf);
+            leftStream = leftTable.openStream(7, "*", "*", "*", this.numBuf);
+            rightStream = rightTable.openStream(7, "*", "*", "*", this.numBuf);
             
             Map m1 = leftStream.getNext();
             Map m2 = rightStream.getNext();
@@ -129,7 +126,7 @@ public class RowJoin {
             		}
         			l2 = Long.parseLong(m2.getValue());
         			
-        			Stream markLeftStream = _bigt1.openStream(7, "*", "*", "*", this.numBuf);
+        			Stream markLeftStream = leftTable.openStream(7, "*", "*", "*", this.numBuf);
         			Map m3 = markLeftStream.getNext();
         			int leftVal = leftMark;
         			while(leftVal>0) {
@@ -161,9 +158,11 @@ public class RowJoin {
 
         leftStream.closestream();
         rightStream.closestream();
+        
+        outputTable.populateBtree();
+        outputTable.removeDuplicates();
+
         this.outputStream = outputTable.openStream(1, "*", columnFilter, "*",this.numBuf/2);
-        _bigt1.deleteBigT();
-        _bigt2.deleteBigT();
     }
 
     private bigt removeDuplicates(Stream stream, String name) throws Exception {
