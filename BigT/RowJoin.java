@@ -39,10 +39,10 @@ public class RowJoin {
             while((left = leftStream.getNext()) != null) {
                 while((right = rightStream.getNext()) != null) {
                     if(left.getValue().equals(right.getValue())) {
-//                    	System.out.println("Left =");
-//                    	left.print();
-//                    	System.out.println("Right =");
-//                    	right.print();
+                    	System.out.println("Left =");
+                    	left.print();
+                    	System.out.println("Right =");
+                    	right.print();
                     	
                         Map temp1 = new Map(left);
                         Map temp2 = new Map(right);
@@ -98,6 +98,8 @@ public class RowJoin {
             	if(breakOuter)
             		break;
             	
+    			long l3 = Long.parseLong(m1.getValue());
+
             	while(true) {
             		int leftAdd = 0;
             		
@@ -106,10 +108,10 @@ public class RowJoin {
                         Map temp1 = new Map(m1);
                         Map temp2 = new Map(m2);
                         
-//                    	System.out.println("Left =");
-//                    	m1.print();
-//                    	System.out.println("Right =");
-//                    	m2.print();
+                    	System.out.println("Left =");
+                    	m1.print();
+                    	System.out.println("Right =");
+                    	m2.print();
 
                         temp1.setRowLabel(m1.getRowLabel() + ":" + m2.getRowLabel());
                         temp2.setRowLabel(m1.getRowLabel() + ":" + m2.getRowLabel());
@@ -136,22 +138,19 @@ public class RowJoin {
             		}
         			l2 = Long.parseLong(m2.getValue());
         			
-        			Stream markLeftStream = leftTable.openStream(7, "*", "*", "*", this.numBuf);
-        			Map m3 = markLeftStream.getNext();
-        			int leftVal = leftMark;
-        			while(leftVal>0) {
-        				m3 = markLeftStream.getNext();
-        				leftVal--;
-        			}
-        			
-        			long l3 = Long.parseLong(m3.getValue());
-        			
+        			        			
             		if(l3 == l2) {
             			leftStream.closestream();
+            			Stream markLeftStream = leftTable.openStream(7, "*", "*", "*", this.numBuf);
+            			Map m3 = markLeftStream.getNext();
+            			int leftVal = leftMark;
+            			while(leftVal>0) {
+            				m3 = markLeftStream.getNext();
+            				leftVal--;
+            			}
             			leftStream = markLeftStream;
             			m1 = m3;
             		}else {
-            			markLeftStream.closestream();
             			if(m1 == null) {
             				breakOuter = true;
             				break;
@@ -173,25 +172,6 @@ public class RowJoin {
         outputTable.removeDuplicates();
 
         this.outputStream = outputTable.openStream(1, "*", columnFilter, "*",this.numBuf/2);
-    }
-
-    private bigt removeDuplicates(Stream stream, String name) throws Exception {
-        bigt bigt = new bigt(name);
-        Map prev = new Map(stream.getNext());
-        Map temp = null;
-
-        while((temp = stream.getNext()) != null) {
-            if(temp.getRowLabel().equals(prev.getRowLabel()) && temp.getColumnLabel().equals(prev.getColumnLabel())) {
-                prev = new Map(temp);
-                continue;
-            }
-            bigt.insertMap(prev.getMapByteArray(), 1);
-            prev = new Map(temp);
-        }
-
-        bigt.insertMap(prev.getMapByteArray(), 1);
-        stream.closestream();
-        return bigt;
     }
 
     public Stream getResult() {

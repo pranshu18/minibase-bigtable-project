@@ -480,6 +480,7 @@ public class TestRun {
 			return;
 
 		}
+		System.out.println();
 		outputStream = rowJoin.getResult();
 		Map temp;
 
