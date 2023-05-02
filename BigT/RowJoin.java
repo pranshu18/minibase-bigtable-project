@@ -28,13 +28,17 @@ public class RowJoin {
         this.numBuf = mem;
         this.outputTable = new bigt(outputTableName);
 
-		Stream leftStream = leftTable.openStream(1, "*", "*", "*", this.numBuf);
-        Stream rightStream = rightTable.openStream(1, "*", "*", "*", this.numBuf);
+		Stream leftStream = null;
+        Stream rightStream = null;
         
 
         Map left, right;
         
         if(joinType.equals("1")) {
+        	
+    		leftStream = leftTable.openStream(1, "*", "*", "*", this.numBuf);
+            rightStream = rightTable.openStream(1, "*", "*", "*", this.numBuf);
+
         	
             while((left = leftStream.getNext()) != null) {
                 while((right = rightStream.getNext()) != null) {
